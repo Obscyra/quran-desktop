@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { pickVerse } from '$lib/actions';
+  import { pickVerse, sayVerse } from '$lib/actions';
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { pageFonts } from '$lib/fonts.svelte';
   import { player } from '$lib/player.svelte';
@@ -20,9 +20,13 @@
   class:saved
   class:picked
   id="end-{v.n}"
-  onclick={() => pickVerse(v.n)}
-  aria-label="Verse {v.n} options"
-  title="Verse {v.n}"
+  onclick={() => sayVerse(v.n)}
+  oncontextmenu={(e) => {
+    e.preventDefault();
+    pickVerse(v.n);
+  }}
+  aria-label="Play verse {v.n}"
+  title="Verse {v.n}: click to play, right-click for options"
 >{#if glyph}<span class="g" style:font-family={pageFonts.family(v.endPage)}>{v.endGlyph}</span>{:else}<span class="ring">{digits}</span>{/if}</button>
 
 <style>

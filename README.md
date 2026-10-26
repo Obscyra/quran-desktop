@@ -56,7 +56,7 @@ Get the installer for your system from the **[Releases page](https://github.com/
 ### Listening
 - **19 reciters** from quran.com, with their portraits, speed control, repeat and automatic next surah.
 - **Word-by-word tracking** that follows the recitation, with a smooth sweep inside each word.
-- **Play one verse or one word.** Click a word to hear it; right-click for its meaning, play verse, play from here, repeat, bookmark or copy.
+- **Play one verse or one word.** Click a word to hear it, or a verse number to hear the whole verse. Right-click either one for its meaning, play from here, repeat, bookmark or copy.
 - **Change reciter mid-surah** and the new voice carries on from the same verse.
 - The listening bar opens only when you ask for it.
 

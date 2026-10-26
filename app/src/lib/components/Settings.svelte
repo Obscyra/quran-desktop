@@ -224,7 +224,7 @@
 
     {#if ui.area === 'appearance'}
       <div class="row wide">
-        <div class="label"><h3>Theme</h3><p>Six palettes, each tuned for comfortable contrast. Auto follows your system.</p></div>
+        <div class="label"><h3>Theme</h3><p>Seven palettes, each tuned for comfortable contrast. Auto follows your system.</p></div>
         <div class="themes">
           <button class="theme auto" class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>
             <span class="sw"><i style:background="#0e0c09"></i><i style:background="#ede8de"></i></span>
