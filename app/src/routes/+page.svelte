@@ -10,7 +10,6 @@
   import { applyTheme, resolveTheme } from '$lib/themes';
   import { ui } from '$lib/ui.svelte';
   import { updater } from '$lib/updater.svelte';
-  import ListenPill from '$lib/components/ListenPill.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import Reader from '$lib/components/Reader.svelte';
   import PlayerBar from '$lib/components/PlayerBar.svelte';
@@ -146,7 +145,6 @@
     {/if}
   </div>
   <PlayerBar />
-  <ListenPill />
   <WordMenu />
   <NoticeCard />
   <ConfirmDialog />

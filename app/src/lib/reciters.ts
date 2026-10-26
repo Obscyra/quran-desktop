@@ -7,7 +7,6 @@ export const PHOTO_BASE = 'https://static.qurancdn.com/';
 // `id` is the recitation id the API takes; `approx` marks recordings that come without word-level
 // timings, where the word highlight is spread across each verse instead.
 export const RECITERS: Reciter[] = [
-  { id: 1, rid: 1, name: "AbdulBaset AbdulSamad", style: "Mujawwad", photo: "images/reciters/1/abdelbasset-profile.jpeg" },
   { id: 2, rid: 1, name: "AbdulBaset AbdulSamad", style: "Murattal", photo: "images/reciters/1/abdelbasset-profile.jpeg" },
   { id: 158, rid: 23, name: "Abdullah Ali Jabir", style: "Murattal", photo: "images/reciters/23/Abdullah-Ali-Jabir-profile.png", approx: true },
   { id: 3, rid: 2, name: "Abdur-Rahman as-Sudais", style: "Murattal", photo: "images/reciters/2/abdul-rahman-al-sudais-profile.jpeg" },
@@ -23,7 +22,9 @@ export const RECITERS: Reciter[] = [
   { id: 13, rid: 12, name: "Sa'ad al-Ghamdi", style: "Murattal", photo: "images/reciters/16/saad-al-ghamdi-profile.png", approx: true },
   { id: 10, rid: 8, name: "Sa'ud ash-Shuraim", style: "Murattal", photo: "images/reciters/8/saoud-shuraim-profile.jpeg" },
   { id: 12, rid: 5, name: "Mahmoud Khalil Al-Husary", style: "Muallim", photo: "images/reciters/5/mahmoud-khalil-al-hussary-profile.png" },
-  { id: 173, rid: 6, name: "Mishari Rashid al-`Afasy", style: "Murattal", photo: "images/reciters/6/mishary-rashid-alafasy-profile.jpeg" },
   { id: 168, rid: 7, name: "Mohamed Siddiq al-Minshawi", style: "Kids repeat", photo: "images/reciters/7/mohamed-siddiq-el-minshawi-profile.jpeg" },
   { id: 174, rid: 20, name: "Yasser Ad Dussary", style: "Murattal", photo: "images/reciters/20/yasser-profile.png" }
 ];
+
+/** Recitations that were taken out of the list, and the one each is replaced by for anyone who had it chosen. */
+export const REMOVED_RECITERS: Record<number, number> = { 1: 2, 173: 7 };

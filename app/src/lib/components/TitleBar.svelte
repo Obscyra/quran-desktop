@@ -51,8 +51,15 @@
   </div>
 
   <div class="right" data-tauri-drag-region>
-    <button class="tool labeled" class:active={ui.listening || settings.listenBar === 'always'} onclick={() => ui.toggleListening()} disabled={settings.listenBar === 'always'} aria-label="Listening bar (L)" aria-pressed={ui.listening || settings.listenBar === 'always'} title="Listen (L)">
-      <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12V10a6.5 6.5 0 0 1 13 0v2" /><rect x="2.5" y="11.5" width="3.5" height="5.5" rx="1.4" /><rect x="14" y="11.5" width="3.5" height="5.5" rx="1.4" /></svg><span>Listen</span>
+    <button class="tool labeled play" class:active={player.playing} onclick={() => player.toggle()} aria-label={player.playing ? 'Pause' : 'Play the recitation'} title={player.playing ? 'Pause (Space)' : 'Play the recitation (Space)'}>
+      <i aria-hidden="true">
+        {#if player.playing}
+          <svg viewBox="0 0 24 24" width="12" height="12"><path d="M6 4.5h4v15H6zM14 4.5h4v15h-4z" fill="currentColor" /></svg>
+        {:else}
+          <svg viewBox="0 0 24 24" width="12" height="12"><path d="M7.5 4.6v14.8a.8.8 0 0 0 1.22.68l12-7.4a.8.8 0 0 0 0-1.36l-12-7.4a.8.8 0 0 0-1.22.68z" fill="currentColor" /></svg>
+        {/if}
+      </i>
+      <span>{player.playing ? 'Pause' : 'Play'}</span>
     </button>
     {#if FOCUS_MODE}
       <button class="tool" class:active={ui.focus} onclick={() => ui.toggleFocus()} aria-label="Focus mode (Z)" aria-pressed={ui.focus} title="Focus mode (Z)">
@@ -111,6 +118,9 @@
   .tool:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 9%, transparent); color: var(--ink); }
   .tool:active:not(:disabled) { background: color-mix(in srgb, var(--ink) 14%, transparent); }
   .tool.active { color: var(--accent); }
+  .tool.play i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
+  .tool.play { color: var(--ink); }
+  .tool.play.active { color: var(--ink); }
   .tool.labeled { width: auto; display: inline-flex; align-items: center; gap: 7px; padding: 0 11px 0 9px; font-size: 12.5px; font-weight: 600; }
   @container (max-width: 900px) { .tool.labeled { width: 34px; padding: 0; justify-content: center; } .tool.labeled span { display: none; } }
   .tool:disabled { opacity: 0.35; }

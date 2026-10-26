@@ -423,9 +423,9 @@
             <button class="danger" onclick={deleteAll} disabled={!have.length || working}>Delete all…</button>
           </div>
           {#if player.dl.reciter === dlReciter && (player.dl.running || player.dl.total)}
-            <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax={player.dl.total} aria-valuenow={player.dl.done} aria-label="Download progress"><i style:width="{player.dl.total ? (player.dl.done / player.dl.total) * 100 : 0}%"></i></div>
+            <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(player.bulkProgress * 100)} aria-label="Download progress"><i style:width="{player.bulkProgress * 100}%"></i></div>
             <small class="status" role="status">
-              {#if player.dl.running}Downloading {player.dl.done} of {player.dl.total}…{:else if player.dl.failed}Finished, but {player.dl.failed} could not be downloaded. Run Download all again to retry.{:else}All done.{/if}
+              {#if player.dl.running}Downloading {player.dl.done} of {player.dl.total} · {Math.round(player.bulkProgress * 100)}%{:else if player.dl.failed}Finished, but {player.dl.failed} could not be downloaded. Run Download all again to retry.{:else}All done.{/if}
             </small>
           {/if}
         </div>
@@ -442,6 +442,7 @@
           {@const got = player.isDownloadedFor(dlReciter, c.id)}
           {@const busy = player.dl.running && player.dl.reciter === dlReciter && player.dl.current.includes(c.id)}
           {@const one = player.downloading === c.id && dlReciter === player.reciterId}
+          {@const pr = player.progress[`${dlReciter}:${c.id}`] ?? 0}
           <li>
             <span class="num">{c.id}</span>
             <span class="nm"><b>{c.name_simple}</b><small>{c.translated_name.name} · {c.verses_count} verses</small></span>
@@ -449,7 +450,7 @@
             {#if got}
               <button class="secondary sm" onclick={() => deleteOne(c.id, c.name_simple)} aria-label="Delete {c.name_simple}">Delete</button>
             {:else if busy || one}
-              <span class="sm wait">Downloading…</span>
+              <span class="sm wait" role="status">{#if pr > 0}<span class="mini" aria-hidden="true"><i style:width="{pr * 100}%"></i></span><b>{Math.round(pr * 100)}%</b>{:else}Downloading…{/if}</span>
             {:else}
               <button class="secondary sm" onclick={() => player.downloadMany(dlReciter, [c.id])} disabled={player.dl.running} aria-label="Download {c.name_simple}">Download</button>
             {/if}
@@ -710,7 +711,10 @@
   .dls .nm b { font-weight: 550; font-size: 14px; }
   .dls .nm small, .dls .sz { color: var(--ink-dim); font-size: 12px; }
   .dls .sm { height: 28px; padding: 0 12px; font-size: 12.5px; justify-self: end; display: inline-grid; place-items: center; }
-  .dls .wait { color: var(--ink-dim); }
+  .dls .wait { color: var(--ink-dim); display: inline-flex; align-items: center; gap: 8px; }
+  .dls .wait b { font-weight: 600; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .dls .mini { width: 44px; height: 5px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 14%, transparent); overflow: hidden; }
+  .dls .mini i { display: block; height: 100%; background: var(--accent); transition: width 0.25s linear; }
   .dls .none { display: block; padding: 28px; text-align: center; color: var(--ink-dim); }
   .dlhead { border-top: 0 !important; padding-bottom: 10px; }
   .stack .inline button { white-space: nowrap; }

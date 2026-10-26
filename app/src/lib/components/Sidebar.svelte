@@ -1,10 +1,79 @@
 <script lang="ts">
   import { bookmarks } from '$lib/bookmarks.svelte';
+  import { confirm } from '$lib/confirm.svelte';
   import { player } from '$lib/player.svelte';
   import { settings } from '$lib/settings.svelte';
   import { ui } from '$lib/ui.svelte';
 
   let query = $state('');
+
+  // right-click on a surah: read it, listen to it, keep it offline
+  let menu = $state<{ id: number; x: number; y: number } | null>(null);
+  let menuEl = $state<HTMLElement>();
+  const target = $derived(menu ? player.chapters.find((c) => c.id === menu!.id) : undefined);
+  const nameOf = (c: { name_simple: string; name_arabic: string }) => (settings.arabicNames ? c.name_arabic : c.name_simple);
+  const savedAudio = $derived(target ? player.isChapterDownloaded(target.id) : false);
+  const fetchingAudio = $derived(
+    !!target && (player.progress[`${player.reciterId}:${target.id}`] !== undefined || (player.dl.running && player.dl.current.includes(target.id) && player.dl.reciter === player.reciterId))
+  );
+  const fetchPct = $derived.by(() => {
+    const p = target ? player.progress[`${player.reciterId}:${target.id}`] : undefined;
+    return p !== undefined && p >= 0 ? Math.round(p * 100) : null;
+  });
+  const reciterName = $derived(player.reciters.find((r) => r.id === player.reciterId)?.name ?? 'this reciter');
+
+  function openMenu(e: MouseEvent, id: number) {
+    e.preventDefault();
+    // the pointer is in screen pixels; the menu sits inside the (possibly scaled) interface
+    const z = settings.uiScale;
+    const W = 248 * z;
+    const H = 230 * z;
+    menu = { id, x: Math.max(8, Math.min(e.clientX, innerWidth - W - 8)) / z, y: Math.max(8, Math.min(e.clientY, innerHeight - H - 8)) / z };
+    queueMicrotask(() => menuEl?.querySelector<HTMLElement>('button')?.focus());
+  }
+  const closeMenu = () => (menu = null);
+  function menuKey(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      closeMenu();
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const items = [...(menuEl?.querySelectorAll<HTMLElement>('button:not(:disabled)') ?? [])];
+      const i = items.indexOf(document.activeElement as HTMLElement);
+      items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]?.focus();
+    }
+  }
+  function read() {
+    const id = menu!.id;
+    closeMenu();
+    ui.closeSettings();
+    player.load(id, false);
+  }
+  function listen() {
+    const id = menu!.id;
+    closeMenu();
+    ui.closeSettings();
+    player.load(id, true);
+  }
+  function saveAudio() {
+    const id = menu!.id;
+    closeMenu();
+    player.downloadMany(player.reciterId, [id]);
+  }
+  async function removeAudio() {
+    const c = target!;
+    closeMenu();
+    const ok = await confirm.ask({
+      danger: true,
+      steps: [{ title: `Delete ${c.name_simple}?`, body: `Removes the saved recitation by ${reciterName}. You can download it again later.`, ok: 'Delete recitation' }]
+    });
+    if (ok) await player.removeAudio(player.reciterId, c.id);
+  }
+  function copyName() {
+    const c = target!;
+    closeMenu();
+    navigator.clipboard?.writeText(`${c.name_simple} (${c.name_arabic}) ${c.id}`).catch(() => {});
+  }
   const closed = $derived(!settings.sidebar || ui.focus || ui.settingsOpen);
   const go = (ch: number, v: number) => player.goTo(ch, v);
 
@@ -80,7 +149,7 @@
     <ul bind:this={list}>
       {#each shown as c (c.id)}
         <li>
-          <button class:on={c.id === player.chapter} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }}>
+          <button class:on={c.id === player.chapter} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
             <span class="num">{c.id}</span>
             <span class="names">
               <b>{settings.arabicNames ? c.name_arabic : c.name_simple}</b>
@@ -95,6 +164,36 @@
     {/if}
   </div>
 </aside>
+
+<svelte:window onpointerdown={(e) => menu && !(e.target as HTMLElement).closest('.cm') && closeMenu()} onresize={closeMenu} onblur={closeMenu} />
+
+{#if menu && target}
+  <div class="cm" bind:this={menuEl} style:left="{menu.x}px" style:top="{menu.y}px" role="menu" aria-label="{target.name_simple} options" tabindex="-1" onkeydown={menuKey}>
+    <header><b>{nameOf(target)}</b><small>{target.id} · {target.verses_count} verses</small></header>
+    <button role="menuitem" onclick={read}>
+      <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5.2C8.4 4.2 5.6 3.8 2.8 4.4v10.8c2.8-.6 5.6-.2 7.2.8 1.6-1 4.4-1.4 7.2-.8V4.4c-2.8-.6-5.6-.2-7.2.8zM10 5.2V16" /></svg>Read
+    </button>
+    <button role="menuitem" onclick={listen}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="M7.5 4.6v14.8a.8.8 0 0 0 1.22.68l12-7.4a.8.8 0 0 0 0-1.36l-12-7.4a.8.8 0 0 0-1.22.68z" fill="currentColor" /></svg>Listen<em>{reciterName}</em>
+    </button>
+    {#if savedAudio}
+      <button role="menuitem" onclick={removeAudio}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="10" fill="currentColor" /><path d="m7.6 12.3 3.3 3.2 5.6-6.4" fill="none" stroke="var(--panel)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Saved offline<em>Remove</em>
+      </button>
+    {:else if fetchingAudio}
+      <button role="menuitem" disabled>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" /></svg>Downloading<em>{fetchPct === null ? '…' : `${fetchPct}%`}</em>
+      </button>
+    {:else}
+      <button role="menuitem" onclick={saveAudio} disabled={player.dl.running}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" /></svg>Download audio
+      </button>
+    {/if}
+    <button role="menuitem" onclick={copyName}>
+      <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="9" height="9" rx="2" /><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /></svg>Copy name
+    </button>
+  </div>
+{/if}
 
 <style>
   aside { flex: none; width: 324px; overflow: hidden; background: var(--bg-2); transition: width 0.34s var(--ease), opacity 0.25s; }
@@ -132,4 +231,16 @@
   .empty svg { color: var(--ink-faint); }
   .empty p { font-size: 15px; font-weight: 600; color: var(--ink); }
   .empty small { display: block; max-width: 24ch; font-size: 13px; line-height: 1.55; white-space: normal; overflow: visible; }
+  li button.ctx { background: color-mix(in srgb, var(--ink) 9%, transparent); }
+
+  .cm { position: fixed; z-index: 90; width: 248px; padding: 6px; display: flex; flex-direction: column; gap: 1px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 44px -14px #000b; animation: cm 0.14s var(--ease); }
+  @keyframes cm { from { opacity: 0; transform: translateY(-4px) scale(0.98); } }
+  .cm header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 8px 10px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+  .cm header b { font-size: 14px; font-weight: 600; }
+  .cm header small { color: var(--ink-dim); font-size: 11.5px; white-space: nowrap; }
+  .cm button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; text-align: left; color: var(--ink); }
+  .cm button:hover:not(:disabled), .cm button:focus-visible { background: color-mix(in srgb, var(--ink) 10%, transparent); outline: 0; }
+  .cm button:disabled { opacity: 0.55; }
+  .cm button svg { flex: none; color: var(--ink-dim); }
+  .cm button em { margin-left: auto; padding-left: 8px; font-style: normal; font-weight: 400; font-size: 12px; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; }
 </style>

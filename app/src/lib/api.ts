@@ -1,4 +1,4 @@
-import { RECITERS } from './reciters';
+import { RECITERS, REMOVED_RECITERS } from './reciters';
 import type { Chapter, ChapterAudio, Reciter, TranslationInfo, Verse, WordTiming } from './types';
 
 const V4 = 'https://api.quran.com/api/v4';
@@ -34,7 +34,7 @@ export async function fetchReciters(): Promise<Reciter[]> {
       const id = Number(r.id);
       const name = String(r.name ?? r.reciter_name ?? '');
       const style = typeof r.style === 'string' ? r.style : ((r.style as { name?: string } | null)?.name ?? null);
-      if (id && name && !known.has(id) && id !== 97) out.push({ id, name, style });
+      if (id && name && !known.has(id) && id !== 97 && !(id in REMOVED_RECITERS)) out.push({ id, name, style });
     }
   } catch {
     /* the bundled list is complete enough on its own */
