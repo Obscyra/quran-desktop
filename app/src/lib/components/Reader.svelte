@@ -9,6 +9,7 @@
   import { ui } from '$lib/ui.svelte';
   import End from './End.svelte';
   import PageSheet from './PageSheet.svelte';
+  import TranslationPicker from './TranslationPicker.svelte';
   import Word from './Word.svelte';
 
   const reading = $derived(settings.mode === 'reading');
@@ -131,24 +132,10 @@
           </button>
         {/if}
       {:else}
-        <label class="pick"><span>Translation</span>
-          <select value={settings.translation} onchange={(e) => setTranslation(Number(e.currentTarget.value))} aria-label="Translation">
-            <option value={0}>None</option>
-            {#each translations.grouped as [lang, list] (lang)}
-              <optgroup label={lang}>{#each list as t (t.id)}<option value={t.id}>{t.name}</option>{/each}</optgroup>
-            {/each}
-          </select>
-        </label>
+        <label class="pick"><span>Translation</span><TranslationPicker compact onpick={setTranslation} /></label>
       {/if}
     {:else}
-      <label class="pick"><span>Translation</span>
-        <select value={settings.translation} onchange={(e) => setTranslation(Number(e.currentTarget.value))} aria-label="Translation">
-          <option value={0}>None</option>
-          {#each translations.grouped as [lang, list] (lang)}
-            <optgroup label={lang}>{#each list as t (t.id)}<option value={t.id}>{t.name}</option>{/each}</optgroup>
-          {/each}
-        </select>
-      </label>
+      <label class="pick"><span>Translation</span><TranslationPicker compact onpick={setTranslation} /></label>
       <div class="seg" role="radiogroup" aria-label="Word meanings">
         {#each MEANINGS as m (m.id)}
           <button role="radio" aria-checked={settings.wordMeaning === m.id} onclick={() => (settings.wordMeaning = m.id)}>{m.name === 'Below' ? 'Word by word' : m.name === 'Hover' ? 'Meanings on hover' : 'No meanings'}</button>
@@ -295,8 +282,6 @@
   .icon:disabled { opacity: 0.35; }
   .size { display: inline-flex; }
   .pick { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-dim); flex: none; }
-  .pick select { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); border: 0; border-radius: 8px; height: 28px; padding: 0 8px; font: inherit; max-width: 240px; }
-  option, optgroup { background: var(--panel); color: var(--ink); }
 
   /* ───── page stage ───── */
   .stage { flex: 1; min-height: 0; position: relative; display: grid; place-items: center; container-type: size; padding: 0 12px; }

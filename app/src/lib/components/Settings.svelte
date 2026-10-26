@@ -1,5 +1,6 @@
 <script lang="ts">
   import ReciterPicker from './ReciterPicker.svelte';
+  import TranslationPicker from './TranslationPicker.svelte';
   import { onMount } from 'svelte';
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { pageFonts } from '$lib/fonts.svelte';
@@ -290,14 +291,7 @@
       </div>
       <div class="row">
         <div class="label"><h3>Translation</h3><p>Shown under each verse and in Reading → Translation. Saved with the surah for offline use.</p></div>
-        <select value={settings.translation} onchange={(e) => setTranslation(Number(e.currentTarget.value))} aria-label="Translation">
-          <option value={0}>None</option>
-          {#each translations.grouped as [lang, list] (lang)}
-            <optgroup label={lang}>
-              {#each list as t (t.id)}<option value={t.id}>{t.name}</option>{/each}
-            </optgroup>
-          {/each}
-        </select>
+        <TranslationPicker onpick={setTranslation} />
       </div>
       {#if settings.translation}
         <div class="row">
@@ -658,7 +652,7 @@
   .rm { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: var(--ink-dim); }
   .rm:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
   .rp-wrap { justify-self: start; max-width: 100%; }
-  .row > :global(.toggle), .row > .times, .row > .time, .row > .text, .row > select, .row > .seg, .row > button.primary, .row > button.secondary, .row > .note { justify-self: start; }
+  .row > :global(.toggle), .row > .times, .row > .time, .row > .text, .row > :global(.tp-btn), .row > .seg, .row > button.primary, .row > button.secondary, .row > .note { justify-self: start; }
 
   .preview { background: var(--surface); border-radius: 16px; padding: 22px 28px; margin-bottom: 8px; text-align: center; }
   .preview p { font-family: var(--ar-font); font-size: var(--ar-size); line-height: var(--ar-lh); color: var(--ink); }
@@ -690,7 +684,6 @@
   .seg button:hover { color: var(--ink); }
   .seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 550; }
 
-  select { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font: inherit; max-width: 100%; min-width: 240px; }
   input[type='range'] { width: min(100%, 360px); accent-color: var(--accent); height: 28px; }
 
   .toggle { width: 42px; height: 24px; border-radius: 999px; background: var(--line); position: relative; transition: background 0.25s; flex: none; }
