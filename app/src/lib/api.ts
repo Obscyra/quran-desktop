@@ -8,7 +8,8 @@ async function getJson<T>(url: string, tries = 3): Promise<T> {
   let last: unknown;
   for (let i = 0; i < tries; i++) {
     try {
-      const res = await fetch(url);
+      // a stalled connection must end in an error, not hang for ever
+      const res = await fetch(url, { signal: AbortSignal.timeout(25000) });
       if (res.ok) return (await res.json()) as T;
       last = new Error(`${res.status} ${url}`);
     } catch (e) {

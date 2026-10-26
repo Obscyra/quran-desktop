@@ -10,6 +10,7 @@
   import { SCRIPTS, settings, type Highlight, type PageLook, type PageType, type Script, type WordMeaning } from '$lib/settings.svelte';
   import { THEMES } from '$lib/themes';
   import { translations } from '$lib/translations.svelte';
+  import { autocache, KEEP_DAYS } from '$lib/autocache.svelte';
   import { confirm } from '$lib/confirm.svelte';
   import { notifier } from '$lib/notifications.svelte';
   import { FOCUS_MODE, ui, type SettingsArea } from '$lib/ui.svelte';
@@ -412,6 +413,10 @@
         <div class="rp-wrap"><ReciterPicker value={dlReciter} onpick={(id) => (dlReciter = id)} /></div>
       </div>
       <div class="row">
+        <div class="label"><h3>Keep favourites offline</h3><p>A surah you listen to on three different days in a month is saved for offline use by itself. If you do not listen to it for {KEEP_DAYS} days, it is removed again. Recitations you download yourself are never removed.</p></div>
+        {@render toggle(settings.autoCache, (v) => (settings.autoCache = v), 'Keep favourites offline')}
+      </div>
+      <div class="row">
         <div class="label"><h3>{have.length} of {player.chapters.length || 114} surahs</h3><p>{mb(haveBytes)} MB stored for {dlName}.</p></div>
         <div class="stack">
           <div class="inline">
@@ -445,7 +450,7 @@
           {@const pr = player.progress[`${dlReciter}:${c.id}`] ?? 0}
           <li>
             <span class="num">{c.id}</span>
-            <span class="nm"><b>{c.name_simple}</b><small>{c.translated_name.name} · {c.verses_count} verses</small></span>
+            <span class="nm"><b>{c.name_simple}</b><small>{c.translated_name.name} · {c.verses_count} verses{#if got && autocache.isAuto(`${dlReciter}:${c.id}`)}{' · '}<span class="auto" title="Saved because you listen to it regularly. Removed after {KEEP_DAYS} days without listening.">kept automatically, {autocache.daysLeft(`${dlReciter}:${c.id}`)} days left</span>{/if}</small></span>
             <span class="sz">{got ? `${mb(sizes.get(`${dlReciter}:${c.id}`) ?? 0)} MB` : ''}</span>
             {#if got}
               <button class="secondary sm" onclick={() => deleteOne(c.id, c.name_simple)} aria-label="Delete {c.name_simple}">Delete</button>
@@ -715,6 +720,7 @@
   .dls .wait b { font-weight: 600; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
   .dls .mini { width: 44px; height: 5px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 14%, transparent); overflow: hidden; }
   .dls .mini i { display: block; height: 100%; background: var(--accent); transition: width 0.25s linear; }
+  .dls .auto { color: var(--accent); }
   .dls .none { display: block; padding: 28px; text-align: center; color: var(--ink-dim); }
   .dlhead { border-top: 0 !important; padding-bottom: 10px; }
   .stack .inline button { white-space: nowrap; }

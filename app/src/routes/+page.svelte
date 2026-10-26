@@ -10,6 +10,7 @@
   import { applyTheme, resolveTheme } from '$lib/themes';
   import { ui } from '$lib/ui.svelte';
   import { updater } from '$lib/updater.svelte';
+  import NetBar from '$lib/components/NetBar.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import Reader from '$lib/components/Reader.svelte';
   import PlayerBar from '$lib/components/PlayerBar.svelte';
@@ -145,6 +146,7 @@
     {/if}
   </div>
   <PlayerBar />
+  <NetBar />
   <WordMenu />
   <NoticeCard />
   <ConfirmDialog />
