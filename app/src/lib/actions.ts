@@ -46,3 +46,7 @@ export async function copyVerse(verse: number) {
 }
 
 export const toggleBookmark = (verse: number) => bookmarks.toggle(player.chapter, verse);
+
+/** Back: out of Settings if it is open, otherwise to the previous place in the trail. */
+export const goBack = () => (ui.settingsOpen ? ui.closeSettings() : player.navigate(-1));
+export const goForward = () => player.navigate(1);

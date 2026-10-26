@@ -3,6 +3,7 @@
   import { pageFonts } from '$lib/fonts.svelte';
   import { notifier } from '$lib/notifications.svelte';
   import { player } from '$lib/player.svelte';
+  import { goBack, goForward } from '$lib/actions';
   import { isTauri } from '$lib/platform';
   import { reader } from '$lib/reader.svelte';
   import { settings } from '$lib/settings.svelte';
@@ -52,6 +53,15 @@
       pageFonts.ensure(pages);
     }
   });
+
+  /** The back and forward buttons on the side of a mouse (buttons 3 and 4) walk the same trail as the arrows. */
+  function sideButton(e: MouseEvent) {
+    if (e.button !== 3 && e.button !== 4) return;
+    e.preventDefault();
+    if (e.type !== 'mouseup') return;
+    if (e.button === 3) goBack();
+    else if (player.canForward) goForward();
+  }
 
   function keys(e: KeyboardEvent) {
     const t = e.target as HTMLElement;
@@ -122,7 +132,7 @@
   });
 </script>
 
-<svelte:window onkeydown={keys} onmousemove={toChrome} />
+<svelte:window onkeydown={keys} onmousemove={toChrome} onmousedown={sideButton} onmouseup={sideButton} onauxclick={sideButton} />
 
 <div class="app" class:focus={ui.focus} class:idle={ui.focus && !ui.chromeVisible}>
   <TitleBar hidden={ui.focus && !ui.chromeVisible} />

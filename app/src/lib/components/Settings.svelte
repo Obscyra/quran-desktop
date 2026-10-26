@@ -12,7 +12,7 @@
   import { translations } from '$lib/translations.svelte';
   import { confirm } from '$lib/confirm.svelte';
   import { notifier } from '$lib/notifications.svelte';
-  import { ui, type SettingsArea } from '$lib/ui.svelte';
+  import { FOCUS_MODE, ui, type SettingsArea } from '$lib/ui.svelte';
   import { updater } from '$lib/updater.svelte';
 
   const AREAS: { id: SettingsArea; name: string; hint: string; group: string }[] = [
@@ -23,7 +23,7 @@
     { id: 'audio', name: 'Listening', hint: 'Player, reciter, follow along', group: 'Listen' },
     { id: 'manager', name: 'Audio manager', hint: 'Download or delete recitations', group: 'Listen' },
     { id: 'reminders', name: 'Reminders', hint: 'Notifications, verse of the day', group: 'App' },
-    { id: 'focus', name: 'Focus & screen', hint: 'Distraction-free reading', group: 'App' },
+    { id: 'focus', name: 'Screen', hint: 'Full screen, keep awake', group: 'App' },
     { id: 'shortcuts', name: 'Shortcuts', hint: 'Keyboard commands', group: 'App' },
     { id: 'updates', name: 'Updates', hint: 'Version and releases', group: 'App' },
     { id: 'data', name: 'Data & about', hint: 'Storage, bookmarks, reset, credits', group: 'App' }
@@ -513,10 +513,12 @@
     {/if}
 
     {#if ui.area === 'focus'}
+      {#if FOCUS_MODE}
       <div class="row">
         <div class="label"><h3>Focus mode</h3><p>Hides the surah list and controls and goes full screen. Move the mouse to bring the player back. Press Esc to leave.</p></div>
         <button class="primary" onclick={() => ui.toggleFocus()}>{ui.focus ? 'Leave focus mode' : 'Enter focus mode'}</button>
       </div>
+      {/if}
       <div class="row">
         <div class="label"><h3>Full screen</h3><p>Use the whole display without changing the layout.</p></div>
         <button class="secondary" onclick={() => ui.toggleFullscreen()}>{ui.fullscreen ? 'Exit full screen' : 'Enter full screen'}</button>
@@ -525,10 +527,12 @@
         <div class="label"><h3>Keep the screen on</h3><p>Stop the display sleeping while a recitation plays.</p></div>
         {@render toggle(settings.keepAwake, (v) => (settings.keepAwake = v), 'Keep screen on')}
       </div>
+      {#if FOCUS_MODE}
       <div class="row">
         <div class="label"><h3>Quiet in focus mode</h3><p>Update prompts stay hidden while you are in focus mode. For notifications from other apps, switch on Do Not Disturb in Windows (Focus) or macOS (Focus); apps are not allowed to change that for you.</p></div>
         <span class="note">Built in</span>
       </div>
+      {/if}
     {/if}
 
     {#if ui.area === 'shortcuts'}
@@ -543,10 +547,10 @@
           <dt>T</dt><dd>Two-page spread</dd>
           <dt>L</dt><dd>Show or hide the listening bar</dd>
           <dt>B</dt><dd>Show or hide the surah list</dd>
-          <dt>Z</dt><dd>Focus mode</dd>
+          {#if FOCUS_MODE}<dt>Z</dt><dd>Focus mode</dd>{/if}
           <dt>F</dt><dd>Full screen</dd>
           <dt>,</dt><dd>Settings</dd>
-          <dt>Esc</dt><dd>Close a menu, leave focus or close settings</dd>
+          <dt>Esc</dt><dd>Close a menu or leave Settings</dd>
         </dl>
       </div>
     {/if}

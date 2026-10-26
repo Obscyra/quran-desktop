@@ -21,6 +21,9 @@ export interface Pick {
   pos: number;
 }
 
+/** Focus mode is switched off for now: set to true to bring back its button, shortcut and settings. */
+export const FOCUS_MODE = false;
+
 class Ui {
   settingsOpen = $state(false);
   area = $state<SettingsArea>('appearance');
@@ -66,6 +69,7 @@ class Ui {
   }
 
   async toggleFocus() {
+    if (!FOCUS_MODE) return;
     this.focus = !this.focus;
     this.settingsOpen = false;
     this.chromeVisible = true;

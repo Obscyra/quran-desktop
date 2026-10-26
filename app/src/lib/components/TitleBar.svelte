@@ -3,13 +3,13 @@
   import { detectOs, onWindowResized, winClose, winIsMaximized, winMinimize, winToggleMaximize } from '$lib/platform';
   import { player } from '$lib/player.svelte';
   import { settings } from '$lib/settings.svelte';
-  import { ui } from '$lib/ui.svelte';
+  import { goBack, goForward } from '$lib/actions';
+  import { FOCUS_MODE, ui } from '$lib/ui.svelte';
 
   let { hidden = false }: { hidden?: boolean } = $props();
 
   const os = detectOs();
   /** Back leaves Settings first; otherwise it steps back through the surahs you opened. */
-  const back = () => (ui.settingsOpen ? ui.closeSettings() : player.navigate(-1));
   let maximized = $state(false);
 
   onMount(() => {
@@ -28,10 +28,10 @@
       <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5" /><path d="M7.5 3.5v13" />{#if settings.sidebar}<path d="M2.5 6a2.5 2.5 0 0 1 2.5-2.5h2.5v13H5A2.5 2.5 0 0 1 2.5 14z" fill="currentColor" stroke="none" opacity=".35" />{/if}</svg>
     </button>
     <div class="hist" role="group" aria-label="History">
-      <button class="tool" onclick={back} disabled={!player.canBack && !ui.settingsOpen} aria-label="Back" title="Back">
+      <button class="tool" onclick={goBack} disabled={!player.canBack && !ui.settingsOpen} aria-label="Back" title="Back">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5" /></svg>
       </button>
-      <button class="tool" onclick={() => player.navigate(1)} disabled={!player.canForward} aria-label="Forward" title="Forward">
+      <button class="tool" onclick={goForward} disabled={!player.canForward} aria-label="Forward" title="Forward">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5 13 10l-5.5 5.5" /></svg>
       </button>
     </div>
@@ -54,9 +54,11 @@
     <button class="tool" class:active={ui.listening || settings.listenBar === 'always'} onclick={() => ui.toggleListening()} disabled={settings.listenBar === 'always'} aria-label="Listening bar (L)" aria-pressed={ui.listening || settings.listenBar === 'always'} title="Listen (L)">
       <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12V10a6.5 6.5 0 0 1 13 0v2" /><rect x="2.5" y="11.5" width="3.5" height="5.5" rx="1.4" /><rect x="14" y="11.5" width="3.5" height="5.5" rx="1.4" /></svg>
     </button>
-    <button class="tool" class:active={ui.focus} onclick={() => ui.toggleFocus()} aria-label="Focus mode (Z)" aria-pressed={ui.focus} title="Focus mode (Z)">
-      <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 10S4.6 4.5 10 4.5 18.2 10 18.2 10 15.4 15.5 10 15.5 1.8 10 1.8 10z" /><circle cx="10" cy="10" r="2.4" /></svg>
-    </button>
+    {#if FOCUS_MODE}
+      <button class="tool" class:active={ui.focus} onclick={() => ui.toggleFocus()} aria-label="Focus mode (Z)" aria-pressed={ui.focus} title="Focus mode (Z)">
+        <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 10S4.6 4.5 10 4.5 18.2 10 18.2 10 15.4 15.5 10 15.5 1.8 10 1.8 10z" /><circle cx="10" cy="10" r="2.4" /></svg>
+      </button>
+    {/if}
     <button class="tool" class:active={ui.fullscreen} onclick={() => ui.toggleFullscreen()} aria-label="Full screen (F)" aria-pressed={ui.fullscreen} title="Full screen (F)">
       <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5v-4h4M16.5 7.5v-4h-4M3.5 12.5v4h4M16.5 12.5v4h-4" /></svg>
     </button>
