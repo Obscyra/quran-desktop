@@ -14,7 +14,13 @@ export function pickWord(verse: number, pos: number) {
   ui.pick = { chapter: player.chapter, verse, pos };
 }
 
-/** A verse-end marker or a verse number was tapped. */
+/** Left click on a verse number: play the whole verse, no menu. */
+export function sayVerse(verse: number) {
+  ui.pick = null;
+  player.playVerse(verse);
+}
+
+/** Right click on a verse number: the menu with the verse options. */
 export function pickVerse(verse: number) {
   ui.pick = { chapter: player.chapter, verse, pos: 0 };
 }

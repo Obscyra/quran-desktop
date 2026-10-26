@@ -5,12 +5,8 @@
   import { ui } from '$lib/ui.svelte';
 
   let query = $state('');
-  const closed = $derived(!settings.sidebar || ui.focus);
-  /** picking a place from the list also leaves Settings */
-  const go = (ch: number, v: number) => {
-    ui.closeSettings();
-    player.goTo(ch, v);
-  };
+  const closed = $derived(!settings.sidebar || ui.focus || ui.settingsOpen);
+  const go = (ch: number, v: number) => player.goTo(ch, v);
 
   // "55:13" jumps straight to a verse
   const ref = $derived.by(() => {

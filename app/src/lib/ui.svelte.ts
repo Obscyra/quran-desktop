@@ -49,8 +49,12 @@ class Ui {
     this.listening = !this.listening;
   }
 
+  /** the list lives beside the reader, so from Settings this returns to it with the list showing */
   toggleSidebar() {
-    settings.sidebar = !settings.sidebar;
+    if (this.settingsOpen) {
+      this.settingsOpen = false;
+      settings.sidebar = true;
+    } else settings.sidebar = !settings.sidebar;
   }
   toggleSettings() {
     this.settingsOpen = !this.settingsOpen;
