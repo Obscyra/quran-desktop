@@ -42,6 +42,10 @@ of quran_android.
   without word timings (`approx`) get word timings estimated from verse spans in `player.fetchAudio`.
 - Reminders / verse of the day: `notifications.svelte.ts` + `NoticeCard.svelte`; system toasts use
   `tauri-plugin-notification` (Cargo + capability added, not yet compiled on Windows).
+- Smoothness rules (measured with the CPU throttled 4x, see git log): layout changes (sidebar, player bar) are
+  one reflow plus a transform glide, never an animated width/height; the paged reader keeps the current spread and
+  its neighbours mounted (neighbours hidden, laid out when idle); long surahs render in batches (`upto` in
+  `Reader.svelte`); the sweep layers are made by `sweep.ts`; Settings is an overlay over a mounted reader.
 - Left-click a word plays it; right-click opens `WordMenu`. Back/forward trail lives in `player.svelte.ts`.
 - Fonts bundled in `app/static/fonts`: KFGQPC Uthmanic Hafs, IndoPak Nastaleeq (from quran.com).
 

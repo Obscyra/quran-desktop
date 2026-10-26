@@ -52,3 +52,7 @@ export const winIsMaximized = async () => (await appWindow()).isMaximized();
 export async function onWindowResized(cb: () => void): Promise<() => void> {
   return (await appWindow()).onResized(cb);
 }
+
+/** Run `fn` when the browser has nothing better to do (Safari has no requestIdleCallback, so it just waits a moment). */
+export const whenIdle = (fn: () => void): number =>
+  typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(fn, { timeout: 2500 }) : window.setTimeout(fn, 60);

@@ -55,6 +55,11 @@
     }
   });
 
+  const soften = (_: Element, o: { duration: number }) => ({ duration: o.duration, css: (t: number) => `opacity: ${t}` });
+
+  // Settings fades in over the page; the reader stays mounted (so coming back is instant) but is not laid out meanwhile
+  const readerGone = $derived(ui.settingsOpen);
+
   /** The back and forward buttons on the side of a mouse (buttons 3 and 4) walk the same trail as the arrows. */
   function sideButton(e: MouseEvent) {
     if (e.button !== 3 && e.button !== 4) return;
@@ -139,11 +144,13 @@
   <TitleBar hidden={ui.focus && !ui.chromeVisible} />
   <div class="body">
     <Sidebar />
-    {#if ui.settingsOpen}
-      <Settings />
-    {:else}
-      <Reader />
-    {/if}
+    <div class="main">
+      <!-- the reader stays where it is while Settings is open, so coming back is instant -->
+      <div class="pane" class:gone={readerGone} inert={ui.settingsOpen}><Reader /></div>
+      {#if ui.settingsOpen}
+        <div class="over" in:soften={{ duration: 180 }} out:soften={{ duration: 140 }}><Settings /></div>
+      {/if}
+    </div>
   </div>
   <PlayerBar />
   <NetBar />
@@ -163,7 +170,11 @@
   /* `zoom` scales the interface; the height is divided back so the app still fills the window exactly */
   .app { position: relative; display: flex; flex-direction: column; height: calc(100vh / var(--zoom, 1)); zoom: var(--zoom, 1); }
   .app.idle { cursor: none; }
-  .body { flex: 1; min-height: 0; display: flex; }
+  .body { flex: 1; min-height: 0; display: flex; position: relative; }
+  .main { flex: 1; min-width: 0; display: flex; position: relative; }
+  .pane { flex: 1; min-width: 0; display: flex; }
+  .pane.gone { display: none; }
+  .over { position: absolute; inset: 0; display: flex; background: var(--bg); z-index: 5; }
   .toast { position: fixed; top: 52px; right: 14px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 32px -12px #000a; animation: in 0.45s var(--ease); z-index: 40; font-size: 13px; }
   .toast button { padding: 6px 12px; border-radius: 7px; background: var(--accent); color: var(--accent-ink); font-weight: 550; }
   @keyframes in { from { transform: translateY(-12px); opacity: 0; } }

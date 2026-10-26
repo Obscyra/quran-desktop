@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { pageFonts } from '$lib/fonts.svelte';
+  import { whenIdle } from '$lib/platform';
   import type { MushafPage } from '$lib/pages';
   import { player } from '$lib/player.svelte';
   import { reader } from '$lib/reader.svelte';
@@ -12,8 +13,9 @@
     page,
     no = 0,
     last = false,
-    side = 'single'
-  }: { page: MushafPage | null; no?: number; last?: boolean; side?: 'single' | 'left' | 'right' } = $props();
+    side = 'single',
+    live = true
+  }: { page: MushafPage | null; no?: number; last?: boolean; side?: 'single' | 'left' | 'right'; live?: boolean } = $props();
 
   let lines = $state<HTMLElement>();
   const ROWS_PER_PAGE = 15;
@@ -43,29 +45,35 @@
     const z = settings.uiScale;
     const glyph = settings.script === 'mushaf';
     const cap = rowH * (glyph ? 0.74 : 0.6);
-    const measure = () => {
-      let widest = 0;
-      const natural = rows.map((ln) => {
-        let w = 0;
-        // rects are in screen pixels; under a scaled interface convert them back to layout pixels
-        for (const c of ln.children) w += (c as HTMLElement).getBoundingClientRect().width / z;
-        w += Math.max(0, ln.children.length - 1) * parseFloat(getComputedStyle(ln).columnGap || '0');
-        if (!ln.classList.contains('center')) widest = Math.max(widest, w);
-        return w;
-      });
-      return { widest, natural };
+    // rects are in screen pixels; under a scaled interface convert them back to layout pixels
+    const gap = parseFloat(getComputedStyle(rows[0]).columnGap || '0');
+    const width = (ln: HTMLElement) => {
+      let w = 0;
+      for (const c of ln.children) w += (c as HTMLElement).getBoundingClientRect().width / z;
+      return w + Math.max(0, ln.children.length - 1) * gap;
     };
-    // widths scale with the font, so measure at one size, solve for the right one, then check
+    // widths scale with the font: measure every line once, solve for the right size, then check the widest line
     let fs = Math.max(10, cap);
     box.style.setProperty('--fs', `${fs}px`);
-    let { widest, natural } = measure();
-    for (let i = 0; i < 3 && widest; i++) {
-      const next = Math.min(cap, (fs * avail) / widest);
-      if (Math.abs(next - fs) < 0.05) break;
-      natural = natural.map((w) => (w * next) / fs);
-      fs = next;
-      box.style.setProperty('--fs', `${fs.toFixed(2)}px`);
-      ({ widest, natural } = measure());
+    let widest = 0;
+    let widestRow = rows[0];
+    let natural = rows.map((ln) => {
+      const w = width(ln);
+      if (!ln.classList.contains('center') && w > widest) {
+        widest = w;
+        widestRow = ln;
+      }
+      return w;
+    });
+    if (widest) {
+      let next = Math.min(cap, (fs * avail) / widest);
+      for (let i = 0; i < 2 && Math.abs(next - fs) >= 0.05; i++) {
+        natural = natural.map((w) => (w * next) / fs);
+        fs = next;
+        box.style.setProperty('--fs', `${fs.toFixed(2)}px`);
+        const w = width(widestRow);
+        next = Math.min(cap, (fs * avail) / w);
+      }
     }
     box.style.setProperty('--fs', `${fs.toFixed(2)}px`);
     // lines far shorter than the page (a surah's closing line) are centred, not stretched
@@ -73,10 +81,29 @@
   }
 
   let raf = 0;
+  let later = 0;
+  let stale = false;
+  // The page being read is fitted at once; one waiting off-screen is fitted a moment later (and the instant it is
+  // turned to), so a change of room does not make every page on hand work in the same frame.
   const schedule = () => {
     cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(fit);
+    clearTimeout(later);
+    if (live) {
+      stale = false;
+      raf = requestAnimationFrame(fit);
+    } else {
+      stale = true;
+      later = window.setTimeout(() => {
+        whenIdle(() => {
+          stale = false;
+          raf = requestAnimationFrame(fit);
+        });
+      }, 500);
+    }
   };
+  $effect(() => {
+    if (live && stale) untrack(schedule);
+  });
 
   $effect(() => {
     page;
@@ -95,6 +122,7 @@
     return () => {
       ro.disconnect();
       cancelAnimationFrame(raf);
+      clearTimeout(later);
     };
   });
 </script>
