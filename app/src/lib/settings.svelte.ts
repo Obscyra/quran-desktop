@@ -46,6 +46,8 @@ const defaults = {
   repeatSurah: false,
   autoScroll: true,
   keepAwake: true,
+  /** keep surahs you listen to regularly offline, and drop them again after a month without listening */
+  autoCache: true,
   autoHideChrome: true,
   checkUpdates: true,
   /** scale of the whole interface (1 = normal) */
@@ -91,6 +93,7 @@ class Settings {
   repeatSurah = $state(defaults.repeatSurah);
   autoScroll = $state(defaults.autoScroll);
   keepAwake = $state(defaults.keepAwake);
+  autoCache = $state(defaults.autoCache);
   autoHideChrome = $state(defaults.autoHideChrome);
   checkUpdates = $state(defaults.checkUpdates);
   uiScale = $state(defaults.uiScale);

@@ -63,6 +63,8 @@ Get the installer for your system from the **[Releases page](https://github.com/
 ### Offline
 - **Audio manager:** pick a reciter, then download or delete any surah, or all 114 at once. Everything needed to read and follow along is stored: text, page fonts and audio.
 - Recently used surahs are cached, and the next surah is prepared while one plays.
+- **Favourites stay offline by themselves:** a surah you listen to on three different days in a month is saved automatically, and removed again after a month without listening. Recitations you download yourself are never removed.
+- A loading indicator shows when the connection is slow, instead of leaving the app looking frozen.
 
 ### Comfort
 - **Themes:** Night, Black, Madinah, Slate, Paper, Stone and White & Gold, or follow the system.

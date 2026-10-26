@@ -1,4 +1,5 @@
 import { fetchChapterAudio, fetchChapters, fetchIndo, fetchReciters, fetchVerses } from './api';
+import { autocache } from './autocache.svelte';
 import { pageFonts } from './fonts.svelte';
 import * as offline from './offline';
 import { settings } from './settings.svelte';
@@ -30,6 +31,17 @@ class Player {
   active = $state(-1);
   downloaded = $state(new Set<string>());
   downloading = $state<number | null>(null);
+  /** the recitation's details (word timings, file address) are being fetched */
+  fetchingAudio = $state(false);
+  /** the audio is waiting for data it needs in order to carry on */
+  buffering = $state(false);
+  get loadingAudio() {
+    return this.fetchingAudio || this.buffering;
+  }
+  /** anything that makes the reader wait on the network */
+  get busy() {
+    return this.loading || this.loadingAudio;
+  }
   /** verse the reader asked to be taken to (a bookmark, a search); the reader consumes it */
   jump = $state<{ verse: number; n: number } | null>(null);
   /** verse being repeated, if any */
@@ -65,7 +77,11 @@ class Player {
       this.startLoop();
       this.lockScreen();
     });
+    // stalls on a slow connection are shown, not left to look like a hang
+    for (const ev of ['waiting', 'stalled'] as const) this.el.addEventListener(ev, () => (this.buffering = !this.el.paused && !this.el.ended));
+    for (const ev of ['playing', 'canplay', 'error', 'ended', 'emptied'] as const) this.el.addEventListener(ev, () => (this.buffering = false));
     this.el.addEventListener('pause', () => {
+      this.buffering = false;
       this.playing = false;
       cancelAnimationFrame(this.raf);
       this.wake?.release().catch(() => {});
@@ -86,6 +102,8 @@ class Player {
       this.reciterId = REMOVED_RECITERS[this.reciterId];
       localStorage.setItem(LS.reciter, String(this.reciterId));
     }
+    this.refreshDownloads().then(() => this.sweepCache());
+    window.setInterval(() => this.sweepCache(), 12 * 3600 * 1000);
     offline
       .listDownloaded()
       .then((keys) => Promise.all(keys.filter((k) => Number(String(k).split(':')[0]) in REMOVED_RECITERS).map((k) => offline.deleteBlob(Number(String(k).split(':')[0]), Number(String(k).split(':')[1])))))
@@ -158,11 +176,51 @@ class Player {
 
   private async refreshDownloads() {
     this.downloaded = new Set((await offline.listDownloaded()).map(String));
+    autocache.prune(this.downloaded);
+  }
+
+  /** Let go of automatically saved recitations nobody has listened to for a month. */
+  async sweepCache() {
+    for (const key of autocache.expired()) {
+      const [r, ch] = key.split(':').map(Number);
+      await offline.deleteBlob(r, ch);
+    }
+    await this.refreshDownloads();
+  }
+
+  private heardMs = 0;
+  private heardKey = '';
+  private heardCounted = false;
+  private heardAt = 0;
+  /** After about half a minute of a surah, count it as listened to; a regular one is saved for offline. */
+  private trackListening(now: number) {
+    const key = `${this.reciterId}:${this.chapter}`;
+    if (key !== this.heardKey) {
+      this.heardKey = key;
+      this.heardMs = 0;
+      this.heardCounted = false;
+    }
+    const dt = now - this.heardAt;
+    this.heardAt = now;
+    if (dt > 400 || this.heardCounted) return; // a gap means playback was not running
+    this.heardMs += dt * this.el.playbackRate;
+    if (this.heardMs < 30_000) return;
+    this.heardCounted = true;
+    const regular = autocache.heard(key);
+    if (regular && settings.autoCache && !this.downloaded.has(key) && navigator.onLine && this.progress[key] === undefined && !this.dl.running) {
+      const [r, ch] = [this.reciterId, this.chapter];
+      this.fetchOne(r, ch)
+        .then(() => autocache.mark(key))
+        .then(() => this.refreshDownloads())
+        .catch(() => {});
+    }
   }
 
   async load(chapter: number, autoplay: boolean) {
     if (!this.replaying && chapter !== this.chapter && this.at >= 0) this.record(chapter);
     const token = ++this.token;
+    this.fetchingAudio = false;
+    this.buffering = false;
     this.el.pause();
     this.range = null;
     this.loopVerse = null;
@@ -208,6 +266,7 @@ class Player {
   async prepareAudio(): Promise<boolean> {
     if (this.audio) return true;
     const token = this.token;
+    this.fetchingAudio = true;
     try {
       const a = await this.fetchAudio(this.reciterId, this.chapter);
       if (token !== this.token) return false;
@@ -215,8 +274,10 @@ class Player {
       this.el.src = a.url;
       return true;
     } catch {
-      this.error = navigator.onLine ? 'Could not load the recitation.' : 'You are offline. Download this surah to listen offline.';
+      this.error = navigator.onLine ? 'Could not load the recitation. The connection may be slow.' : 'You are offline. Download this surah to listen offline.';
       return false;
+    } finally {
+      if (token === this.token) this.fetchingAudio = false;
     }
   }
 
@@ -549,6 +610,7 @@ class Player {
     this.dlCancel = false;
     this.dlAbort = new AbortController();
     const signal = this.dlAbort.signal;
+    for (const ch of chapters) autocache.release(`${reciter}:${ch}`); // asked for by hand: keep them
     this.dl = { reciter, total: chapters.length, done: 0, failed: 0, running: true, current: [] };
     const queue = [...chapters];
     const worker = async () => {
@@ -585,6 +647,7 @@ class Player {
 
   async download() {
     if (this.downloading) return;
+    autocache.release(`${this.reciterId}:${this.chapter}`); // asked for by hand: keep it
     this.downloading = this.chapter;
     const [r, ch] = [this.reciterId, this.chapter];
     try {
@@ -627,7 +690,10 @@ class Player {
       this.lastStamp = now;
     }
     let t = ct * 1000;
-    if (!this.el.paused) t += Math.min(250, (now - this.lastStamp) * this.el.playbackRate) + 40;
+    if (!this.el.paused) {
+      t += Math.min(250, (now - this.lastStamp) * this.el.playbackRate) + 40;
+      this.trackListening(now);
+    } else this.heardAt = 0;
     const timings = this.audio?.timings;
     if (!timings?.length) return;
     let lo = 0;

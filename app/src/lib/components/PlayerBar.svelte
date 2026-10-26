@@ -22,7 +22,7 @@
 
   /** this surah is on its way (a single download or part of Download all) */
   const fetching = $derived(
-    player.downloading === player.chapter || (player.dl.running && player.dl.reciter === player.reciterId && player.dl.current.includes(player.chapter))
+    player.downloading === player.chapter || player.chapterProgress !== null || (player.dl.running && player.dl.reciter === player.reciterId && player.dl.current.includes(player.chapter))
   );
   const pct = $derived(player.chapterProgress !== null && player.chapterProgress >= 0 ? Math.round(player.chapterProgress * 100) : null);
   const R = 11;
@@ -50,7 +50,7 @@
   <div class="now">
     <button class="np" onclick={showPlaying} title="Go to the verse being recited" aria-label="Now playing: {player.current?.name_simple ?? ''}{playingVerse ? ', verse ' + playingVerse : ''}. Go to it">
       <b>{settings.arabicNames ? (player.current?.name_arabic ?? '—') : (player.current?.name_simple ?? '—')}</b>
-      {#if playingVerse}<span class="vs">Verse {playingVerse}<i>/ {player.current?.verses_count}</i></span>{/if}
+      {#if player.loadingAudio}<span class="vs load">Loading…</span>{:else if playingVerse}<span class="vs">Verse {playingVerse}<i>/ {player.current?.verses_count}</i></span>{/if}
       {#if player.loopVerse}<em>· repeating</em>{/if}
     </button>
     <ReciterPicker compact />
@@ -64,8 +64,10 @@
       <button class="ctl" onclick={() => player.stepVerse(-1)} aria-label="Previous verse" title="Previous verse">
         <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 5.5-6.5 6.5 6.5 6.5" /></svg>
       </button>
-      <button class="play" onclick={() => player.toggle()} aria-label={player.playing ? 'Pause' : 'Play'} >
-        {#if player.playing}
+      <button class="play" onclick={() => player.toggle()} aria-label={player.loadingAudio ? 'Loading the recitation' : player.playing ? 'Pause' : 'Play'} aria-busy={player.loadingAudio}>
+        {#if player.loadingAudio}
+          <i class="wait" aria-hidden="true"></i>
+        {:else if player.playing}
           <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M6 4.5h4v15H6zM14 4.5h4v15h-4z" fill="currentColor" /></svg>
         {:else}
           <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M7.5 4.6v14.8a.8.8 0 0 0 1.22.68l12-7.4a.8.8 0 0 0 0-1.36l-12-7.4a.8.8 0 0 0-1.22.68z" fill="currentColor" /></svg>
@@ -82,6 +84,7 @@
       <span>{fmt(player.time)}</span>
       <div class="bar" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(frac * 100)} aria-valuetext="{fmt(player.time)} of {fmt(player.duration)}" onclick={scrub} onkeydown={seekKey}>
         <i style:width="{frac * 100}%"></i>
+        {#if player.loadingAudio}<span class="clip" aria-hidden="true"><b class="shimmer"></b></span>{/if}
       </div>
       <span>{fmt(player.duration)}</span>
     </div>
@@ -132,6 +135,11 @@
   .dl { position: relative; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); transition: background-color 0.15s, color 0.15s; }
   .dl:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 10%, transparent); }
   .dl.done { color: var(--accent); }
+  .play .wait { width: 20px; height: 20px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--bg) 30%, transparent); border-top-color: var(--bg); animation: spin 0.8s linear infinite; }
+  .vs.load { color: var(--accent); }
+  .bar .clip { position: absolute; inset: 0; overflow: hidden; border-radius: 4px; pointer-events: none; }
+  .bar .shimmer { position: absolute; inset: 0; width: 35%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 70%, transparent), transparent); animation: slide 1.1s ease-in-out infinite; pointer-events: none; }
+  @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
   .dl.busy { color: var(--accent); }
   .dl.busy b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 9.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
   .dl svg.spin { animation: spin 0.9s linear infinite; }
