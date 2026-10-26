@@ -3,7 +3,7 @@ import { pageFonts } from './fonts.svelte';
 import * as offline from './offline';
 import { settings } from './settings.svelte';
 import { ui } from './ui.svelte';
-import { RECITERS } from './reciters';
+import { RECITERS, REMOVED_RECITERS } from './reciters';
 import { dim, light, progress } from './sweep';
 import type { Chapter, ChapterAudio, Reciter, Verse, WordTiming } from './types';
 
@@ -81,6 +81,15 @@ class Player {
         this.el.play().catch(() => {});
       } else if (settings.autoAdvance) this.next(true);
     });
+    // a recitation that is no longer offered: move to its replacement and free its saved audio
+    if (this.reciterId in REMOVED_RECITERS) {
+      this.reciterId = REMOVED_RECITERS[this.reciterId];
+      localStorage.setItem(LS.reciter, String(this.reciterId));
+    }
+    offline
+      .listDownloaded()
+      .then((keys) => Promise.all(keys.filter((k) => Number(String(k).split(':')[0]) in REMOVED_RECITERS).map((k) => offline.deleteBlob(Number(String(k).split(':')[0]), Number(String(k).split(':')[1])))))
+      .then(() => this.refreshDownloads());
     this.refreshDownloads();
     try {
       [this.chapters, this.reciters] = await Promise.all([fetchChapters(), fetchReciters()]);
@@ -186,6 +195,7 @@ class Player {
       } else this.el.removeAttribute('src');
       this.preloadFonts(verses);
       setTimeout(() => token === this.token && this.warmNext(), 2500);
+      if (autoplay) ui.listening = true; // whatever starts the audio also shows the player
       if (autoplay && (await this.prepareAudio())) await this.el.play();
     } catch (e) {
       if (token === this.token) this.error = navigator.onLine ? 'Could not load this surah.' : 'You are offline and this surah is not downloaded.';
@@ -487,9 +497,46 @@ class Player {
     this.preloadFonts(verses);
     const a = (await offline.getAudioMeta(r, ch)) ?? (await this.fetchAudio(r, ch));
     if (await offline.getBlob(r, ch)) return;
-    const res = await fetch(a.url, { signal });
-    if (!res.ok) throw new Error(String(res.status));
-    await offline.putBlob(r, ch, await res.blob());
+    const key = `${r}:${ch}`;
+    this.progress[key] = 0;
+    try {
+      const res = await fetch(a.url, { signal });
+      if (!res.ok) throw new Error(String(res.status));
+      const total = Number(res.headers.get('content-length')) || 0;
+      if (!res.body || !total) {
+        this.progress[key] = -1; // size unknown: no percentage to show
+        await offline.putBlob(r, ch, await res.blob());
+        return;
+      }
+      // read it in pieces so the percentage can move
+      const reader = res.body.getReader();
+      const parts: Uint8Array[] = [];
+      let got = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        parts.push(value);
+        got += value.length;
+        this.progress[key] = Math.min(0.99, got / total);
+      }
+      await offline.putBlob(r, ch, new Blob(parts as BlobPart[], { type: res.headers.get('content-type') ?? 'audio/mpeg' }));
+    } finally {
+      delete this.progress[key];
+    }
+  }
+
+  /** How much of a surah's audio has arrived while it downloads, 0 to 1, by "reciter:surah". */
+  progress = $state<Record<string, number>>({});
+  /** 0 to 1 for the surah in the player right now, or null when it is not downloading */
+  get chapterProgress(): number | null {
+    return this.progress[`${this.reciterId}:${this.chapter}`] ?? null;
+  }
+  /** overall progress of a bulk download, 0 to 1 */
+  get bulkProgress(): number {
+    const { total, done, reciter } = this.dl;
+    if (!total) return 0;
+    const part = this.dl.current.reduce((t, ch) => t + Math.max(0, this.progress[`${reciter}:${ch}`] ?? 0), 0);
+    return Math.min(1, (done + part) / total);
   }
 
   /** Progress of the download manager (bulk or single downloads for any reciter). */
