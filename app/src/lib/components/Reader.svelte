@@ -1,7 +1,9 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { cubicOut } from 'svelte/easing';
   import { copyVerse, toggleBookmark } from '$lib/actions';
   import { bookmarks } from '$lib/bookmarks.svelte';
+  import { whenIdle } from '$lib/platform';
   import { player } from '$lib/player.svelte';
   import { reader } from '$lib/reader.svelte';
   import { settings, type WordMeaning } from '$lib/settings.svelte';
@@ -22,6 +24,42 @@
 
   let scroller = $state<HTMLElement>();
   let lastUserScroll = 0;
+
+  // A long surah is put on the page in small batches (a few frames each), so switching to one never freezes the window.
+  const FIRST = { pages: 2, flow: 30, verses: 6 } as const;
+  const MAXBATCH = { pages: 2, flow: 30, verses: 8 } as const;
+  const kind = $derived(mushafMode ? 'pages' : reading ? 'flow' : 'verses');
+  const total = $derived(mushafMode ? reader.pages.length : player.verses.length);
+  let upto = $state(0);
+  $effect(() => {
+    const k = kind;
+    const t = total;
+    player.chapter;
+    let raf = 0;
+    untrack(() => {
+      upto = Math.min(t, FIRST[k]);
+      let last = performance.now();
+      let batch = 1;
+      const grow = (now: number) => {
+        // the batch grows while frames stay quick and shrinks (or waits a frame) when the machine is busy
+        const dt = now - last;
+        last = now;
+        if (dt > 40) batch = Math.max(1, Math.floor(batch / 2));
+        else {
+          upto = Math.min(t, upto + batch);
+          if (dt < 20) batch = Math.min(MAXBATCH[k], batch + 1);
+        }
+        if (upto < t) raf = requestAnimationFrame(grow);
+      };
+      if (upto < t) raf = requestAnimationFrame(grow);
+    });
+    return () => cancelAnimationFrame(raf);
+  });
+  /** make sure the item at this index is on the page (before scrolling to it) */
+  const reveal = (i: number) => {
+    if (i >= upto) upto = Math.min(total, i + 8);
+  };
+  const indexOfVerse = (n: number) => (mushafMode ? (reader.wordPage.get(`${n}-1`) ?? -1) : player.verses.findIndex((v) => v.n === n));
 
   // each surah opens on its first page
   $effect(() => {
@@ -58,6 +96,7 @@
         if (i !== undefined) reader.show(i);
       } else {
         const id = mushafMode ? `w-${j.verse}-1` : reading ? `t-${j.verse}` : `v-${j.verse}`;
+        reveal(indexOfVerse(j.verse));
         requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'center' }));
       }
       player.jump = null;
@@ -68,6 +107,7 @@
   $effect(() => {
     if (paged || !activeVerse || !scroller || !settings.autoScroll) return;
     if (Date.now() - lastUserScroll < 2500) return;
+    untrack(() => reveal(indexOfVerse(activeVerse)));
     const el = document.getElementById(mushafMode ? `w-${reader.activeKey}` : reading ? `t-${activeVerse}` : `v-${activeVerse}`);
     if (!el) return;
     const box = scroller.getBoundingClientRect();
@@ -94,6 +134,82 @@
     if (Math.abs(dx) > 60) reader.go(dx > 0 ? 1 : -1); // swipe right = forward (right to left reading)
   }
 
+  // The page being read and its neighbours stay on the page (the neighbours hidden), so a turn only moves and
+  // fades pages that are already laid out. Building two new pages at the moment of the turn is what made it stutter.
+  const step = $derived(settings.spread ? 2 : 1);
+  const curKey = $derived(settings.spread ? reader.spread.rightNo : reader.pageIdx);
+  const validKey = (k: number) => (settings.spread ? reader.hasSpread(k) : k >= 0 && k < reader.pages.length);
+  let kept = $state<number[]>([]);
+  let keptFor = '';
+  // While the room around the pages is changing (list, player or window), the waiting pages are left out of the
+  // layout; once things settle they are laid out again, off-screen, ready for the next turn.
+  let waitingReady = $state(false);
+  let resizing = 0;
+  $effect(() => {
+    shape();
+    waitingReady = false;
+    let idle = 0;
+    const t = setTimeout(() => (idle = whenIdle(() => (waitingReady = true))), 700);
+    return () => {
+      clearTimeout(t);
+      window.cancelIdleCallback?.(idle);
+    };
+  });
+  function windowResized() {
+    waitingReady = false;
+    clearTimeout(resizing);
+    resizing = window.setTimeout(() => whenIdle(() => (waitingReady = true)), 700);
+  }
+  $effect(() => {
+    const key = curKey;
+    const st = step;
+    const id = `${settings.spread}:${reader.pages.length}:${player.chapter}`;
+    untrack(() => {
+      // a different surah or layout starts afresh; otherwise the page just left stays until it has faded
+      const keep = id === keptFor ? kept.filter((k) => k !== key && Math.abs(k - key) <= st) : [];
+      keptFor = id;
+      kept = [key, ...keep];
+    });
+    const t = setTimeout(() => {
+      kept = [...new Set([...kept, key - st, key + st].filter(validKey))];
+    }, 450);
+    return () => clearTimeout(t);
+  });
+
+  // When the room around the page changes (the list or the player opening), the page glides to its new size
+  // instead of jumping: it is moved back to where it was and eased into place with transforms only.
+  let stage = $state<HTMLElement>();
+  let before: DOMRect | null = null;
+  const shape = () => `${settings.sidebar}${ui.settingsOpen}${ui.listening}${settings.listenBar}${ui.focus}`;
+  const currentBook = () => {
+    return stage?.querySelector<HTMLElement>('.book.cur') ?? null;
+  };
+  $effect.pre(() => {
+    shape();
+    untrack(() => (before = currentBook()?.getBoundingClientRect() ?? null));
+  });
+  $effect(() => {
+    shape();
+    untrack(() => {
+      const from = before;
+      before = null;
+      const book = currentBook();
+      if (!from || !book || ui.settingsOpen) return;
+      const to = book.getBoundingClientRect();
+      if (!to.width || !to.height) return;
+      const z = settings.uiScale;
+      const dx = (from.left - to.left) / z;
+      const dy = (from.top - to.top) / z;
+      const sx = from.width / to.width;
+      const sy = from.height / to.height;
+      if (Math.abs(dx) < 2 && Math.abs(dy) < 2 && Math.abs(sx - 1) < 0.01 && Math.abs(sy - 1) < 0.01) return;
+      book.animate(
+        [{ transformOrigin: 'top left', transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` }, { transformOrigin: 'top left', transform: 'none' }],
+        { duration: 400, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+      );
+    });
+  });
+
   const MEANINGS: { id: WordMeaning; name: string }[] = [
     { id: 'off', name: 'Off' },
     { id: 'hover', name: 'Hover' },
@@ -107,6 +223,8 @@
   }
   const surahName = $derived(settings.arabicNames ? player.current?.name_arabic : player.current?.name_simple);
 </script>
+
+<svelte:window onresize={windowResized} />
 
 <div
   class="reader"
@@ -165,26 +283,23 @@
     <p class="msg">Loading…</p>
   {:else if paged && reader.page}
     <!-- ───────── Mushaf pages ───────── -->
-    <div class="stage hl-{settings.highlight}" onwheel={wheel} ontouchstart={touchStart} ontouchend={touchEnd} role="presentation">
+    <div class="stage hl-{settings.highlight}" bind:this={stage} onwheel={wheel} ontouchstart={touchStart} ontouchend={touchEnd} role="presentation">
       <!-- Arabic books open from the right: the next page is on the left -->
       <button class="turn next" onclick={() => reader.go(1)} disabled={!reader.canForward} aria-label="Next page (Page Down)">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5" /></svg>
       </button>
 
-      {#if settings.spread}
-        {#key reader.spread.rightNo}
-          <div class="book spread" class:fwd={reader.dir > 0} class:back={reader.dir < 0}>
-            <PageSheet page={reader.spread.left} no={reader.spread.leftNo} side="left" last={reader.spread.left?.page === reader.pages[lastIdx]?.page} />
-            <PageSheet page={reader.spread.right} no={reader.spread.rightNo} side="right" last={reader.spread.right?.page === reader.pages[lastIdx]?.page} />
-          </div>
-        {/key}
-      {:else}
-        {#key reader.pageIdx}
-          <div class="book" class:fwd={reader.dir > 0} class:back={reader.dir < 0}>
-            <PageSheet page={reader.page} last={reader.pageIdx === lastIdx} />
-          </div>
-        {/key}
-      {/if}
+      {#each kept as k (k)}
+        {@const sp = settings.spread ? reader.spreadAt(k) : null}
+        <div class="book" class:spread={settings.spread} class:cur={k === curKey} class:after={k > curKey} class:before={k < curKey} class:ready={waitingReady} inert={k !== curKey} aria-hidden={k !== curKey}>
+          {#if sp}
+            <PageSheet page={sp.left} no={sp.leftNo} side="left" live={k === curKey} last={sp.left?.page === reader.pages[lastIdx]?.page} />
+            <PageSheet page={sp.right} no={sp.rightNo} side="right" live={k === curKey} last={sp.right?.page === reader.pages[lastIdx]?.page} />
+          {:else}
+            <PageSheet page={reader.pages[k]} live={k === curKey} last={k === lastIdx} />
+          {/if}
+        </div>
+      {/each}
 
       <button class="turn prev" onclick={() => reader.go(-1)} disabled={!reader.canBack} aria-label="Previous page (Page Up)">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5 13 10l-5.5 5.5" /></svg>
@@ -212,7 +327,7 @@
       {#if mushafMode}
         <!-- scroll: the printed pages one after another -->
         <div class="pages hl-{settings.highlight}">
-          {#each reader.pages as pg, i (pg.page)}
+          {#each reader.pages.slice(0, upto) as pg, i (pg.page)}
             <div class="pg"><PageSheet page={pg} last={i === lastIdx} /></div>
           {/each}
         </div>
@@ -222,7 +337,7 @@
           {#if !settings.translation}
             <p class="hint">Choose a translation above to read it here.</p>
           {/if}
-          {#each player.verses as v (v.n)}
+          {#each player.verses.slice(0, upto) as v (v.n)}
             <p id="t-{v.n}" class:now={activeVerse === v.n || ui.pick?.verse === v.n && ui.pick.pos === 0}>
               <button class="vn" class:saved={settings.highlightBookmarks && bookmarks.has(player.chapter, v.n)} onclick={() => (ui.pick = { chapter: player.chapter, verse: v.n, pos: 0 })} id="end-{v.n}" aria-label="Verse {v.n} options">{v.n}</button>
               {v.translation ?? ''}
@@ -232,7 +347,7 @@
       {:else}
         <!-- verse by verse -->
         <div class="verses hl-{settings.highlight}">
-          {#each player.verses as v (v.n)}
+          {#each player.verses.slice(0, upto) as v (v.n)}
             {@const saved = bookmarks.has(player.chapter, v.n)}
             <section class="verse" id="v-{v.n}" class:now={activeVerse === v.n || (ui.pick?.verse === v.n)}>
               <div class="tools">
@@ -290,11 +405,13 @@
 
   /* ───── page stage ───── */
   .stage { flex: 1; min-height: 0; position: relative; display: grid; place-items: center; container-type: size; padding: 0 12px; }
-  .book { --sh: min(calc(100cqh - 24px), calc((100cqw - 140px) / 0.66)); animation: turn-fwd 0.34s var(--ease); display: flex; }
+  .book { --sh: min(calc(100cqh - 24px), calc((100cqw - 140px) / 0.66)); grid-area: 1 / 1; display: flex; opacity: 0; visibility: hidden; transition: opacity 0.34s var(--ease), transform 0.34s var(--ease), visibility 0s linear 0.34s; }
+  /* the next pages wait on the left, the earlier ones on the right (Arabic books turn that way) */
+  .book.after { transform: translateX(-28px); }
+  .book.before { transform: translateX(28px); }
+  .book:not(.cur):not(.ready) { content-visibility: hidden; }
+  .book.cur { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
   .book.spread { --sh: min(calc(100cqh - 24px), calc((100cqw - 140px) / 1.32)); }
-  .book.back { animation-name: turn-back; }
-  @keyframes turn-fwd { from { opacity: 0; transform: translateX(-28px); } }
-  @keyframes turn-back { from { opacity: 0; transform: translateX(28px); } }
   .turn { position: absolute; top: 50%; translate: 0 -50%; width: 44px; height: 88px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-dim); transition: background-color 0.15s, color 0.15s, opacity 0.15s; z-index: 2; }
   .turn:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
   .turn:disabled { opacity: 0.2; }

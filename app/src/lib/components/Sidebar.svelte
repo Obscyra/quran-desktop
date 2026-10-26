@@ -196,8 +196,10 @@
 {/if}
 
 <style>
-  aside { flex: none; width: 324px; overflow: hidden; background: var(--bg-2); transition: width 0.34s var(--ease), opacity 0.25s; }
-  aside.closed { width: 0; opacity: 0; }
+  aside { flex: none; width: 324px; overflow: hidden; background: var(--bg-2); z-index: 6; transition: transform 0.38s var(--ease), opacity 0.28s var(--ease); }
+  /* Closed, it leaves the layout at once (the page reflows one time) and slides away; resizing it frame by
+     frame made the page refit on every frame. */
+  aside.closed { position: absolute; left: 0; top: 0; bottom: 0; transform: translateX(-100%); opacity: 0; pointer-events: none; }
   .inner { width: 324px; height: 100%; display: flex; flex-direction: column; min-height: 0; padding: 10px 12px 12px; }
   .search { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 0 12px; height: 38px; border-radius: 10px; background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink-dim); }
   .search:focus-within { background: color-mix(in srgb, var(--ink) 10%, transparent); box-shadow: 0 0 0 2px var(--accent-soft); }

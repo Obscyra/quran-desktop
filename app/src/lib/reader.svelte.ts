@@ -29,14 +29,23 @@ class Reader {
    * The two facing pages of a book spread, read right to left: an even page on the right and the next
    * (odd) page on its left, so page 2 faces page 3. A side with no page of this surah is left blank.
    */
-  get spread(): { right: MushafPage | null; left: MushafPage | null; rightNo: number; leftNo: number } {
+  get spread() {
     const p = this.page?.page ?? 1;
-    const rightNo = p % 2 ? p - 1 : p;
+    return this.spreadAt(p % 2 ? p - 1 : p);
+  }
+
+  /** The spread whose right-hand (even) page is `rightNo`. */
+  spreadAt(rightNo: number): { right: MushafPage | null; left: MushafPage | null; rightNo: number; leftNo: number } {
     const at = (n: number) => {
       const i = this.byNumber.get(n);
       return i === undefined ? null : this.pages[i];
     };
     return { right: at(rightNo), left: at(rightNo + 1), rightNo, leftNo: rightNo + 1 };
+  }
+
+  /** Is there anything of this surah on the spread that starts at `rightNo`? */
+  hasSpread(rightNo: number): boolean {
+    return !!this.pages.length && rightNo <= this.pages[this.pages.length - 1].page && rightNo + 1 >= this.pages[0].page;
   }
 
   get canBack() {
