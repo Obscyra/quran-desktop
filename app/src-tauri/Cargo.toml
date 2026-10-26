@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.0.1-beta"
+version = "0.0.2-beta"
 description = "Free, open-source desktop Quran app"
 authors = ["Obscyra"]
 license = "GPL-3.0-only"
