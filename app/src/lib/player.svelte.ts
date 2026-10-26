@@ -4,6 +4,7 @@ import * as offline from './offline';
 import { settings } from './settings.svelte';
 import { ui } from './ui.svelte';
 import { RECITERS } from './reciters';
+import { dim, light, progress } from './sweep';
 import type { Chapter, ChapterAudio, Reciter, Verse, WordTiming } from './types';
 
 const LS = { reciter: 'quran.reciter', chapter: 'quran.chapter', verse: 'quran.verse' };
@@ -162,6 +163,8 @@ class Player {
     history.replaceState(null, '', `#/${chapter}`);
     this.loading = true;
     this.error = '';
+    dim(this.pEl.el);
+    this.pEl = { id: '', el: null };
     this.active = -1;
     this.time = 0;
     this.duration = 0;
@@ -590,15 +593,22 @@ class Player {
         lo = mid + 1;
       } else hi = mid - 1;
     }
-    if (idx !== this.active) this.active = idx;
     if (idx >= 0) {
       const w = timings[idx];
-      const p = Math.min(1, Math.max(0, (t - w.start) / Math.max(1, w.end - w.start)));
       const id = `w-${w.verse}-${w.pos}`;
-      if (this.pEl.id !== id || !this.pEl.el?.isConnected) this.pEl = { id, el: document.getElementById(id) };
-      this.pEl.el?.style.setProperty('--p', p.toFixed(3));
+      if (this.pEl.id !== id || !this.pEl.el?.isConnected) {
+        dim(this.pEl.el);
+        this.pEl = { id, el: document.getElementById(id) };
+        if (this.pEl.el) light(this.pEl.el);
+      }
+      progress(Math.min(1, Math.max(0, (t - w.start) / Math.max(1, w.end - w.start))));
+    } else if (this.pEl.el) {
+      dim(this.pEl.el);
+      this.pEl = { id: '', el: null };
     }
-    this.time = ct;
+    if (idx !== this.active) this.active = idx;
+    // the clock readout and seek bar do not need 60 updates a second
+    if (Math.abs(ct - this.time) >= 0.1 || ct < this.time) this.time = ct;
     if (this.duration && ct / this.duration > 0.75) this.warmNext();
     const r = this.range;
     if (r && t >= r.end) {

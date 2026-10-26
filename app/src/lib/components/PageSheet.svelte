@@ -160,7 +160,7 @@
 
   .lines { --ar-size: var(--fs, 20px); --ar-lh: 1.2; display: grid; width: 100%; }
   .line { display: flex; justify-content: space-between; align-items: center; white-space: nowrap; column-gap: 0.12em; min-width: 0; }
-  .line { border-radius: 0.3em; transition: background-color 0.25s; }
+  .line { border-radius: 0.3em; transition: background-color 0.45s ease; }
   .line.now { background: color-mix(in srgb, var(--accent) 6%, transparent); }
   .line.center, .line.short { justify-content: center; column-gap: 0.45em; }
   .banner { display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--accent-soft); color: var(--accent); margin: 3px 0; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
