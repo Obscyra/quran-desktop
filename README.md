@@ -46,7 +46,7 @@ Get the installer for your system from the **[Releases page](https://github.com/
 
 ### Reading
 - **Two ways to read**, switched from the top bar: *Verse by Verse* (each verse with its translation and tools) and *Reading* (the printed Mushaf, or the translation alone), the same split as [quran.com](https://quran.com).
-- **Mushaf pages** with a **two-page spread** that opens like a book, single pages with a page turn, or one long scroll. Pages turn right to left.
+- **Mushaf pages** with a **two-page spread** that reads right to left like an Arabic book (page 2 on the right, page 3 on its left), single pages with a page turn, or one long scroll. Page turns glide, and long surahs open without freezing the window.
 - **Seven script styles with a live preview:** Madani Mushaf, Tajweed (colour-coded rules), Uthmani, IndoPak, Naskh, Amiri Quran and Scheherazade.
 - **Page types:** Madani (15 lines, 604 pages) and IndoPak (15 lines, 610 pages), each with a Paper, Frame or Plain look.
 - **Translations:** 120+ in dozens of languages, plus word-by-word meanings and transliteration.
@@ -58,17 +58,19 @@ Get the installer for your system from the **[Releases page](https://github.com/
 - **Word-by-word tracking** that follows the recitation, with a smooth sweep inside each word.
 - **Play one verse or one word.** Click a word to hear it, or a verse number to hear the whole verse. Right-click either one for its meaning, play from here, repeat, bookmark or copy.
 - **Change reciter mid-surah** and the new voice carries on from the same verse.
-- The listening bar opens only when you ask for it.
+- **One-click Play** in the title bar. The player bar opens when you start listening and closes with its cross.
+- **Right-click any surah** in the list to read it, listen to it, download or remove its audio, or copy its name.
 
 ### Offline
-- **Audio manager:** pick a reciter, then download or delete any surah, or all 114 at once. Everything needed to read and follow along is stored: text, page fonts and audio.
+- **Audio manager:** pick a reciter, then download or delete any surah, or all 114 at once, with a live percentage for each. Everything needed to read and follow along is stored: text, page fonts and audio.
+- **Download status at a glance:** an icon in the player shows whether the surah is saved, downloading (with its percentage) or still online.
 - Recently used surahs are cached, and the next surah is prepared while one plays.
 - **Favourites stay offline by themselves:** a surah you listen to on three different days in a month is saved automatically, and removed again after a month without listening. Recitations you download yourself are never removed.
 - A loading indicator shows when the connection is slow, instead of leaving the app looking frozen.
 
 ### Comfort
 - **Themes:** Night, Black, Madinah, Slate, Paper, Stone and White & Gold, or follow the system.
-- **Interface size** from 90% to 150%, independent of the Arabic text size.
+- **Interface size** from 90% to 150%, independent of the Arabic text size. The interface uses the Inter font, bundled with the app, so it looks the same on every machine.
 - **Full screen**, with the screen kept awake while you listen.
 - **Reminders** at times you choose, and the **Verse of the Day** from quran.com in your chosen translation.
 - **In-app updates:** new versions download in the background and install when you restart (Settings → Updates).
@@ -83,6 +85,10 @@ Get the installer for your system from the **[Releases page](https://github.com/
   <tr>
     <td width="50%"><img src="assets/screenshots/audio-manager.png" alt="Audio manager with reciter list"/><br/><sub><b>Audio manager:</b> choose a reciter, then download or delete surahs</sub></td>
     <td width="50%"><img src="assets/screenshots/settings.png" alt="Settings"/><br/><sub><b>Settings</b>, organised into Look, Read, Listen and App</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/screenshots/surah-menu.png" alt="Right-click menu on a surah"/><br/><sub><b>Right-click a surah</b> to read it, listen, or keep its audio offline</sub></td>
+    <td width="50%"><img src="assets/screenshots/translation-picker.png" alt="Searchable translation picker"/><br/><sub><b>Translations:</b> search by name, translator or language</sub></td>
   </tr>
 </table>
 
