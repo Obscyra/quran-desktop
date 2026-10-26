@@ -8,6 +8,8 @@ Data from the Quran.com public API v4. App code is in `app/`; `reference/` (giti
 of quran_android.
 
 ## Owner's rules (do not break)
+- Focus mode is switched off until the owner says so (`FOCUS_MODE = false` in `ui.svelte.ts` hides its button, shortcut and settings).
+- Don't build unless asked; the owner has said "don't build" more than once.
 - Never build until told ("don't build until I say so"). Building = Windows .exe, see below.
 - Everything is free: no ads, no paid features. Beta versions (`x.y.z-beta.n`) until the owner has tested.
 - No mistakes in the Arabic writing. Use the per-page glyph fonts for the Mushaf script.
@@ -25,7 +27,7 @@ of quran_android.
   `has()` must read `tick` to stay reactive.
 - `player.svelte.ts` audio engine: lazy audio load (`prepareAudio`), `playVerse` (range + loop),
   `playFrom`, `playWord` (wbw mp3, or segment offline), `goTo`/`jump` for bookmarks and search.
-- `reader.svelte.ts` page state incl. two-page spread (odd pages right, even left). `pages.ts` groups
+- `reader.svelte.ts` page state incl. two-page spread (even page right, the next odd page left: 2 faces 3). `pages.ts` groups
   words by page/line (normalises by reading order; the API mislabels some verses).
 - `settings.svelte.ts` (localStorage `quran.settings.v2`), `bookmarks.svelte.ts`, `ui.svelte.ts`,
   `actions.ts`, `translations.svelte.ts`, `updater.svelte.ts`, `themes.ts`, `platform.ts`.

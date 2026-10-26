@@ -26,27 +26,27 @@ class Reader {
   }
 
   /**
-   * The two facing pages of a book spread. Odd pages sit on the right, even on the left, as in a
-   * printed Mushaf; a side with no page of this surah is left blank.
+   * The two facing pages of a book spread, read right to left: an even page on the right and the next
+   * (odd) page on its left, so page 2 faces page 3. A side with no page of this surah is left blank.
    */
   get spread(): { right: MushafPage | null; left: MushafPage | null; rightNo: number; leftNo: number } {
     const p = this.page?.page ?? 1;
-    const rightNo = p % 2 ? p : p + 1;
+    const rightNo = p % 2 ? p - 1 : p;
     const at = (n: number) => {
       const i = this.byNumber.get(n);
       return i === undefined ? null : this.pages[i];
     };
-    return { right: at(rightNo), left: at(rightNo - 1), rightNo, leftNo: rightNo - 1 };
+    return { right: at(rightNo), left: at(rightNo + 1), rightNo, leftNo: rightNo + 1 };
   }
 
   get canBack() {
     if (!this.pages.length) return false;
-    return settings.spread ? this.spread.leftNo > this.pages[0].page : this.pageIdx > 0;
+    return settings.spread ? this.spread.rightNo > this.pages[0].page : this.pageIdx > 0;
   }
   get canForward() {
     if (!this.pages.length) return false;
     const last = this.pages[this.pages.length - 1].page;
-    return settings.spread ? this.spread.rightNo < last : this.pageIdx < this.pages.length - 1;
+    return settings.spread ? this.spread.leftNo < last : this.pageIdx < this.pages.length - 1;
   }
 
   go(delta: number) {
@@ -55,8 +55,8 @@ class Reader {
       const target = this.spread.rightNo + 2 * delta;
       const first = this.pages[0].page;
       const last = this.pages[this.pages.length - 1].page;
-      if (target < (first | 1) || target - 1 > last) return;
-      const i = this.byNumber.get(target) ?? this.byNumber.get(target - 1);
+      if (target > last || target + 1 < first) return;
+      const i = this.byNumber.get(target) ?? this.byNumber.get(target + 1);
       if (i === undefined) return;
       this.dir = delta > 0 ? 1 : -1;
       this.pageIdx = i;
@@ -78,7 +78,7 @@ class Reader {
   private spreadContains(index: number) {
     const n = this.pages[index].page;
     const { rightNo } = this.spread;
-    return n === rightNo || n === rightNo - 1;
+    return n === rightNo || n === rightNo + 1;
   }
 }
 

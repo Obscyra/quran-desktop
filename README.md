@@ -51,7 +51,7 @@ Get the installer for your system from the **[Releases page](https://github.com/
 - **Page types:** Madani (15 lines, 604 pages) and IndoPak (15 lines, 610 pages), each with a Paper, Frame or Plain look.
 - **Translations:** 120+ in dozens of languages, plus word-by-word meanings and transliteration.
 - **Bookmarks** with notes, a marked ornament on bookmarked verses, jump to any verse by typing `55:13`, and export or import.
-- **Back and forward** history through the surahs you opened.
+- **Back and forward** history through the surahs you opened, with the arrows in the title bar or the side buttons of your mouse.
 
 ### Listening
 - **19 reciters** from quran.com, with their portraits, speed control, repeat and automatic next surah.
@@ -67,7 +67,7 @@ Get the installer for your system from the **[Releases page](https://github.com/
 ### Comfort
 - **Themes:** Night, Black, Madinah, Slate, Paper, Stone and White & Gold, or follow the system.
 - **Interface size** from 90% to 150%, independent of the Arabic text size.
-- **Focus mode** and full screen, with the screen kept awake while you listen.
+- **Full screen**, with the screen kept awake while you listen.
 - **Reminders** at times you choose, and the **Verse of the Day** from quran.com in your chosen translation.
 - **In-app updates:** new versions download in the background and install when you restart (Settings → Updates).
 
@@ -91,9 +91,9 @@ Get the installer for your system from the **[Releases page](https://github.com/
 | `Space` | Play or pause | `T` | Two-page spread |
 | `←` `→` | Turn the page, or step verses while listening | `L` | Listening bar |
 | `Page Up` `Page Down` | Previous or next page | `B` | Surah list |
-| `P` | Verse by Verse or Reading | `Z` | Focus mode |
-| `R` | Arabic or Translation | `F` | Full screen |
-| `,` | Settings | `Esc` | Close a menu or leave Settings |
+| `P` | Verse by Verse or Reading | `F` | Full screen |
+| `R` | Arabic or Translation | `,` | Settings |
+| `Esc` | Close a menu or leave Settings | | |
 
 ## Build from source
 
