@@ -106,8 +106,9 @@
     padding: 10px 20px; background: var(--bg-2); border-top: 1px solid var(--line); user-select: none; -webkit-user-select: none; z-index: 30;
     transition: transform 0.4s var(--ease), opacity 0.3s var(--ease);
   }
-  footer { max-height: 140px; overflow: hidden; transition: transform 0.4s var(--ease), opacity 0.3s var(--ease), max-height 0.34s var(--ease), padding 0.34s var(--ease); }
-  footer.closed { max-height: 0; padding-block: 0; border-top-width: 0; opacity: 0; }
+  /* Closed, the bar leaves the layout at once (the page below it reflows one time) and slides out over the
+     bottom edge. Animating its height instead made the page refit on every frame, which stuttered. */
+  footer.closed { position: absolute; inset: auto 0 0 0; transform: translateY(100%); opacity: 0; pointer-events: none; }
   .now em { font-style: normal; font-weight: 400; color: var(--accent); }
   .chip.x { width: 28px; padding: 0; display: grid; place-items: center; }
   footer.hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
