@@ -62,6 +62,21 @@ jobs:
       - run: npm ci
         working-directory: app
 
+      - name: Compose the release notes
+        id: notes
+        shell: bash
+        run: |
+          {
+            echo 'body<<NOTES_EOF'
+            if [ -f ".github/release-notes/${GITHUB_REF_NAME}.md" ]; then
+              cat ".github/release-notes/${GITHUB_REF_NAME}.md"
+            else
+              echo "Release ${GITHUB_REF_NAME}."
+            fi
+            cat .github/release-notes/footer.md
+            echo 'NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -71,7 +86,7 @@ jobs:
           projectPath: app
           tagName: ${{ github.ref_name }}
           releaseName: 'Quran ${{ github.ref_name }}'
-          releaseBody: 'Free and open source, no ads. Windows: download the -setup.exe installer. macOS: download the .dmg. Installed apps offer the update from Settings → Updates.'
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           # Installed apps read releases/latest/download/latest.json, and GitHub's "latest" skips
           # pre-releases. Beta builds are therefore published as normal releases (the version in the
