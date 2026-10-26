@@ -10,6 +10,7 @@
   import { applyTheme, resolveTheme } from '$lib/themes';
   import { ui } from '$lib/ui.svelte';
   import { updater } from '$lib/updater.svelte';
+  import ListenPill from '$lib/components/ListenPill.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import Reader from '$lib/components/Reader.svelte';
   import PlayerBar from '$lib/components/PlayerBar.svelte';
@@ -145,6 +146,7 @@
     {/if}
   </div>
   <PlayerBar />
+  <ListenPill />
   <WordMenu />
   <NoticeCard />
   <ConfirmDialog />
@@ -159,7 +161,7 @@
 
 <style>
   /* `zoom` scales the interface; the height is divided back so the app still fills the window exactly */
-  .app { display: flex; flex-direction: column; height: calc(100vh / var(--zoom, 1)); zoom: var(--zoom, 1); }
+  .app { position: relative; display: flex; flex-direction: column; height: calc(100vh / var(--zoom, 1)); zoom: var(--zoom, 1); }
   .app.idle { cursor: none; }
   .body { flex: 1; min-height: 0; display: flex; }
   .toast { position: fixed; top: 52px; right: 14px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 32px -12px #000a; animation: in 0.45s var(--ease); z-index: 40; font-size: 13px; }
