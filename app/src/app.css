@@ -1,0 +1,53 @@
+@import '@fontsource/amiri-quran/400.css';
+@import '@fontsource/scheherazade-new/400.css';
+@import '@fontsource/noto-naskh-arabic/400.css';
+
+@font-face { font-family: 'KFGQPC Uthmanic Hafs'; src: url('/fonts/uthmanic-hafs.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'IndoPak Nastaleeq'; src: url('/fonts/indopak.woff2') format('woff2'); font-display: swap; }
+
+:root {
+  --ui: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  --ar: 'Amiri Quran', 'Traditional Arabic', serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+  transition: background 0.4s var(--ease), color 0.4s var(--ease);
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: default; }
+button:disabled { cursor: default; }
+input[type='range'] { cursor: default; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+::selection { background: var(--accent-soft); }
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+/* Tokens derived from the six theme roles that applyTheme() sets on :root. */
+:root {
+  --bg: #0e0c09; --surface: #1a1611; --ink: #fbf5e6; --muted: #cbbfa6; --accent: #f0c46a; --accent-ink: #1a1408;
+  --bg-2: color-mix(in srgb, var(--bg) 70%, var(--surface));
+  --panel: var(--surface);
+  --line: color-mix(in srgb, var(--ink) 13%, var(--bg));
+  --ink-dim: var(--muted);
+  --ink-faint: color-mix(in srgb, var(--muted) 60%, var(--bg));
+  --accent-soft: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+h1, h2, h3 { text-wrap: balance; }
+main, .view, aside ul { overscroll-behavior: contain; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}

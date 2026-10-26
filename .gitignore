@@ -1,0 +1,7 @@
+reference/
+node_modules/
+.svelte-kit/
+build/
+target/
+*.log
+.DS_Store
