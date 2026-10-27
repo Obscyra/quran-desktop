@@ -18,8 +18,10 @@
   const glyph = $derived(settings.script === 'mushaf' && !!w.glyph && pageFonts.has(w.gp));
   const family = $derived(glyph ? pageFonts.family(w.gp) : settings.fontFamily);
   const tajweed = $derived(settings.script === 'tajweed');
+  // Tajweed text spells some marks differently from the plain text (a small dotted sukun for a sukun, for one), so
+  // the highlight layers must be made from the tajweed letters or they sit behind the word out of line.
   const text = $derived(
-    glyph ? w.glyph : settings.script === 'indopak' ? (w.indo?.text ?? w.text) : w.text
+    glyph ? w.glyph : tajweed ? w.taj.replace(/<\/?rule[^>]*>/g, '') : settings.script === 'indopak' ? (w.indo?.text ?? w.text) : w.text
   );
 
   // The player lights the word being recited straight on its element (no reactive update of every word
@@ -105,9 +107,9 @@
   .t :global(.tj-ham_wasl), .t :global(.tj-slnt), .t :global(.tj-laam_shamsiyah) { color: var(--ink-faint); }
   .t :global(.tj-madda_normal) { color: #e0803a; }
   .t :global(.tj-madda_permissible) { color: #e0a23a; }
-  .t :global(.tj-madda_necessary), .t :global(.tj-madda_obligatory) { color: #d6453d; }
+  .t :global(.tj-madda_necessary), .t :global(.tj-madda_obligatory), .t :global(.tj-madda_obligatory_monfasel), .t :global(.tj-madda_obligatory_mottasel) { color: #d6453d; }
   .t :global(.tj-qalaqah) { color: #3d9ad6; }
-  .t :global(.tj-ikhfa_shafawi), .t :global(.tj-ikhfa) { color: #c75a9a; }
+  .t :global(.tj-ikhafa_shafawi), .t :global(.tj-ikhafa), .t :global(.tj-ikhfa_shafawi), .t :global(.tj-ikhfa) { color: #c75a9a; }
   .t :global(.tj-iqlab) { color: #3dba9a; }
   .t :global(.tj-idgham_shafawi), .t :global(.tj-idgham_ghunnah), .t :global(.tj-idgham_wo_ghunnah), .t :global(.tj-idgham_mutajanisayn), .t :global(.tj-idgham_mutaqaribayn) { color: #7cba3d; }
   .t :global(.tj-ghunnah) { color: #4aa86a; }
