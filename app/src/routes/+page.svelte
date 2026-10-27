@@ -20,6 +20,7 @@
   import NoticeCard from '$lib/components/NoticeCard.svelte';
   import Welcome from '$lib/components/Welcome.svelte';
   import CopyMenu from '$lib/components/CopyMenu.svelte';
+  import Tooltip from '$lib/components/Tooltip.svelte';
   import WordMenu from '$lib/components/WordMenu.svelte';
   import TitleBar from '$lib/components/TitleBar.svelte';
 
@@ -177,6 +178,7 @@
   <NetBar />
   <WordMenu />
   <CopyMenu bind:this={copyMenu} />
+  <Tooltip />
   <NoticeCard />
   {#if ui.welcome}<Welcome />{/if}
   <ConfirmDialog />

@@ -249,9 +249,26 @@
       centerPlaying(true);
     }, 650);
   }
+  // in the scrolling views, the verse at the top of the window is where the app reopens
+  let savePos = 0;
+  function saveScrollPlace() {
+    const box = scroller;
+    if (!box || paged) return;
+    const top = box.getBoundingClientRect().top + 8;
+    const sel = mushafMode ? '[id^="w-"][id$="-1"]' : reading ? '[id^="t-"]' : '[id^="v-"]';
+    for (const el of box.querySelectorAll<HTMLElement>(sel)) {
+      if (el.getBoundingClientRect().bottom > top) {
+        const n = Number(el.id.split('-')[1]);
+        if (n) player.remember(n);
+        return;
+      }
+    }
+  }
   const onscroll = () => {
     checkAway();
     if (Date.now() > busyUntil) moved();
+    clearTimeout(savePos);
+    savePos = window.setTimeout(saveScrollPlace, 500);
   };
   $effect(() => {
     if (settings.lockPlaying && !paged && activeVerse) untrack(() => centerPlaying(true));
@@ -403,11 +420,11 @@
           <button role="radio" aria-checked={settings.flow === 'scroll'} onclick={() => (settings.flow = 'scroll')}>Scroll</button>
         </div>
         <div class="size" role="group" aria-label="Page size">
-          <button class="icon" aria-label="Zoom out" title="Zoom out" disabled={settings.pageZoom <= 0.5} onclick={() => zoomPage(-0.1)}>
+          <button class="icon" aria-label="Zoom out" title={`Zoom out · ${Math.round(settings.pageZoom * 100)}% → ${Math.round(Math.max(0.5, settings.pageZoom - 0.1) * 100)}%`} disabled={settings.pageZoom <= 0.5} onclick={() => zoomPage(-0.1)}>
             <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5" /></svg>
           </button>
-          <span class="pct" aria-live="polite">{Math.round(settings.pageZoom * 100)}%</span>
-          <button class="icon" aria-label="Zoom in" title="Zoom in" disabled={settings.pageZoom >= 3} onclick={() => zoomPage(0.1)}>
+          <span class="pct" aria-live="polite" title="Page zoom: {Math.round(settings.pageZoom * 100)}%">{Math.round(settings.pageZoom * 100)}%</span>
+          <button class="icon" aria-label="Zoom in" title={`Zoom in · ${Math.round(settings.pageZoom * 100)}% → ${Math.round(Math.min(3, settings.pageZoom + 0.1) * 100)}%`} disabled={settings.pageZoom >= 3} onclick={() => zoomPage(0.1)}>
             <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5M8.5 6v5" /></svg>
           </button>
         </div>
@@ -432,10 +449,10 @@
         {/each}
       </div>
       <div class="size" role="group" aria-label="Arabic text size">
-        <button class="icon" aria-label="Zoom out" title="Zoom out" disabled={settings.size <= 24} onclick={() => (settings.size = Math.max(24, settings.size - 4))}>
+        <button class="icon" aria-label="Zoom out" title={`Zoom out · ${Math.round(settings.pageZoom * 100)}% → ${Math.round(Math.max(0.5, settings.pageZoom - 0.1) * 100)}%`} disabled={settings.size <= 24} onclick={() => (settings.size = Math.max(24, settings.size - 4))}>
           <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5" /></svg>
         </button>
-        <button class="icon" aria-label="Zoom in" title="Zoom in" disabled={settings.size >= 96} onclick={() => (settings.size = Math.min(96, settings.size + 4))}>
+        <button class="icon" aria-label="Zoom in" title={`Zoom in · ${Math.round(settings.pageZoom * 100)}% → ${Math.round(Math.min(3, settings.pageZoom + 0.1) * 100)}%`} disabled={settings.size >= 96} onclick={() => (settings.size = Math.min(96, settings.size + 4))}>
           <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5M8.5 6v5" /></svg>
         </button>
       </div>
