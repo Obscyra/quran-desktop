@@ -479,7 +479,7 @@
             {#if got}
               <button class="secondary sm" onclick={() => deleteOne(c.id, c.name_simple)} aria-label="Delete {c.name_simple}">Delete</button>
             {:else if busy || one}
-              <span class="sm wait" role="status">{#if pr > 0}<span class="mini" aria-hidden="true"><i style:width="{pr * 100}%"></i></span><b>{Math.round(pr * 100)}%</b>{:else}Downloading…{/if}</span>
+              <span class="sm wait" role="status">{#if pr > 0}<span class="dlbar" aria-hidden="true"><i style:width="{pr * 100}%"></i></span><b>{Math.round(pr * 100)}%</b>{:else}Downloading…{/if}</span>
             {:else}
               <button class="secondary sm" onclick={() => player.downloadMany(dlReciter, [c.id])} disabled={player.dl.running} aria-label="Download {c.name_simple}">Download</button>
             {/if}
@@ -758,8 +758,8 @@
   .dls .sm { height: 28px; padding: 0 12px; font-size: 12.5px; justify-self: end; display: inline-grid; place-items: center; }
   .dls .wait { color: var(--ink-dim); display: inline-flex; align-items: center; gap: 8px; }
   .dls .wait b { font-weight: 600; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
-  .dls .mini { width: 44px; height: 5px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 14%, transparent); overflow: hidden; }
-  .dls .mini i { display: block; height: 100%; background: var(--accent); transition: width 0.25s linear; }
+  .dls .dlbar { width: 44px; height: 5px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 14%, transparent); overflow: hidden; }
+  .dls .dlbar i { display: block; height: 100%; background: var(--accent); transition: width 0.25s linear; }
   .dls .auto { color: var(--accent); }
   .dls .none { display: block; padding: 28px; text-align: center; color: var(--ink-dim); }
   .dlhead { border-top: 0 !important; padding-bottom: 10px; }
