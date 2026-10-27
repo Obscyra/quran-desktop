@@ -1,0 +1,30 @@
+name: Arabic text report
+description: A word, mark or page in the Arabic looks wrong
+labels: [arabic-text]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Surah and verse (and page, if it is a Mushaf page)
+      placeholder: "2:255, page 42"
+    validations:
+      required: true
+  - type: dropdown
+    id: script
+    attributes:
+      label: Script style
+      options: [Madani Mushaf, Tajweed, Uthmani, IndoPak, Naskh, Amiri Quran, Scheherazade]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What is wrong, and what should it be?
+      description: A screenshot helps. If you can, compare with a printed Mushaf.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version and system
+      placeholder: "0.0.4-beta, Windows 11"
