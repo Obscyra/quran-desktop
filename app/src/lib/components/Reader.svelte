@@ -141,9 +141,18 @@
           );
         } else requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'center' }));
       }
+      if (j.mark) markVerse(j.verse);
       player.jump = null;
     });
   });
+
+  // a verse reached by search, bookmark or a link is outlined for a few seconds, so the eye finds it
+  let markTimer = 0;
+  function markVerse(verse: number) {
+    clearTimeout(markTimer);
+    ui.target = verse;
+    markTimer = window.setTimeout(() => (ui.target = 0), 4000);
+  }
 
   /**
    * Bring the recited verse to the middle of the window. A verse that fits is centred whole; one taller than the
@@ -252,12 +261,23 @@
   let lastTurn = 0;
   function wheel(e: WheelEvent) {
     if (!paged || Math.abs(e.deltaY) < 12) return;
+    // a page bigger than the window scrolls first; the turn comes once its edge is reached
+    const v = view;
+    if (v && v.scrollHeight > v.clientHeight + 2) {
+      const atEnd = e.deltaY > 0 ? v.scrollTop + v.clientHeight >= v.scrollHeight - 2 : v.scrollTop <= 1;
+      if (!atEnd) return;
+    }
     e.preventDefault();
     const now = Date.now();
     if (now - lastTurn < 520) return;
     lastTurn = now;
     reader.go(e.deltaY > 0 ? 1 : -1);
   }
+  const zoomPage = (d: number) => (settings.pageZoom = Math.min(3, Math.max(0.5, Math.round((settings.pageZoom + d) * 10) / 10)));
+  const fitPage = (f: 'fit' | 'fill') => {
+    settings.pageFit = f;
+    settings.pageZoom = 1;
+  };
   let touchX = 0;
   const touchStart = (e: TouchEvent) => (touchX = e.touches[0].clientX);
   function touchEnd(e: TouchEvent) {
@@ -307,9 +327,15 @@
     return () => clearTimeout(t);
   });
 
+  $effect(() => {
+    curKey;
+    untrack(() => view?.scrollTo({ top: 0 }));
+  });
+
   // When the room around the page changes (the list or the player opening), the page glides to its new size
   // instead of jumping: it is moved back to where it was and eased into place with transforms only.
   let stage = $state<HTMLElement>();
+  let view = $state<HTMLElement>();
   let before: DOMRect | null = null;
   const shape = () => `${settings.sidebar}${ui.settingsOpen}${ui.listening}${settings.listenBar}${settings.playerHover}${ui.focus}`;
   const currentBook = () => {
@@ -376,6 +402,19 @@
           <button role="radio" aria-checked={settings.flow === 'page'} onclick={() => (settings.flow = 'page')}>Pages</button>
           <button role="radio" aria-checked={settings.flow === 'scroll'} onclick={() => (settings.flow = 'scroll')}>Scroll</button>
         </div>
+        <div class="size" role="group" aria-label="Page size">
+          <button class="icon" aria-label="Zoom out" title="Zoom out" disabled={settings.pageZoom <= 0.5} onclick={() => zoomPage(-0.1)}>
+            <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5" /></svg>
+          </button>
+          <span class="pct" aria-live="polite">{Math.round(settings.pageZoom * 100)}%</span>
+          <button class="icon" aria-label="Zoom in" title="Zoom in" disabled={settings.pageZoom >= 3} onclick={() => zoomPage(0.1)}>
+            <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5M8.5 6v5" /></svg>
+          </button>
+        </div>
+        <div class="seg" role="radiogroup" aria-label="Page fit">
+          <button role="radio" aria-checked={settings.pageFit === 'fit'} title="Show the whole page" onclick={() => fitPage('fit')}>Fit</button>
+          <button role="radio" aria-checked={settings.pageFit === 'fill'} title="Fill the width of the window" onclick={() => fitPage('fill')}>Fill</button>
+        </div>
         {#if settings.flow === 'page'}
           <button class="icon" class:on={settings.spread} aria-pressed={settings.spread} aria-label="Two-page spread (T)" title="Two-page spread (T)" onclick={() => (settings.spread = !settings.spread)}>
             <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 5.2C8.4 4.2 5.6 3.8 2.8 4.4v10.8c2.8-.6 5.6-.2 7.2.8 1.6-1 4.4-1.4 7.2-.8V4.4c-2.8-.6-5.6-.2-7.2.8zM10 5.2V16" /></svg>
@@ -427,9 +466,10 @@
         <svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5" /></svg>
       </button>
 
+      <div class="view" bind:this={view} style:--pz={settings.pageZoom}>
       {#each kept as k (k)}
         {@const sp = settings.spread ? reader.spreadAt(k) : null}
-        <div class="book" class:spread={settings.spread} class:cur={k === curKey} class:after={k > curKey} class:before={k < curKey} class:ready={waitingReady} inert={k !== curKey} aria-hidden={k !== curKey}>
+        <div class="book" class:fill={settings.pageFit === 'fill'} class:spread={settings.spread} class:cur={k === curKey} class:after={k > curKey} class:before={k < curKey} class:ready={waitingReady} inert={k !== curKey} aria-hidden={k !== curKey}>
           {#if sp}
             <PageSheet page={sp.left} no={sp.leftNo} side="left" live={k === curKey} last={sp.left?.page === reader.pages[lastIdx]?.page} />
             <PageSheet page={sp.right} no={sp.rightNo} side="right" live={k === curKey} last={sp.right?.page === reader.pages[lastIdx]?.page} />
@@ -438,13 +478,14 @@
           {/if}
         </div>
       {/each}
+      </div>
 
       <button class="turn prev" onclick={() => reader.go(-1)} disabled={!reader.canBack} aria-label="Previous page (Page Up)">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5 13 10l-5.5 5.5" /></svg>
       </button>
     </div>
   {:else}
-    <main class="scroll" bind:this={scroller} onwheel={moved} ontouchmove={moved} onscroll={onscroll} onpointerdown={() => (pressing = true)}>
+    <main class="scroll" class:fill={settings.pageFit === 'fill'} style:--pz={settings.pageZoom} bind:this={scroller} onwheel={moved} ontouchmove={moved} onscroll={onscroll} onpointerdown={() => (pressing = true)}>
       {#if player.current}
         <div class="head">
           <p class="kicker">{player.current.revelation_place} · {player.current.verses_count} verses</p>
@@ -476,7 +517,7 @@
             <p class="hint">Choose a translation above to read it here.</p>
           {/if}
           {#each player.verses.slice(0, upto) as v (v.n)}
-            <p id="t-{v.n}" class:now={activeVerse === v.n || ui.pick?.verse === v.n && ui.pick.pos === 0}>
+            <p id="t-{v.n}" class:target={ui.target === v.n} class:now={activeVerse === v.n || ui.pick?.verse === v.n && ui.pick.pos === 0}>
               <button class="vn" class:saved={settings.highlightBookmarks && bookmarks.has(player.chapter, v.n)} onclick={() => (ui.pick = { chapter: player.chapter, verse: v.n, pos: 0 })} id="end-{v.n}" aria-label="Verse {v.n} options">{v.n}</button>
               {v.translation ?? ''}
             </p>
@@ -487,7 +528,7 @@
         <div class="verses hl-{settings.highlight}">
           {#each player.verses.slice(0, upto) as v (v.n)}
             {@const saved = bookmarks.has(player.chapter, v.n)}
-            <section class="verse" id="v-{v.n}" class:now={activeVerse === v.n || (ui.pick?.verse === v.n)}>
+            <section class="verse" id="v-{v.n}" class:target={ui.target === v.n} class:now={activeVerse === v.n || (ui.pick?.verse === v.n)}>
               <div class="tools">
                 <span class="ref">{player.chapter}:{v.n}</span>
                 <button class="icon" onclick={() => player.playVerse(v.n)} aria-label="Play verse {v.n}" title="Play this verse">
@@ -547,18 +588,22 @@
   .icon:hover { background: color-mix(in srgb, var(--ink) 9%, transparent); color: var(--ink); }
   .icon.on { color: var(--accent); }
   .icon:disabled { opacity: 0.35; }
-  .size { display: inline-flex; }
+  .size { display: inline-flex; align-items: center; }
   .pick { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-dim); flex: none; }
 
   /* ───── page stage ───── */
-  .stage { flex: 1; min-height: 0; position: relative; display: grid; place-items: center; container-type: size; padding: 0 12px; }
-  .book { --sh: min(calc(100cqh - 24px), calc((100cqw - 140px) / 0.66)); grid-area: 1 / 1; display: flex; opacity: 0; visibility: hidden; transition: opacity 0.34s var(--ease), transform 0.34s var(--ease), visibility 0s linear 0.34s; }
+  .stage { flex: 1; min-height: 0; position: relative; }
+  .view { position: absolute; inset: 0; overflow: auto; display: grid; place-items: safe center; container-type: size; padding: 0 12px; }
+  .book { --sh: calc(min(calc(100cqh - 24px), calc((100cqw - 140px) / 0.66)) * var(--pz, 1)); grid-area: 1 / 1; display: flex; opacity: 0; visibility: hidden; transition: opacity 0.34s var(--ease), transform 0.34s var(--ease), visibility 0s linear 0.34s; }
   /* the next pages wait on the left, the earlier ones on the right (Arabic books turn that way) */
   .book.after { transform: translateX(-28px); }
   .book.before { transform: translateX(28px); }
   .book:not(.cur):not(.ready) { content-visibility: hidden; }
   .book.cur { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
-  .book.spread { --sh: min(calc(100cqh - 8px), calc((100cqw - 104px) / 1.32)); }
+  .book.spread { --sh: calc(min(calc(100cqh - 8px), calc((100cqw - 104px) / 1.32)) * var(--pz, 1)); }
+  /* fill: the page takes the full width of the window, and the window scrolls down it */
+  .book.fill { --sh: calc(((100cqw - 96px) / 0.66) * var(--pz, 1)); }
+  .book.fill.spread { --sh: calc(((100cqw - 64px) / 1.32) * var(--pz, 1)); }
   .turn { position: absolute; top: 50%; translate: 0 -50%; width: 44px; height: 88px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-dim); transition: background-color 0.15s, color 0.15s, opacity 0.15s; z-index: 2; }
   .turn:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
   .turn:disabled { opacity: 0.2; }
@@ -566,7 +611,7 @@
   .turn.prev { right: 14px; }
 
   /* ───── scrolling views ───── */
-  .scroll { flex: 1; overflow-y: auto; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
+  .scroll { flex: 1; overflow: auto; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
   .head { text-align: center; padding: 36px 0 16px; }
   .kicker { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
   h2 { font-family: 'KFGQPC Uthmanic Hafs', serif; font-weight: 400; font-size: clamp(48px, 6vw, 80px); line-height: 1.6; margin: 4px 0 6px; color: var(--accent); }
@@ -578,13 +623,19 @@
   .bismillah { font-family: 'KFGQPC Uthmanic Hafs', serif; font-size: calc(var(--ar-size) * 0.95); text-align: center; color: var(--ink-dim); margin: 14px 0 10px; line-height: 2; }
   .tail { height: 120px; }
 
-  .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; padding-top: 8px; }
-  .pg { --sh: calc(min(760px, 100cqw) / 0.66); height: var(--sh); aspect-ratio: 0.66; flex: none; }
+  .pages { display: flex; flex-direction: column; align-items: safe center; gap: 28px; padding-top: 8px; }
+  .pg { --sh: calc(min(760px, 100cqw) * var(--pz, 1) / 0.66); height: var(--sh); aspect-ratio: 0.66; flex: none; }
 
+  .scroll.fill { padding: 0 12px; }
+  .scroll.fill .pg { --sh: calc(100cqw * var(--pz, 1) / 0.66); }
+  .pct { min-width: 44px; text-align: center; font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--ink-dim); }
   .verses { max-width: 900px; margin: 0 auto; }
   .verse { padding: 18px 14px 22px; border-radius: 14px; transition: background-color 0.3s; border-bottom: 1px solid var(--line); }
+  .verse.target, .tflow p.target { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 3px 0 0 var(--accent), 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 10px; }
   .verse.now { background: color-mix(in srgb, var(--accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
-  .tools { display: flex; align-items: center; gap: 2px; margin-bottom: 6px; }
+  .tools { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+  .tools .icon { min-width: 40px; height: 38px; border-radius: 9px; }
+  .tools .icon svg { width: 22px; height: 22px; }
   .ref { font-size: 13px; color: var(--ink-dim); font-variant-numeric: tabular-nums; margin-right: 8px; min-width: 42px; }
   .ar { text-align: right; line-height: var(--ar-lh); }
   .ar.below { display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: flex-start; align-items: flex-start; }

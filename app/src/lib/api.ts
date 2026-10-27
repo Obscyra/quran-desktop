@@ -1,6 +1,7 @@
 import * as offline from './offline';
 import { RECITERS, REMOVED_RECITERS } from './reciters';
 import { QURANICAUDIO } from './reciters-qa';
+import { portraitOf } from './reciters-photos';
 import type { Chapter, ChapterAudio, Reciter, TranslationInfo, Verse, WordTiming } from './types';
 
 const V4 = 'https://api.quran.com/api/v4';
@@ -52,7 +53,7 @@ export async function fetchChapters(): Promise<Chapter[]> {
 export const QA_BASE = 10000;
 const plainPaths = new Map<number, string>();
 // quranicaudio.com's own list cannot be read from a browser (no CORS), so a copy ships with the app (scripts/update-reciters.mjs)
-const QA_RECITERS: Reciter[] = QURANICAUDIO.map(([id, name, folder]) => ({ id: QA_BASE + id, name, style: 'Murattal', plain: folder }));
+const QA_RECITERS: Reciter[] = QURANICAUDIO.map(([id, name, folder]) => ({ id: QA_BASE + id, name, style: 'Murattal', plain: folder, photo: portraitOf({ name }) }));
 for (const r of QA_RECITERS) plainPaths.set(r.id, r.plain!);
 
 /**

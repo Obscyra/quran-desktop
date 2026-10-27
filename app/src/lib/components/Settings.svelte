@@ -4,6 +4,7 @@
   import { onMount, tick } from 'svelte';
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { pageFonts } from '$lib/fonts.svelte';
+  import { sample } from '$lib/script-sample';
   import * as offline from '$lib/offline';
   import { player } from '$lib/player.svelte';
   import { getAutostart, isTauri, setAutostart } from '$lib/platform';
@@ -16,23 +17,25 @@
   import { FOCUS_MODE, ui, type SettingsArea } from '$lib/ui.svelte';
   import { updater } from '$lib/updater.svelte';
 
+  // Each page holds one or more sections (the blocks below); a setting is found by its section, shown on its page.
+  type Section = SettingsArea | 'text' | 'manager' | 'shortcuts' | 'updates';
   const AREAS: { id: SettingsArea; name: string; hint: string; group: string }[] = [
-    { id: 'appearance', name: 'Appearance', hint: 'Theme and interface size', group: 'Look' },
-    { id: 'text', name: 'Arabic text', hint: 'Script style, size, spacing', group: 'Look' },
-    { id: 'reading', name: 'Reading', hint: 'Start view, translation, meanings', group: 'Read' },
-    { id: 'pages', name: 'Mushaf pages', hint: 'Page type, look, spread', group: 'Read' },
-    { id: 'audio', name: 'Listening', hint: 'Player, reciter, follow along', group: 'Listen' },
-    { id: 'manager', name: 'Audio manager', hint: 'Download or delete recitations', group: 'Listen' },
-    { id: 'reminders', name: 'Reminders', hint: 'Notifications, verse of the day', group: 'App' },
-    { id: 'focus', name: 'System', hint: 'Window, tray, start-up', group: 'App' },
-    { id: 'shortcuts', name: 'Shortcuts', hint: 'Keyboard commands', group: 'App' },
-    { id: 'updates', name: 'Updates', hint: 'Version and releases', group: 'App' },
-    { id: 'data', name: 'Data & about', hint: 'Storage, bookmarks, reset, credits', group: 'App' }
+    { id: 'appearance', name: 'Appearance', hint: 'Theme, interface size, Arabic script', group: 'Look' },
+    { id: 'reading', name: 'Translation & meanings', hint: 'Start view, translation, word meanings', group: 'Read' },
+    { id: 'pages', name: 'Mushaf pages', hint: 'Printed page layout (Reading mode)', group: 'Read' },
+    { id: 'audio', name: 'Listening', hint: 'Reciter, player, audio downloads', group: 'Listen' },
+    { id: 'reminders', name: 'Reminders', hint: 'Verse of the day, reading reminders', group: 'App' },
+    { id: 'focus', name: 'App & window', hint: 'Window, tray, start-up', group: 'App' },
+    { id: 'data', name: 'Data & help', hint: 'Bookmarks, storage, shortcuts, reset', group: 'App' },
+    { id: 'about', name: 'About', hint: 'Version, updates, developer', group: 'App' }
   ];
+  const PAGE_OF: Partial<Record<Section, SettingsArea>> = { text: 'appearance', manager: 'audio', shortcuts: 'data', updates: 'about' };
+  const pageOf = (s: Section) => PAGE_OF[s] ?? (s as SettingsArea);
+  const onPage = (s: Section) => ui.area === pageOf(s);
 
   // ───── search ─────
   // every setting, with the words people may look for it by (the area it lives in is added when searching)
-  const ROWS: { area: SettingsArea; title: string; text: string }[] = [
+  const ROWS: { area: Section; title: string; text: string }[] = [
     { area: 'appearance', title: 'Theme', text: 'colour color dark light night black madinah slate paper stone gold white auto system' },
     { area: 'appearance', title: 'Interface size', text: 'zoom scale bigger smaller menus buttons' },
     { area: 'appearance', title: 'Surah names in Arabic', text: 'arabic names list player' },
@@ -70,16 +73,17 @@
     { area: 'focus', title: 'Keep running in the tray', text: 'background close system tray hide quit' },
     { area: 'focus', title: 'Start with the computer', text: 'autostart startup boot login sign in' },
     { area: 'shortcuts', title: 'Keyboard', text: 'shortcuts keys hotkeys commands' },
-    { area: 'updates', title: 'Version', text: 'about release beta' },
+    { area: 'about', title: 'Version', text: 'about release beta software' },
     { area: 'updates', title: 'Update automatically', text: 'updates download new version' },
     { area: 'data', title: 'Offline downloads', text: 'storage space size audio' },
     { area: 'data', title: 'Bookmarks', text: 'export import backup notes' },
     { area: 'data', title: 'Reset settings', text: 'defaults restore' },
-    { area: 'data', title: 'About', text: 'credits licence license open source' }
+    { area: 'about', title: 'About', text: 'credits licence license open source version' },
+    { area: 'about', title: 'Developer', text: 'author contact fahim shahriar github email website who made' }
   ];
   let query = $state('');
   let searchEl = $state<HTMLInputElement>();
-  const areaName = (id: SettingsArea) => AREAS.find((a) => a.id === id)?.name ?? '';
+  const areaName = (id: Section) => AREAS.find((a) => a.id === pageOf(id))?.name ?? '';
   const found = $derived.by(() => {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return [];
@@ -95,9 +99,9 @@
       .sort((a, b) => a.rank - b.rank)
       .map((x) => x.r);
   });
-  async function openResult(r: { area: SettingsArea; title: string }) {
+  async function openResult(r: { area: Section; title: string }) {
     query = '';
-    ui.area = r.area;
+    ui.area = pageOf(r.area);
     await tick();
     const row = [...document.querySelectorAll<HTMLElement>('.view .row')].find((el) => el.querySelector('.label h3')?.textContent?.trim() === r.title);
     if (!row) return;
@@ -230,16 +234,6 @@
   ];
   const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
 
-  // the first verse of Al-Fatihah, in every script, for the previews
-  const SAMPLE = [
-    { glyph: 'ﱁ', text: 'بِسۡمِ', taj: 'بِسۡمِ', indo: 'بِسۡمِ' },
-    { glyph: 'ﱂ', text: 'ٱللَّهِ', taj: '<span class="tj-ham_wasl">ٱ</span>للَّهِ', indo: 'اللهِ' },
-    { glyph: 'ﱃ', text: 'ٱلرَّحۡمَـٰنِ', taj: '<span class="tj-ham_wasl">ٱ</span><span class="tj-laam_shamsiyah">ل</span>رَّحۡمَ<span class="tj-madda_normal">ـٰ</span>نِ', indo: 'الرَّحۡمٰنِ' },
-    { glyph: 'ﱄ', text: 'ٱلرَّحِيمِ', taj: '<span class="tj-ham_wasl">ٱ</span><span class="tj-laam_shamsiyah">ل</span>رَّح<span class="tj-madda_permissible">ِي</span>مِ', indo: 'الرَّحِيۡمِ' }
-  ];
-  const sample = (id: Script) =>
-    id === 'mushaf' ? SAMPLE.map((w) => w.glyph).join(' ') : id === 'tajweed' ? SAMPLE.map((w) => w.taj).join(' ') : id === 'indopak' ? SAMPLE.map((w) => w.indo).join(' ') : SAMPLE.map((w) => w.text).join(' ');
-
   const mb = (b: number) => (b / 1048576).toFixed(b > 1e8 ? 0 : 1);
 
   function setTranslation(id: number) {
@@ -369,9 +363,9 @@
       </div>
     {/if}
 
-    {#if !query && ui.area === 'text'}
+    {#if !query && onPage('text')}
       {@render preview()}
-      <h3 class="grp">Script</h3>
+      <h3 class="grp">Arabic script</h3>
       <div class="row wide">
         <div class="label"><h3>Script style</h3><p>How the Arabic is written. Madani Mushaf is the exact printed page; it is fetched once per page, then kept for offline use. Every card shows the same verse.</p></div>
         <div class="scripts">
@@ -385,6 +379,7 @@
           {/each}
         </div>
       </div>
+      <p class="intro">Choosing <b>Madani Mushaf</b> or <b>IndoPak</b> also sets the matching page type under Mushaf pages, so the pages and the text agree.</p>
       <h3 class="grp">Size</h3>
       <div class="row">
         <div class="label"><h3>Text size</h3><p>{settings.size}px, for Verse by Verse. Mushaf pages always fill the page.</p></div>
@@ -396,7 +391,7 @@
       </div>
     {/if}
 
-    {#if !query && ui.area === 'reading'}
+    {#if !query && onPage('reading')}
       <h3 class="grp">Start</h3>
       <div class="row">
         <div class="label"><h3>Open in</h3><p>What you see first. Switch any time from the top bar.</p></div>
@@ -433,7 +428,8 @@
       {/if}
     {/if}
 
-    {#if !query && ui.area === 'pages'}
+    {#if !query && onPage('pages')}
+      <p class="intro">These options are for <b>Reading</b> mode, the printed Mushaf pages. Verse by Verse ignores them.</p>
       <h3 class="grp">Page</h3>
       <div class="row">
         <div class="label"><h3>Page type</h3><p>Which printed Mushaf the pages follow. Same text, different line breaks and page numbers.</p></div>
@@ -478,7 +474,7 @@
       </div>
     {/if}
 
-    {#if !query && ui.area === 'audio'}
+    {#if !query && onPage('audio')}
       <h3 class="grp">Player</h3>
       <div class="row">
         <div class="label"><h3>Listening bar</h3><p>Reading comes first. The bar opens when you press Listen or play a verse, and ✕ closes it. Choose "Always" to keep it docked.</p></div>
@@ -535,7 +531,8 @@
       </div>
     {/if}
 
-    {#if !query && ui.area === 'manager'}
+    {#if !query && onPage('manager')}
+      <h3 class="grp">Audio downloads</h3>
       <div class="row mgr">
         <div class="label"><h3>Audio manager</h3><p>First choose a reciter, then download or delete the surahs you want. Each reciter's recitations are stored separately.</p></div>
         <div class="rp-wrap"><ReciterPicker value={dlReciter} onpick={(id) => (dlReciter = id)} /></div>
@@ -594,7 +591,7 @@
       </ul>
     {/if}
 
-    {#if !query && ui.area === 'reminders'}
+    {#if !query && onPage('reminders')}
       <div class="row">
         <div class="label"><h3>Verse of the day</h3><p>One verse from quran.com each day, from the time you choose: a card in the app, or a notification when the window is behind other apps or in the tray.</p></div>
         {@render toggle(settings.dailyVerse, (v) => (settings.dailyVerse = v), 'Verse of the day')}
@@ -646,7 +643,7 @@
       </div>
     {/if}
 
-    {#if !query && ui.area === 'focus'}
+    {#if !query && onPage('focus')}
       <h3 class="grp">Window</h3>
       {#if FOCUS_MODE}
       <div class="row">
@@ -681,7 +678,8 @@
       {/if}
     {/if}
 
-    {#if !query && ui.area === 'shortcuts'}
+    {#if !query && onPage('shortcuts')}
+      <h3 class="grp">Keyboard shortcuts</h3>
       <div class="row wide">
         <div class="label"><h3>Keyboard</h3><p>Everything is reachable without the mouse.</p></div>
         <dl class="keys">
@@ -701,7 +699,8 @@
       </div>
     {/if}
 
-    {#if !query && ui.area === 'updates'}
+    {#if !query && onPage('updates')}
+      <h3 class="grp">Updates</h3>
       <div class="row">
         <div class="label"><h3>Version</h3><p>{version} <span class="beta">Beta</span></p></div>
         <div class="stack">
@@ -730,10 +729,11 @@
       </div>
     {/if}
 
-    {#if !query && ui.area === 'data'}
+    {#if !query && onPage('data')}
+      <h3 class="grp">Your data</h3>
       <div class="row">
-        <div class="label"><h3>Offline downloads</h3><p>{mb(usedBytes)} MB of audio stored on this device. Download or delete recitations in Audio manager.</p></div>
-        <button class="secondary" onclick={() => (ui.area = 'manager')}>Open audio manager…</button>
+        <div class="label"><h3>Offline downloads</h3><p>{mb(usedBytes)} MB of audio stored on this device. Download or delete recitations under Listening → Audio downloads.</p></div>
+        <button class="secondary" onclick={() => (ui.area = 'audio')}>Open audio downloads…</button>
       </div>
       <div class="row">
         <div class="label"><h3>Bookmarks</h3><p>{bookmarks.list.length} saved. Export a copy, or merge one back in.</p></div>
@@ -749,13 +749,27 @@
         <div class="label"><h3>Reset settings</h3><p>Restore every setting to its default. Downloads are kept.</p></div>
         <button class="secondary" onclick={resetSettings}>Reset to defaults…</button>
       </div>
+    {/if}
+
+    {#if !query && onPage('about')}
+      <h3 class="grp">The app</h3>
       <div class="row about">
         <div class="label"><h3>About</h3></div>
         <div>
           <p>Free and open source, with no ads and nothing locked. This is a beta: please report anything that looks wrong. Built on the ideas of
             <a href="https://github.com/quran/quran_android" target="_blank" rel="noreferrer">Quran for Android</a>.
             Text, timings and audio come from the Quran.com public API.</p>
-          <p><a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">Source code</a></p>
+          <p><a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">Source code</a> ·
+            <a href="https://github.com/Obscyra/quran-desktop/issues" target="_blank" rel="noreferrer">Report a problem</a></p>
+        </div>
+      </div>
+      <div class="row about">
+        <div class="label"><h3>Developer</h3><p>Made and maintained by one person.</p></div>
+        <div class="dev">
+          <b>Fahim Shahriar</b>
+          <p>Email: <a href="mailto:fahimonlinux@gmail.com">fahimonlinux@gmail.com</a></p>
+          <p>GitHub: <a href="https://github.com/Obscyra" target="_blank" rel="noreferrer">github.com/Obscyra</a></p>
+          <p>Website: <span class="soon">coming soon</span></p>
         </div>
       </div>
     {/if}
@@ -818,6 +832,10 @@
   .rp-wrap { justify-self: start; max-width: 100%; }
   .row > :global(.toggle), .row > .times, .row > .time, .row > .text, .row > :global(.tp-btn), .row > .seg, .row > button.primary, .row > button.secondary, .row > .note { justify-self: start; }
 
+  .dev b { font-size: 16px; }
+  .dev p { margin-top: 4px; }
+  .dev .soon { color: var(--ink-dim); font-style: italic; }
+  .intro { margin: 0 0 4px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; line-height: 1.55; color: var(--ink); }
   .preview { background: var(--surface); border-radius: 16px; padding: 22px 28px; margin-bottom: 8px; text-align: center; }
   .preview p { font-family: var(--ar-font); font-size: var(--ar-size); line-height: var(--ar-lh); color: var(--ink); }
   .preview small { color: var(--ink-dim); }
@@ -848,7 +866,7 @@
   .seg button:hover { color: var(--ink); }
   .seg .custom { display: inline-flex; align-items: center; gap: 2px; padding: 0 10px; border-radius: 9px; color: var(--ink-dim); }
   .seg .custom.on { background: var(--accent-soft); color: var(--accent); }
-  .seg .custom input { width: 58px; background: transparent; border: 0; color: inherit; font: inherit; text-align: right; outline: none; }
+  .seg .custom input { width: 74px; background: transparent; border: 0; color: inherit; font: inherit; text-align: right; outline: none; }
   .seg .custom input:focus-visible { box-shadow: 0 1px 0 var(--accent); }
   .seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 550; }
 

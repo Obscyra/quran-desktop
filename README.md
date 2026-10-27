@@ -23,7 +23,7 @@ Read the exact printed Mushaf, follow the recitation word by word, and read with
 
 - **Reading comes first.** It opens as a Quran to read. Listening is one click away and never in the way.
 - **The real Mushaf.** Every page is drawn in its own per-page font, so each line matches the printed Madani Mushaf glyph for glyph.
-- **Works offline from the first launch.** The full Arabic text and all 604 page fonts are inside the installer. Only audio, other translations and reciter portraits need a connection, and audio can be downloaded for later.
+- **Works offline from the first launch.** The full Arabic text and all 604 page fonts are inside the installer. Only audio and other translations need a connection, and audio can be downloaded for later. Once a week the app checks for corrections to the text and fonts and applies them.
 - **Free for good.** No ads, no accounts, no paid features, no tracking.
 
 Compared with the [quran.com](https://quran.com) website, this is a native desktop app that keeps working without a connection and runs quietly in the tray.
@@ -46,11 +46,11 @@ New versions are offered inside the app (Settings → Updates).
 
 - **Two ways to read:** *Verse by Verse* with translation and tools, or *Reading* the printed Mushaf as a two-page spread, single pages or one long scroll.
 - **Seven script styles**, including colour-coded Tajweed, and the Madani and IndoPak page layouts.
-- **100+ translations**, with word-by-word meanings and transliteration.
+- **100+ translations**, with word-by-word meanings in the translation's language, and transliteration.
 - **17 reciters** with word-by-word tracking that follows the recitation, plus **90+ more** to listen to surah by surah.
 - **Audio manager** to download any surah, or all 114, for offline listening.
 - **Bookmarks with notes**, and jump to any verse by typing `55:13`.
-- **Seven themes**, interface size from 50% to 200%, full screen, and a player bar that can hide until you need it.
+- **Seven themes**, interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode, and Settings has a search bar.
 - **Runs in the system tray** with optional reminders and the Verse of the Day.
 
 The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/FEATURES.md)**.
@@ -74,7 +74,7 @@ The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/
 
 ## Privacy
 
-There are no accounts, no analytics and no tracking. The app talks to the [Quran.com](https://quran.com) API and its audio hosts only to fetch audio, translations other than the bundled one, the reciter list and portraits, and the Verse of the Day. Bookmarks, settings and downloads stay on your computer.
+There are no accounts, no analytics and no tracking. The app talks to the [Quran.com](https://quran.com) API and its audio hosts only to fetch audio, translations other than the bundled one, the reciter list, and the Verse of the Day. Bookmarks, settings and downloads stay on your computer.
 
 ## Build from source
 

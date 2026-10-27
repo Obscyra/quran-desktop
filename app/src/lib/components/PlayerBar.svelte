@@ -54,7 +54,9 @@
 
   const fmt = (s: number) => {
     s = Math.max(0, Math.floor(s || 0));
-    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    const two = (n: number) => String(n).padStart(2, '0');
+    // a long surah runs past an hour: show hours too
+    return s >= 3600 ? `${Math.floor(s / 3600)}:${two(Math.floor(s / 60) % 60)}:${two(s % 60)}` : `${Math.floor(s / 60)}:${two(s % 60)}`;
   };
   const playingVerse = $derived(player.activeTiming?.verse ?? 0);
   /** from any screen (Settings included): back to the surah and verse that is playing */

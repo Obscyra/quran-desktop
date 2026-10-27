@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
+  import { pageFonts } from '$lib/fonts.svelte';
   import { player } from '$lib/player.svelte';
-  import { SCRIPTS, settings, type WordMeaning } from '$lib/settings.svelte';
+  import { sample } from '$lib/script-sample';
+  import { SCRIPTS, settings, type Script, type WordMeaning } from '$lib/settings.svelte';
   import { THEMES } from '$lib/themes';
   import { translations } from '$lib/translations.svelte';
   import { ui } from '$lib/ui.svelte';
@@ -16,7 +18,6 @@
     { id: 'below', name: 'Under each word' },
     { id: 'off', name: 'Off' }
   ];
-  const SAMPLE = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ';
 
   // the language of the chosen translation (0 is the Arabic alone)
   const language = $derived(settings.translation === 0 ? '' : (translations.list.find((t) => t.id === settings.translation)?.language ?? 'English'));
@@ -34,6 +35,11 @@
     setTranslation((l === 'English' && options.find((t) => t.id === 20)?.id) || options[0]?.id || settings.translation);
   }
 
+  function setScript(id: Script) {
+    settings.script = id;
+    if (id === 'mushaf') settings.pageType = 'madani';
+    if (id === 'indopak') settings.pageType = 'indopak';
+  }
   function finish() {
     try {
       localStorage.setItem('quran.welcomed', '1');
@@ -49,6 +55,7 @@
 
   onMount(() => {
     translations.load();
+    pageFonts.ensure([1]); // the Madani Mushaf sample is page 1 in its own font
     card?.querySelector<HTMLElement>('button.pri')?.focus();
   });
   function key(e: KeyboardEvent) {
@@ -75,11 +82,11 @@
       <p class="sub">Everything here can be changed later in Settings, the gear at the top right.</p>
       <div class="themes" role="radiogroup" aria-label="Theme">
         <button class="th" role="radio" aria-checked={settings.theme === 'auto'} class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>
-          <span class="sw auto"></span>Match system
+          <span class="sw auto"><i style:background="#0e0c09"></i><i style:background="#ede8de"></i></span><b>Match system</b>
         </button>
         {#each THEMES as t (t.id)}
           <button class="th" role="radio" aria-checked={settings.theme === t.id} class:on={settings.theme === t.id} onclick={() => (settings.theme = t.id)}>
-            <span class="sw" style:background={t.bg} style:border-color={t.accent}><i style:background={t.accent}></i><i style:background={t.ink}></i></span>{t.name}
+            <span class="sw" style:background={t.bg}><span class="ink" style:color={t.ink}>بسم</span><i style:background={t.accent}></i></span><b>{t.name}</b>
           </button>
         {/each}
       </div>
@@ -103,9 +110,11 @@
       <h3>Arabic style</h3>
       <div class="scripts" role="radiogroup" aria-label="Arabic style">
         {#each SCRIPTS as s (s.id)}
-          <button class="sc" role="radio" aria-checked={settings.script === s.id} class:on={settings.script === s.id} onclick={() => (settings.script = s.id)}>
-            <span class="ar" dir="rtl" lang="ar" style:font-family={s.family || "'KFGQPC Uthmanic Hafs'"}>{SAMPLE}</span>
-            <b>{s.name}</b>
+          <button class="sc" role="radio" aria-checked={settings.script === s.id} class:on={settings.script === s.id} onclick={() => setScript(s.id)}>
+            <span class="ar" dir="rtl" lang="ar" style:font-family={s.id === 'mushaf' ? 'QCF1' : s.family}>
+              {#if s.id === 'tajweed'}{@html sample('tajweed')}{:else}{sample(s.id)}{/if}
+            </span>
+            <b>{s.name}</b><small>{s.hint}</small>
           </button>
         {/each}
       </div>
@@ -162,9 +171,9 @@
   .scrim { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; background: #0009; animation: fade 0.25s; }
   @keyframes fade { from { opacity: 0; } }
   .card {
-    width: min(620px, calc((100vw - 32px) / var(--zoom, 1))); max-height: calc((100vh - 32px) / var(--zoom, 1)); overflow: auto;
-    min-height: min(500px, calc((100vh - 32px) / var(--zoom, 1))); display: flex; flex-direction: column;
-    padding: 20px 24px 20px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line);
+    width: min(940px, calc((100vw - 32px) / var(--zoom, 1))); max-height: calc((100vh - 32px) / var(--zoom, 1)); overflow: auto;
+    min-height: min(720px, calc((100vh - 32px) / var(--zoom, 1))); display: flex; flex-direction: column;
+    padding: 24px 32px 24px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line);
     box-shadow: 0 28px 70px -18px #000d; animation: pop 0.3s var(--ease);
   }
   @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(0.985); } }
@@ -176,36 +185,45 @@
   li.on span, li.done span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .skip { color: var(--ink-dim); font-size: 13px; padding: 6px 10px; border-radius: 8px; }
   .skip:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
-  h2 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
-  .sub { margin-top: 6px; color: var(--ink-dim); font-size: 14px; line-height: 1.55; }
+  h2 { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
+  .sub { margin-top: 6px; color: var(--ink-dim); font-size: 15px; line-height: 1.55; }
   h3 { margin: 20px 0 8px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); font-weight: 600; }
-  .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
-  .th { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 10px 4px 9px; border-radius: 12px; border: 1px solid var(--line); font-size: 12.5px; }
-  .sw { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; max-width: 74px; height: 38px; border-radius: 8px; border: 1px solid; }
-  .sw i { width: 14px; height: 14px; border-radius: 50%; }
-  .sw.auto { background: linear-gradient(105deg, #0e0c09 50%, #fffdf7 50%); border-color: var(--line); }
+  .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+  .th { display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 14px; text-align: left; border: 1px solid var(--line); }
+  .th b { font-size: 13.5px; font-weight: 500; padding: 0 2px; }
+  .sw { display: flex; align-items: center; justify-content: space-between; height: 76px; padding: 0 14px; border-radius: 9px; overflow: hidden; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); }
+  .sw .ink { font-family: 'Amiri Quran', serif; font-size: 26px; }
+  .sw i { width: 16px; height: 16px; border-radius: 50%; }
+  .sw.auto { padding: 0; }
+  .sw.auto i { flex: 1; height: 100%; border-radius: 0; width: auto; }
   .th:hover, .chip:hover, .sc:hover, .mode:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
   .on { border-color: var(--accent) !important; background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); font-size: 13.5px; }
+  .chip { padding: 9px 18px; border-radius: 10px; border: 1px solid var(--line); font-size: 13.5px; }
   .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-  .mode { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); }
+  .mode { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); }
   .mode b { font-size: 15px; }
   .mode span { color: var(--ink-dim); font-size: 12.5px; line-height: 1.4; }
-  .scripts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .sc { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 12px; border: 1px solid var(--line); font-size: 12px; min-width: 0; }
-  .sc .ar { font-size: 17px; line-height: 1.7; white-space: nowrap; overflow: hidden; max-width: 100%; text-overflow: clip; }
+  .scripts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .sc { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 8px 10px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); text-align: center; min-width: 0; }
+  .sc .ar { font-size: 20px; line-height: 1.7; color: var(--ink); max-width: 100%; min-height: 2.8em; display: flex; align-items: center; justify-content: center; text-wrap: balance; }
+  .sc b { font-size: 13.5px; font-weight: 600; margin-top: 2px; }
+  .sc small { color: var(--ink-dim); font-size: 12px; line-height: 1.4; }
+  .sc :global([class^='tj-']) { color: inherit; }
+  .sc :global(.tj-ham_wasl), .sc :global(.tj-laam_shamsiyah) { color: var(--ink-faint); }
+  .sc :global(.tj-madda_normal) { color: #e0803a; }
+  .sc :global(.tj-madda_permissible) { color: #e0a23a; }
   .fields { display: grid; gap: 12px; margin-top: 16px; }
   label { display: grid; gap: 6px; font-size: 12px; letter-spacing: 0.04em; color: var(--ink-dim); }
   select { height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; }
   .note { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; line-height: 1.55; }
   .tips { margin: 16px 0 0; padding-left: 18px; display: grid; gap: 10px; font-size: 14px; line-height: 1.55; }
   kbd { padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); font: inherit; font-size: 12.5px; }
-  footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 22px; }
+  footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 16px; position: sticky; bottom: -24px; padding-bottom: 24px; margin-bottom: -24px; background: linear-gradient(transparent, var(--panel) 18px); }
   .ghost { padding: 9px 16px; border-radius: 10px; color: var(--ink-dim); }
   .ghost:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
   .pri { padding: 10px 22px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .pri:hover { opacity: 0.92; }
   button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  @media (max-width: 560px) { .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
 </style>

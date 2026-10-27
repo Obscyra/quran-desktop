@@ -48,6 +48,47 @@ fn remember_window(window: &tauri::Window, event: &tauri::WindowEvent) {
     });
 }
 
+/// Bring the window back inside the screen. After the display scaling changes (or a window restored onto a smaller
+/// screen) it can be larger than the work area, or sit partly outside it, which hides the title bar and its buttons.
+#[cfg(desktop)]
+fn fit_window(w: &tauri::WebviewWindow) {
+    use tauri::{PhysicalPosition, PhysicalSize};
+    if w.is_maximized().unwrap_or(false) || w.is_fullscreen().unwrap_or(false) || w.is_minimized().unwrap_or(false) {
+        return;
+    }
+    let (Ok(Some(monitor)), Ok(pos), Ok(size)) = (w.current_monitor(), w.outer_position(), w.outer_size()) else {
+        return;
+    };
+    let area = monitor.work_area();
+    let (ax, ay) = (area.position.x, area.position.y);
+    let (aw, ah) = (area.size.width as i32, area.size.height as i32);
+    let width = (size.width as i32).min(aw);
+    let height = (size.height as i32).min(ah);
+    let x = pos.x.clamp(ax, (ax + aw - width).max(ax));
+    let y = pos.y.clamp(ay, (ay + ah - height).max(ay));
+    if width != size.width as i32 || height != size.height as i32 {
+        let _ = w.set_size(PhysicalSize::new(width as u32, height as u32));
+    }
+    if x != pos.x || y != pos.y {
+        let _ = w.set_position(PhysicalPosition::new(x, y));
+    }
+}
+
+/// A change of display scaling: once the system has resized the window for it, check it still fits the screen.
+#[cfg(desktop)]
+fn rescaled(window: &tauri::Window, event: &tauri::WindowEvent) {
+    if window.label() != "main" || !matches!(event, tauri::WindowEvent::ScaleFactorChanged { .. }) {
+        return;
+    }
+    let app = window.app_handle().clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        if let Some(w) = app.get_webview_window("main") {
+            fit_window(&w);
+        }
+    });
+}
+
 #[cfg(desktop)]
 fn build_tray(app: &tauri::App) -> tauri::Result<()> {
     let open = MenuItem::with_id(app, "open", "Open Quran", true, None::<&str>)?;
@@ -93,7 +134,10 @@ pub fn run() {
                 show_main(app);
             }
         }))
-        .on_window_event(|window, event| remember_window(window, event));
+        .on_window_event(|window, event| {
+            remember_window(window, event);
+            rescaled(window, event);
+        });
 
     let builder = builder.plugin(tauri_plugin_opener::init());
 
@@ -120,6 +164,10 @@ pub fn run() {
         ))
         .setup(|app| {
             build_tray(app)?;
+            // restored onto a screen with other scaling or size than last time: keep the title bar reachable
+            if let Some(w) = app.get_webview_window("main") {
+                fit_window(&w);
+            }
             // started with the computer: stay in the tray until the reader opens the app
             if std::env::args().any(|a| a == "--hidden") {
                 if let Some(w) = app.get_webview_window("main") {

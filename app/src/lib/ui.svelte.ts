@@ -1,11 +1,11 @@
 import { getFullscreen, setFullscreen } from './platform';
 import { settings } from './settings.svelte';
 
-export type SettingsArea = 'appearance' | 'text' | 'reading' | 'pages' | 'audio' | 'manager' | 'reminders' | 'focus' | 'shortcuts' | 'updates' | 'data';
+export type SettingsArea = 'appearance' | 'reading' | 'pages' | 'audio' | 'reminders' | 'focus' | 'data' | 'about';
 
 /** A reminder or the verse of the day, shown as a card while the reader is in the app. */
 export interface Notice {
-  kind: 'reminder' | 'verse';
+  kind: 'reminder' | 'verse' | 'info';
   title: string;
   body: string;
   arabic?: string;
@@ -38,6 +38,8 @@ class Ui {
   /** the hover-only player bar is showing over the page (things in the bottom corner step up out of its way) */
   barOver = $state(false);
   pick = $state<Pick | null>(null);
+  /** the verse reached by a search, bookmark or link, outlined for a few seconds (0: none) */
+  target = $state(0);
   notice = $state<Notice | null>(null);
   /** sidebar tab */
   tab = $state<'surahs' | 'bookmarks'>('surahs');

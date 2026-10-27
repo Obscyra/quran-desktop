@@ -56,6 +56,7 @@
   bind:this={el}
   class:sel={selected}
   class:tj={tajweed}
+  class:target={ui.target === v.n}
   id="w-{v.n}-{w.pos}"
   title={settings.wordMeaning === 'hover' && !ui.pick ? w.translation : undefined}
   role="button"
@@ -70,6 +71,7 @@
 
 <style>
   .w { cursor: pointer; border-radius: 0.2em; padding: 0 0.03em; transition: color 0.3s, background-color 0.3s; display: inline-block; white-space: nowrap; }
+  .w.target { background: color-mix(in srgb, var(--accent) 24%, transparent); }
   .t { font-size: var(--ar-size); line-height: var(--ar-lh); user-select: text; -webkit-user-select: text; display: inline-block; }
   .t.g { text-rendering: geometricPrecision; }
   .w:hover .t { color: var(--accent); }

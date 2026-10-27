@@ -45,7 +45,7 @@ class Player {
     return this.loading || this.loadingAudio;
   }
   /** verse the reader asked to be taken to (a bookmark, a search); the reader consumes it */
-  jump = $state<{ verse: number; n: number } | null>(null);
+  jump = $state<{ verse: number; n: number; mark?: boolean } | null>(null);
   /** verse being repeated, if any */
   loopVerse = $state<number | null>(null);
   /** when set, playback stops (or loops) at `end` instead of running to the end of the surah */
@@ -150,7 +150,7 @@ class Player {
     } finally {
       this.replaying = false;
     }
-    this.jump = { verse, n: Date.now() };
+    this.jump = { verse, n: Date.now(), mark: true };
   }
 
   /** The back/forward trail: every surah or verse the reader opened, like a browser's history. */
@@ -510,7 +510,8 @@ class Player {
 
   /** A recording without timings cannot start at a verse or a word. */
   private wholeSurahOnly() {
-    if (this.audio?.plain) this.error = 'This reciter plays whole surahs only. Choose another reciter to start from a verse or a word.';
+    // a small notice: an error here would replace the surah on screen
+    if (this.audio?.plain) ui.notice = { kind: 'info', title: 'This reciter plays whole surahs', body: 'To start from a verse or a word, choose a reciter from the Follow along group.' };
   }
 
   /** Play on from a word to the end of the surah. */
