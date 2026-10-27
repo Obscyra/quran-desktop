@@ -60,6 +60,7 @@ of quran_android.
   400 ms after the last resize/move by `remember_window` in `lib.rs` (the plugin alone only saves on exit, rare for a tray app).
 - Scroll views: `settings.lockPlaying` + `centerPlaying`/`playingBounds` in `Reader.svelte` (verse centred whole; taller verses follow the word);
   unlocked, a `.back` arrow shows when the verse is off screen. Rects are divided by `k` (interface zoom).
+- Window fit (`+page.svelte`): `fit()`/`refit()` write the real `window.innerHeight` to `--vh` (used by `.app` height) and reset the scroll on resize, focus, scroll and visibilitychange. A window hidden in the tray can come back with a stale 100vh and a scrolled page (top bar and player lost); this fixes it. Check it on real Windows, not in a browser.
 - Settings `playerHover`: the player bar floats over the bottom edge and shows on hover (`PlayerBar.svelte`).
 
 ## Bundled Quran data (works with no connection)
@@ -74,7 +75,7 @@ of quran_android.
 - Run `npm run bundle` once before a local build or dev session; a build without the files still works but fetches from the network.
 
 ## Website
-- Own repo https://github.com/Obscyra/quran-desktop-site, hosted on Netlify at https://qurandesktop.netlify.app (GitHub Pages is switched off). The site address is written into `index.html`, `robots.txt`, `sitemap.xml` and `llms.txt`: change all four if a custom domain is added. `_headers` holds the security headers and CSP (keep `connect-src` in step with what `app.js` fetches). Kept in `website/` here (excluded from this repo via `.git/info/exclude`; commit and push from inside that folder). The download buttons ask the GitHub API for the latest release's `.exe` / `.dmg` (`app.js`, `data-dl`).
+- Own repo https://github.com/Obscyra/quran-desktop-site, hosted on Netlify at https://qurandesktop.netlify.app (GitHub Pages is switched off). The site address is written into `index.html`, `robots.txt`, `sitemap.xml` and `llms.txt`: change all four if a custom domain is added. `_headers` holds the security headers and CSP (keep `connect-src` in step with what `app.js` fetches). Kept in `website/` here (excluded from this repo via `.git/info/exclude`; commit and push from inside that folder). The page has gold Arabic calligraphy phrases as CSS pseudo-elements (`:root{--gold}`, placed per section so they never sit behind screenshots), features alternate sides (text centred against the screenshot), and the "Try the reader" demo works like the app: real audio (`audio/fatiha.mp3`), word timings in `data.js` (`window.FATIHA_T`), Sweep / Fill / Line highlight (the sweep is a clipped accent copy of the word, as in the app). Step videos fade in over a poster image (`.vid.ready`) to avoid a white flash. Headless Chromium cannot decode the VP9 webm, so check video in a real browser. The download buttons ask the GitHub API for the latest release's `.exe` / `.dmg` (`app.js`, `data-dl`).
 
 ## Run and test
 - UI in a browser: `cd app && npm install && npx vite dev --port 1420` then
@@ -91,8 +92,9 @@ WSL2 with Windows interop. Build happens in `C:\Users\magnum\quran-build` (copy 
 3. `powershell.exe -NoProfile -Command 'cd C:\Users\magnum\quran-build; $env:Path += ";C:\Program Files\nodejs;$env:USERPROFILE\.cargo\bin"; npm.cmd run tauri build -- --config src-tauri\tauri.local.json'`
    (run in background, ~5+ min; PowerShell reports exit 1 from stderr even on success).
 4. Installer: `quran-build\src-tauri\target\release\bundle\nsis\Quran_<version>_x64-setup.exe`.
+   (Tauri 2 signs with env `TAURI_SIGNING_PRIVATE_KEY`, content or path, not `_PATH`. To sign a finished exe: `npx tauri signer sign -f ~/.tauri/quran-desktop.key -p "" <exe>`.)
    Copy to `D:\Downloads\Quran-Beta\` (`/mnt/d/Downloads/Quran-Beta/`) with a README.txt.
-Don't install on the owner's PC unless asked. Don't use `-ExecutionPolicy Bypass`.
+Replacing an installer on an existing release (only when asked): upload the exe and its `.sig` with `gh release upload --clobber` and put the new signature in `latest.json`. The copy can fail with "Permission denied" if an installer is running; don't kill the owner's process. Don't install on the owner's PC unless asked. Don't use `-ExecutionPolicy Bypass`.
 
 ## Releases and updates
 - `.github/workflows/release.yml`: pushing a `v*` tag builds Windows (.exe) + macOS (.dmg), signs update
@@ -100,15 +102,12 @@ Don't install on the owner's PC unless asked. Don't use `-ExecutionPolicy Bypass
 - Needs secrets `TAURI_SIGNING_PRIVATE_KEY` (+ `_PASSWORD`, empty). Key is `~/.tauri/quran-desktop.key`;
   the public key is in `app/src-tauri/tauri.conf.json`. Losing the key breaks updates for installs.
 - Installed apps only see updates from a public repo's non-prerelease `latest`.
-- Uninstaller (`src-tauri/windows/hooks.nsi`) removes app data unless `$UpdateMode`; verified earlier.
+- Uninstaller (`src-tauri/windows/hooks.nsi`) removes app data unless `$UpdateMode`; verified earlier. The same hooks file defines `MUI_UNICON` so the uninstaller shows the Quran icon (hooks are included before Tauri's `UNINSTALLERICON` check).
 - Version lives in `app/package.json`, `app/src-tauri/tauri.conf.json`, `app/src-tauri/Cargo.toml`
   (CI overrides from the tag).
 
 ## Status
-- Shipped: v0.3.0-beta.1 installer in `D:\Downloads\Quran-Beta\`, pushed as commit `bd2b0bd`
-  (exact Mushaf pages, Verse by Verse / Reading modes, 2-page spread, 7 script styles, Madani/IndoPak
-  page types, word/verse menu, bookmarks, optional listening bar).
-- Not yet verified: the real Windows window (title-bar buttons, drag, snap, fullscreen, focus mode),
-  updater end to end, macOS build, SmartScreen (no code-signing cert).
-- Ideas not done: tafsir, sleep timer, download-all manager, in-text search, true OS Do Not Disturb
-  (no public API; only in-app quiet focus mode), 21st MCP, Linux.
+- Current: v0.0.5-beta (tag at `1ff6b55`; the Windows exe on the release was rebuilt after `4f1896e`, so it has the About website link and the macOS dmg from CI does not). Latest README commit `59458fd`.
+- Done in 0.0.5: first-run setup, continue where I left off, reorganised Settings (8 pages, search, per-setting Reset), custom tooltips, Zoom/Fit/Fill, Black and gold theme, tray-reopen window fix, uninstaller icon, site demo and calligraphy.
+- Not yet verified: the real Windows window after tray reopen, uninstaller icon on an installed copy, 0.0.4 to 0.0.5 in-app update, macOS build, SmartScreen (no code-signing cert; downloads carry Mark of the Web, local builds do not).
+- Ideas not done: tafsir, sleep timer, in-text search, true OS Do Not Disturb (no public API; only in-app quiet focus mode), Linux, code signing, licence check for the website's page fonts.
