@@ -10,7 +10,7 @@ import { RECITERS, REMOVED_RECITERS } from './reciters';
 import { dim, light, progress } from './sweep';
 import type { Chapter, ChapterAudio, Reciter, Verse, WordTiming } from './types';
 
-const LS = { reciter: 'quran.reciter', chapter: 'quran.chapter', verse: 'quran.verse' };
+const LS = { reciter: 'quran.reciter', chapter: 'quran.chapter', verse: 'quran.verse', time: 'quran.time' };
 const read = (k: string, d: number) => Number(localStorage.getItem(k) ?? d) || d;
 const fromHash = () => {
   const n = Number(location.hash.match(/^#\/(\d+)/)?.[1]);
@@ -89,6 +89,7 @@ class Player {
       if (this.audio?.plain && navigator.onLine && this.el.src) this.error = 'This reciter has no recording of this surah. Choose another reciter.';
     });
     this.el.addEventListener('pause', () => {
+      this.saveTime(true);
       this.buffering = false;
       this.playing = false;
       cancelAnimationFrame(this.raf);
@@ -130,8 +131,40 @@ class Player {
     this.at = 0;
     // read before load(), which forgets the saved verse of the surah it leaves
     const saved = settings.resume && !this.linked ? Number(localStorage.getItem(LS.verse)) : 0;
+    const savedTime = settings.resume && !this.linked ? Number(localStorage.getItem(LS.time)) : 0;
     await this.load(this.chapter, false);
     if (saved > 1) this.jump = { verse: saved, n: Date.now() };
+    if (savedTime > 1) await this.restoreTime(savedTime);
+  }
+
+  private lastSaved = 0;
+  /** Remember how far the recitation got, so the app can reopen at the same moment (paused). */
+  private saveTime(force = false) {
+    const ct = this.el.currentTime;
+    if (this.loading || !this.audio || !(ct > 1)) return;
+    const now = performance.now();
+    if (!force && now - this.lastSaved < 2000) return;
+    this.lastSaved = now;
+    // a recitation that has finished starts over next time
+    if (this.duration && ct >= this.duration - 1.5) localStorage.removeItem(LS.time);
+    else localStorage.setItem(LS.time, ct.toFixed(1));
+  }
+
+  /** Put the recitation back where it was last time, ready to resume with Play. */
+  private async restoreTime(sec: number) {
+    const token = this.token;
+    // nothing to fetch when offline and not downloaded: reading still resumes
+    if (!this.audio && !navigator.onLine) return;
+    if (!(await this.prepareAudio()) || token !== this.token) {
+      this.error = '';
+      return;
+    }
+    await this.whenReady();
+    if (token !== this.token || this.playing) return;
+    ui.listening = true;
+    this.jumpTo(sec * 1000);
+    // load() forgot it: keep it, so a second restart without playing still comes back here
+    localStorage.setItem(LS.time, String(sec));
   }
 
   /** Remember where the reader is, so the app reopens at the same verse. */
@@ -236,6 +269,7 @@ class Player {
     this.chapter = chapter;
     localStorage.setItem(LS.chapter, String(chapter));
     localStorage.removeItem(LS.verse);
+    localStorage.removeItem(LS.time);
     history.replaceState(null, '', `#/${chapter}`);
     this.loading = true;
     this.error = '';
@@ -715,6 +749,7 @@ class Player {
     if (!this.el.paused) {
       t += Math.min(250, (now - this.lastStamp) * this.el.playbackRate) + 40;
       this.trackListening(now);
+      this.saveTime();
     } else this.heardAt = 0;
     const timings = this.audio?.timings;
     if (!timings?.length) {
