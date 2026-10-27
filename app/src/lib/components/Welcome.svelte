@@ -183,6 +183,8 @@
   li span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line); font-size: 11px; font-variant-numeric: tabular-nums; }
   li.on { color: var(--ink); font-weight: 600; }
   li.on span, li.done span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  li.on span { box-shadow: 0 0 0 3px var(--accent-soft); }
+  li:not(.on):not(.done) { opacity: 0.7; }
   .skip { color: var(--ink-dim); font-size: 13px; padding: 6px 10px; border-radius: 8px; }
   .skip:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
   h2 { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
@@ -197,7 +199,7 @@
   .sw.auto { padding: 0; }
   .sw.auto i { flex: 1; height: 100%; border-radius: 0; width: auto; }
   .th:hover, .chip:hover, .sc:hover, .mode:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
-  .on { border-color: var(--accent) !important; background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
+  .on:not(li) { border-color: var(--accent) !important; background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { padding: 9px 18px; border-radius: 10px; border: 1px solid var(--line); font-size: 13.5px; }
   .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
