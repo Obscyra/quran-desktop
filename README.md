@@ -26,6 +26,8 @@ Read the exact printed Mushaf, follow the recitation word by word, and read with
 - **Works offline from the first launch.** The full Arabic text and all 604 page fonts are inside the installer. Only audio and other translations need a connection, and audio can be downloaded for later. Once a week the app checks for corrections to the text and fonts and applies them.
 - **Free for good.** No ads, no accounts, no paid features, no tracking.
 
+Website: **[qurandesktop.netlify.app](https://qurandesktop.netlify.app)**, with a live demo of the reader.
+
 Compared with the [quran.com](https://quran.com) website, this is a native desktop app that keeps working without a connection and runs quietly in the tray.
 
 ## Download
@@ -50,7 +52,7 @@ New versions are offered inside the app (Settings → Updates).
 - **17 reciters** with word-by-word tracking that follows the recitation, plus **90+ more** to listen to surah by surah.
 - **Audio manager** to download any surah, or all 114, for offline listening.
 - **Bookmarks with notes**, jump to any verse by typing `55:13`, and the app reopens where you left off.
-- **Seven themes**, interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode, and Settings has a search bar.
+- **Seven themes**, interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode. Settings has a search bar, a Reset on each setting and a list of what you changed.
 - **Runs in the system tray** with optional reminders and the Verse of the Day.
 
 The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/FEATURES.md)**.
@@ -64,7 +66,7 @@ The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/
   </tr>
   <tr>
     <td width="50%"><img src="assets/screenshots/audio-manager.webp" alt="Audio manager: choose a reciter, download or delete surahs"/><br/><sub><b>Audio manager:</b> choose a reciter, then download or delete surahs</sub></td>
-    <td width="50%"><img src="assets/screenshots/settings.webp" alt="Settings organised into Look, Read, Listen and App"/><br/><sub><b>Settings</b>, organised into Look, Read, Listen and App</sub></td>
+    <td width="50%"><img src="assets/screenshots/settings.webp" alt="Settings organised into eight pages, with search and per-setting reset"/><br/><sub><b>Settings</b>, organised into eight pages, with search and a Reset on each setting</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="assets/screenshots/theme-gold.webp" alt="Verse by Verse in the White and Gold theme"/><br/><sub><b>White &amp; Gold</b> theme</sub></td>
