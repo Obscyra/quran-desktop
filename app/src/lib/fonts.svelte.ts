@@ -40,9 +40,21 @@ class PageFonts {
     return p;
   }
 
+  private async shipped(page: number): Promise<ArrayBuffer | undefined> {
+    try {
+      const res = await fetch(`/fonts/qcf/p${page}.woff2`);
+      if (!res.ok || !(res.headers.get('content-type') ?? '').includes('font')) return undefined;
+      return await res.arrayBuffer();
+    } catch {
+      return undefined;
+    }
+  }
+
   private async load(page: number): Promise<boolean> {
     try {
-      let buf = await offline.getFont(page).catch(() => undefined);
+      // the installer carries all 604 page fonts; the cache and the network are only for builds without them
+      let buf = await this.shipped(page);
+      if (!buf) buf = await offline.getFont(page).catch(() => undefined);
       if (!buf) {
         const res = await fetch(`${HOST}/p${page}.woff2`);
         if (!res.ok) throw new Error(String(res.status));

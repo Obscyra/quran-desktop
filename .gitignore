@@ -5,3 +5,7 @@ build/
 target/
 *.log
 .DS_Store
+# downloaded by app/scripts/bundle-data.mjs (about 120 MB): the whole Quran text and the 604 page fonts
+app/static/data/
+app/static/fonts/qcf/
+.taste-skill/

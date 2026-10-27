@@ -62,6 +62,10 @@ jobs:
       - run: npm ci
         working-directory: app
 
+      - name: Bundle the Quran text and page fonts
+        run: node scripts/bundle-data.mjs
+        working-directory: app
+
       - name: Compose the release notes
         id: notes
         shell: bash

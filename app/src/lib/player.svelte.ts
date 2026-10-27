@@ -1,4 +1,4 @@
-import { fetchChapterAudio, fetchChapters, fetchIndo, fetchReciters, fetchVerses } from './api';
+import { BUNDLED_TRANSLATION, fetchChapterAudio, fetchChapters, fetchIndo, fetchReciters, fetchVerses, isPartial } from './api';
 import { autocache } from './autocache.svelte';
 import { pageFonts } from './fonts.svelte';
 import * as offline from './offline';
@@ -283,6 +283,7 @@ class Player {
 
   /** Recently opened surahs stay in memory, so going back to one (or on to the next) is instant. */
   private memo = new Map<string, Promise<Verse[]>>();
+  private lastPartial = false;
 
   private textFor(ch: number): Promise<Verse[]> {
     const key = `${ch}:${settings.translation}:${settings.needsIndo}`;
@@ -290,7 +291,10 @@ class Player {
     if (!hit) {
       hit = (async () => {
         const tr = settings.translation;
+        this.lastPartial = false;
         const base = (await offline.getText(ch, tr)) ?? (await this.fetchText(ch));
+        // without its translation (offline): show the Arabic, but ask again next time
+        if (this.lastPartial) queueMicrotask(() => this.memo.delete(key));
         return settings.needsIndo ? this.withIndo(ch, base) : base;
       })();
       hit.catch(() => this.memo.delete(key)); // a failed fetch must not be remembered
@@ -334,7 +338,9 @@ class Player {
   private async fetchText(ch: number) {
     const tr = settings.translation;
     const v = await fetchVerses(ch, tr);
-    offline.putText(ch, tr, v);
+    // the bundled text is already on disk; a translation that could not be fetched must not be remembered as empty
+    if (tr !== BUNDLED_TRANSLATION && !isPartial(v)) offline.putText(ch, tr, v);
+    this.lastPartial = isPartial(v);
     return v;
   }
   private async fetchAudio(r: number, ch: number) {
