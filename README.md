@@ -38,7 +38,7 @@ Get the installer for your system from the **[latest release](https://github.com
 | --- | --- | --- |
 | Windows 10 / 11 | `Quran_<version>_x64-setup.exe` (about 100 MB) | Installs for your user only, no administrator rights needed. Windows SmartScreen may warn because the app is not code-signed yet: choose **More info → Run anyway**. |
 | macOS | `Quran_<version>_universal.dmg` | Built automatically for Apple silicon and Intel. Not yet tested on a Mac by the maintainer. |
-| Linux (x86_64) | `Quran_<version>_amd64.AppImage`, `.deb` or `.rpm` | The AppImage runs on most distributions (`chmod +x`, then run) and updates itself; the `.deb` is for Debian and Ubuntu, the `.rpm` for Fedora and openSUSE. Not yet tested on a Linux desktop by the maintainer. On GNOME the tray icon needs the AppIndicator extension. |
+| Linux (x86_64) | `Quran_<version>_amd64.AppImage`, or `.deb` | The AppImage runs on most distributions (`chmod +x`, then run) and updates itself; the `.deb` is for Debian and Ubuntu. Not yet tested on a Linux desktop by the maintainer. On GNOME the tray icon needs the AppIndicator extension. |
 
 > **This is a beta.** Please report anything that looks wrong, especially in the Arabic text, with the
 > [Arabic text report form](https://github.com/Obscyra/quran-desktop/issues/new?template=arabic-text.yml).
