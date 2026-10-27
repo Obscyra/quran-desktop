@@ -1,6 +1,6 @@
 # Quran for Desktop — project memory
 
-Free, open-source (GPL-3.0), ad-free desktop Quran app for Windows and macOS, with Linux builds (AppImage, deb, rpm) added to CI and untested.
+Free, open-source (GPL-3.0), ad-free desktop Quran app for Windows and macOS, with Linux builds (AppImage, deb) added; no rpm: RPM versions cannot contain a hyphen, so `0.0.5-beta` fails to bundle. Add `rpm` back once a version has no pre-release suffix, or map it to `~beta` to CI and untested.
 Tauri 2 + SvelteKit (adapter-static, ssr=false) + Svelte 5 runes + TypeScript. Repo:
 https://github.com/Obscyra/quran-desktop (branch `main`, public). Inspired by
 https://github.com/quran/quran_android (credit it and keep its Android links in the README; the app now has its own icon).
@@ -97,7 +97,7 @@ WSL2 with Windows interop. Build happens in `C:\Users\magnum\quran-build` (copy 
 Replacing an installer on an existing release (only when asked): upload the exe and its `.sig` with `gh release upload --clobber` and put the new signature in `latest.json`. The copy can fail with "Permission denied" if an installer is running; don't kill the owner's process. Don't install on the owner's PC unless asked. Don't use `-ExecutionPolicy Bypass`.
 
 ## Releases and updates
-- `.github/workflows/release.yml`: pushing a `v*` tag builds Windows (.exe) + macOS (.dmg) + Linux (.AppImage, .deb, .rpm on ubuntu-22.04), signs update
+- `.github/workflows/release.yml`: pushing a `v*` tag builds Windows (.exe) + macOS (.dmg) + Linux (.AppImage, .deb on ubuntu-22.04), signs update
   artifacts, publishes `latest.json`. Releases are normal (non-pre-release) even for `-beta` tags, so the updater sees them; notes come from `.github/release-notes/<tag>.md` + `footer.md`.
 - Needs secrets `TAURI_SIGNING_PRIVATE_KEY` (+ `_PASSWORD`, empty). Key is `~/.tauri/quran-desktop.key`;
   the public key is in `app/src-tauri/tauri.conf.json`. Losing the key breaks updates for installs.
