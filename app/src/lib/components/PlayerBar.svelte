@@ -33,6 +33,10 @@
     peekTimer = window.setTimeout(() => (peek = false), 350);
   }
   let bar = $state<HTMLElement>();
+  $effect(() => {
+    ui.barOver = float && open;
+    return () => (ui.barOver = false);
+  });
   function track(e: PointerEvent) {
     if (!peek || !over || held || !bar) return;
     if (!bar.contains(e.target as Node)) leave();

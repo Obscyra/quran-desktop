@@ -473,7 +473,7 @@
       <div class="tail"></div>
     </main>
     {#if away && !settings.lockPlaying}
-      <button class="back" class:up={away === 'up'} onclick={backToPlaying} aria-label="Back to the verse being recited" title="Back to the verse being recited">
+      <button class="back" class:lift={ui.barOver} class:up={away === 'up'} onclick={backToPlaying} aria-label="Back to the verse being recited" title="Back to the verse being recited">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4v12M5 11l5 5 5-5" /></svg>
       </button>
     {/if}
@@ -493,6 +493,7 @@
   :global(.app.focus) .sub.away { transform: translateY(-140%); opacity: 0; pointer-events: none; }
   .grow { flex: 1; }
   .back { position: absolute; right: 22px; bottom: 18px; width: 42px; height: 42px; border-radius: 999px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 24px -8px #000b; z-index: 5; transition: transform 0.15s var(--ease), opacity 0.15s; }
+  .back.lift { bottom: 118px; }
   .back:hover { transform: scale(1.06); }
   .back.up svg { transform: rotate(180deg); }
   .where { color: var(--ink-dim); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }

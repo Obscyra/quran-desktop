@@ -33,6 +33,8 @@ class Ui {
   chromeVisible = $state(true);
   /** the listening bar is opt-in: it opens when the reader asks to hear something */
   listening = $state(false);
+  /** the hover-only player bar is showing over the page (things in the bottom corner step up out of its way) */
+  barOver = $state(false);
   pick = $state<Pick | null>(null);
   notice = $state<Notice | null>(null);
   /** sidebar tab */
