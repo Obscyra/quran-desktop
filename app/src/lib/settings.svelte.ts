@@ -20,7 +20,7 @@ export const SCRIPTS: { id: Script; name: string; hint: string; family: string }
 
 const defaults = {
   theme: 'night',
-  mode: 'reading' as Mode,
+  mode: 'verse' as Mode,
   readingStyle: 'arabic' as ReadingStyle,
   flow: 'page' as PageFlow,
   spread: false,
