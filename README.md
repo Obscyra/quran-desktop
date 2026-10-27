@@ -4,13 +4,13 @@
 
 # Quran for Desktop
 
-**A free, open-source Quran app for Windows and macOS.**<br/>
+**A free, open-source Quran app for Windows, macOS and Linux.**<br/>
 Read the exact printed Mushaf, follow the recitation word by word, and read with no internet at all.
 
 [![Latest release](https://img.shields.io/github/v/release/Obscyra/quran-desktop?style=for-the-badge&color=2ea44f&label=Download)](https://github.com/Obscyra/quran-desktop/releases/latest)
 
 [![Downloads](https://img.shields.io/github/downloads/Obscyra/quran-desktop/total)](https://github.com/Obscyra/quran-desktop/releases)
-[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS-555)](#download)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-555)](#download)
 [![License: GPL v3](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 
 <img src="assets/screenshots/verse-by-verse-playing.webp" alt="Verse by Verse view with word-by-word meanings and the recited word highlighted" width="900"/>
@@ -38,6 +38,7 @@ Get the installer for your system from the **[latest release](https://github.com
 | --- | --- | --- |
 | Windows 10 / 11 | `Quran_<version>_x64-setup.exe` (about 100 MB) | Installs for your user only, no administrator rights needed. Windows SmartScreen may warn because the app is not code-signed yet: choose **More info → Run anyway**. |
 | macOS | `Quran_<version>_universal.dmg` | Built automatically for Apple silicon and Intel. Not yet tested on a Mac by the maintainer. |
+| Linux (x86_64) | `Quran_<version>_amd64.AppImage`, `.deb` or `.rpm` | The AppImage runs on most distributions (`chmod +x`, then run) and updates itself; the `.deb` is for Debian and Ubuntu, the `.rpm` for Fedora and openSUSE. Not yet tested on a Linux desktop by the maintainer. On GNOME the tray icon needs the AppIndicator extension. |
 
 > **This is a beta.** Please report anything that looks wrong, especially in the Arabic text, with the
 > [Arabic text report form](https://github.com/Obscyra/quran-desktop/issues/new?template=arabic-text.yml).
