@@ -24,6 +24,8 @@ const defaults = {
   readingStyle: 'arabic' as ReadingStyle,
   flow: 'page' as PageFlow,
   spread: false,
+  pageFit: 'fit' as 'fit' | 'fill',
+  pageZoom: 1,
   pageType: 'madani' as PageType,
   pageLook: 'paper' as PageLook,
   showPageInfo: true,
@@ -76,6 +78,10 @@ class Settings {
   readingStyle = $state(defaults.readingStyle);
   flow = $state(defaults.flow);
   spread = $state(defaults.spread);
+  /** how a Mushaf page sits in the window: whole page in view (fit) or the full width of it (fill) */
+  pageFit = $state(defaults.pageFit);
+  /** on top of fit or fill: 0.5 to 3 */
+  pageZoom = $state(defaults.pageZoom);
   pageType = $state(defaults.pageType);
   pageLook = $state(defaults.pageLook);
   showPageInfo = $state(defaults.showPageInfo);

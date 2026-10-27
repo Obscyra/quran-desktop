@@ -14,7 +14,7 @@ export interface Theme {
 // surface 5:1+, accent on ground and surface 4.7:1+. No violet or indigo, no cream with terracotta.
 export const THEMES: Theme[] = [
   { id: 'night', name: 'Night', dark: true, bg: '#0e0c09', surface: '#1a1611', ink: '#fbf5e6', muted: '#cbbfa6', accent: '#f0c46a', accentInk: '#1a1408' },
-  { id: 'oled', name: 'Black', dark: true, bg: '#000000', surface: '#121212', ink: '#e8e6e1', muted: '#96938c', accent: '#4fb98a', accentInk: '#00140c' },
+  { id: 'oled', name: 'Black', dark: true, bg: '#000000', surface: '#120e06', ink: '#f2e8cc', muted: '#c2b184', accent: '#d9ad3e', accentInk: '#120c00' },
   { id: 'forest', name: 'Madinah', dark: true, bg: '#0c1a14', surface: '#143025', ink: '#e6efe6', muted: '#98b3a4', accent: '#dcb85e', accentInk: '#1a1408' },
   { id: 'slate', name: 'Slate', dark: true, bg: '#10151c', surface: '#1a222c', ink: '#e3e8ee', muted: '#92a0b0', accent: '#74b8de', accentInk: '#08141c' },
   { id: 'paper', name: 'Paper', dark: false, bg: '#ede8de', surface: '#e4ddcf', ink: '#231d12', muted: '#625640', accent: '#0d6a50', accentInk: '#f4f1e8' },

@@ -19,6 +19,7 @@
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import NoticeCard from '$lib/components/NoticeCard.svelte';
   import Welcome from '$lib/components/Welcome.svelte';
+  import CopyMenu from '$lib/components/CopyMenu.svelte';
   import WordMenu from '$lib/components/WordMenu.svelte';
   import TitleBar from '$lib/components/TitleBar.svelte';
 
@@ -57,6 +58,15 @@
     }
   });
 
+  // the web view's own page menu (Back, Refresh, Save as, Print, More tools) means nothing in an app: only text boxes keep
+  // theirs, for paste. The word, verse-number and surah menus are the app's own and set their own handlers.
+  let copyMenu: CopyMenu;
+  function noBrowserMenu(e: MouseEvent) {
+    if (e.defaultPrevented || (e.target as HTMLElement | null)?.closest('input, textarea, [contenteditable="true"]')) return;
+    e.preventDefault();
+    // selected text: a menu with Copy only
+    copyMenu?.show(e);
+  }
   const soften = (_: Element, o: { duration: number }) => ({ duration: o.duration, css: (t: number) => `opacity: ${t}` });
 
   // Settings fades in over the page; the reader stays mounted (so coming back is instant) but is not laid out meanwhile
@@ -149,7 +159,7 @@
   });
 </script>
 
-<svelte:window onkeydown={keys} onmousemove={toChrome} onmousedown={sideButton} onmouseup={sideButton} onauxclick={sideButton} />
+<svelte:window onkeydown={keys} onmousemove={toChrome} onmousedown={sideButton} onmouseup={sideButton} onauxclick={sideButton} oncontextmenu={noBrowserMenu} />
 
 <div class="app" class:focus={ui.focus} class:idle={ui.focus && !ui.chromeVisible}>
   <TitleBar hidden={ui.focus && !ui.chromeVisible} />
@@ -166,6 +176,7 @@
   <PlayerBar />
   <NetBar />
   <WordMenu />
+  <CopyMenu bind:this={copyMenu} />
   <NoticeCard />
   {#if ui.welcome}<Welcome />{/if}
   <ConfirmDialog />

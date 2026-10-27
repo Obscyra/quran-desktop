@@ -70,8 +70,11 @@ of quran_android.
 - `datasync.svelte.ts`: a weekly background check (25 s after start, online only) compares the provider's text, IndoPak spelling and page-font sizes (`data/manifest.json`, written by the bundle script) with what the app has, and keeps changes in IndexedDB (`<surah>:fresh`, `fonts`, `quran.fresh.fonts`), read before the bundled copy. Changes must pass `sound()` (no verse or word lost).
 - Word meanings follow the translation's language (`languages.ts`, `api.extrasOf`); the bundled words are English. Cached text keys end in `:2`.
 - First run (`settings.firstRun`): `Welcome.svelte` (theme, size, mode, script, language, word meanings; Skip on every step; flag `quran.welcomed`).
-- App icon master is `app/src-tauri/icon-source.png` (`npx tauri icon src-tauri/icon-source.png`, then delete the generated `icons/android` and `icons/ios`).
+- App icon master is `app/src-tauri/icon-source.png` (`npx tauri icon src-tauri/icon-source.png`, then delete the generated `icons/android` and `icons/ios`). It is the green icon with the gold calligraphy; the golden squircle version (commit `67c2209`) was set aside at the owner's request.
 - Run `npm run bundle` once before a local build or dev session; a build without the files still works but fetches from the network.
+
+## Website
+- Own repo https://github.com/Obscyra/quran-desktop-site (GitHub Pages from `main`, live at https://obscyra.github.io/quran-desktop-site/), kept in `website/` here (excluded from this repo via `.git/info/exclude`; commit and push from inside that folder). The download buttons ask the GitHub API for the latest release's `.exe` / `.dmg` (`app.js`, `data-dl`).
 
 ## Run and test
 - UI in a browser: `cd app && npm install && npx vite dev --port 1420` then
