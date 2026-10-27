@@ -1,6 +1,10 @@
 ; Installer hooks for the Windows (NSIS) installer.
 ; Tauri calls these at fixed points; see https://v2.tauri.app/distribute/windows-installer/
 
+; Tauri leaves the uninstaller's icon empty, which gives the uninstaller NSIS's default icon.
+; This file is read before that check, so the app icon can be set here.
+!define MUI_UNICON "${__FILEDIR__}\..\icons\icon.ico"
+
 !macro NSIS_HOOK_PREINSTALL
 !macroend
 
