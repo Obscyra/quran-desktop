@@ -61,6 +61,13 @@ of quran_android.
   unlocked, a `.back` arrow shows when the verse is off screen. Rects are divided by `k` (interface zoom).
 - Settings `playerHover`: the player bar floats over the bottom edge and shows on hover (`PlayerBar.svelte`).
 
+## Bundled Quran data (works with no connection)
+- `app/scripts/bundle-data.mjs` (`npm run bundle`) downloads the surah list, the Arabic text of all 114 surahs (default translation Saheeh) with
+  Tajweed markup and IndoPak spelling, and the 604 page fonts into `app/static/data/` and `app/static/fonts/qcf/` (about 120 MB, gitignored,
+  so every checkout and CI run must run it: `release.yml` does). The installer carries them; `api.ts` and `fonts.svelte.ts` read them first
+  and only go online for other translations and audio (audio is never bundled; the Audio manager downloads it).
+- Run `npm run bundle` once before a local build or dev session; a build without the files still works but fetches from the network.
+
 ## Run and test
 - UI in a browser: `cd app && npm install && npx vite dev --port 1420` then
   `http://localhost:1420/#/55?os=windows` (`?os=` previews other chrome).

@@ -26,3 +26,6 @@ gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD   # leave empty if the key has 
 
 Put the printed public key in `app/src-tauri/tauri.conf.json` (`plugins.updater.pubkey`). Keep the private key safe: without it, installed copies can no longer be updated. Installed apps read `latest.json` from the repository's latest release, so the repository must be public.
 
+## Bundled data
+
+The installer carries the whole Arabic text and the 604 page fonts (about 120 MB, not in git). The release workflow downloads them with `node scripts/bundle-data.mjs` before building; for a local build run `npm run bundle` in `app/` first.

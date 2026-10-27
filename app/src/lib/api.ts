@@ -20,7 +20,28 @@ async function getJson<T>(url: string, tries = 3): Promise<T> {
   throw last;
 }
 
+/**
+ * The Arabic text of the whole Quran ships with the app (see scripts/bundle-data.mjs), so reading never waits for the
+ * network. Only what cannot be bundled is fetched: other translations, and audio.
+ */
+async function bundled<T>(path: string): Promise<T | undefined> {
+  try {
+    const res = await fetch(`/data/${path}`);
+    if (res.ok && (res.headers.get('content-type') ?? '').includes('json')) return (await res.json()) as T;
+  } catch {
+    /* not in this build: use the network */
+  }
+}
+
+/** The translation that comes with the text (Saheeh International). */
+export const BUNDLED_TRANSLATION = 20;
+const partial = new WeakSet<object>();
+/** true for text shown without its chosen translation because that translation could not be fetched (offline) */
+export const isPartial = (v: object) => partial.has(v);
+
 export async function fetchChapters(): Promise<Chapter[]> {
+  const local = await bundled<Chapter[]>('chapters.json');
+  if (local?.length === 114) return local;
   const d = await getJson<{ chapters: Chapter[] }>(`${V4}/chapters?language=en`);
   return d.chapters;
 }
@@ -92,7 +113,31 @@ async function allVerses(chapter: number, query: string): Promise<ApiVerse[]> {
   return out;
 }
 
+/** Just the verse translations of a surah (no words), to put under the bundled Arabic. */
+async function translationsOf(chapter: number, translation: number): Promise<Map<number, string>> {
+  const out = new Map<number, string>();
+  for (let page = 1; ; page++) {
+    const d = await getJson<Paged>(`${V4}/verses/by_chapter/${chapter}?words=false&per_page=50&page=${page}&translations=${translation}`);
+    for (const v of d.verses) if (v.translations?.[0]) out.set(v.verse_number, stripTags(v.translations[0].text));
+    if (!d.pagination.next_page) break;
+  }
+  return out;
+}
+
 export async function fetchVerses(chapter: number, translation: number): Promise<Verse[]> {
+  const local = await bundled<Verse[]>(`verses/${chapter}.json`);
+  if (local) {
+    if (!translation || translation === BUNDLED_TRANSLATION) return translation ? local : local.map((v) => ({ ...v, translation: undefined }));
+    try {
+      const tr = await translationsOf(chapter, translation);
+      return local.map((v) => ({ ...v, translation: tr.get(v.n) }));
+    } catch {
+      // offline and this translation was never downloaded: the Arabic is still all there
+      const bare = local.map((v) => ({ ...v, translation: undefined }));
+      partial.add(bare);
+      return bare;
+    }
+  }
   const tr = translation ? `&translations=${translation}` : '';
   const fields = 'text_uthmani,text_uthmani_tajweed,code_v2,v2_page';
   const verses = await allVerses(chapter, `word_fields=${fields}${tr}`);
@@ -124,6 +169,8 @@ export async function fetchVerses(chapter: number, translation: number): Promise
 
 /** IndoPak spelling and page/line of every word (the 15-line Pakistani print), keyed "verse-pos". */
 export async function fetchIndo(chapter: number): Promise<Record<string, { text: string; page: number; line: number }>> {
+  const local = await bundled<Record<string, { text: string; page: number; line: number }>>(`indo/${chapter}.json`);
+  if (local) return local;
   const verses = await allVerses(chapter, 'word_fields=text_indopak&mushaf=3');
   const out: Record<string, { text: string; page: number; line: number }> = {};
   for (const v of verses)
