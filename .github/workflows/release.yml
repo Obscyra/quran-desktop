@@ -18,9 +18,18 @@ jobs:
             args: ''
           - os: macos-latest
             args: '--target universal-apple-darwin'
+          # the oldest runner on offer, so the AppImage runs on as many distributions as possible
+          - os: ubuntu-22.04
+            args: ''
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install the Linux libraries Tauri needs
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - uses: actions/setup-node@v4
         with:

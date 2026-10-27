@@ -1,6 +1,6 @@
 # Quran for Desktop — project memory
 
-Free, open-source (GPL-3.0), ad-free desktop Quran app for Windows and macOS (Linux later).
+Free, open-source (GPL-3.0), ad-free desktop Quran app for Windows and macOS, with Linux builds (AppImage, deb, rpm) added to CI and untested.
 Tauri 2 + SvelteKit (adapter-static, ssr=false) + Svelte 5 runes + TypeScript. Repo:
 https://github.com/Obscyra/quran-desktop (branch `main`, public). Inspired by
 https://github.com/quran/quran_android (credit it and keep its Android links in the README; the app now has its own icon).
@@ -97,7 +97,7 @@ WSL2 with Windows interop. Build happens in `C:\Users\magnum\quran-build` (copy 
 Replacing an installer on an existing release (only when asked): upload the exe and its `.sig` with `gh release upload --clobber` and put the new signature in `latest.json`. The copy can fail with "Permission denied" if an installer is running; don't kill the owner's process. Don't install on the owner's PC unless asked. Don't use `-ExecutionPolicy Bypass`.
 
 ## Releases and updates
-- `.github/workflows/release.yml`: pushing a `v*` tag builds Windows (.exe) + macOS (.dmg), signs update
+- `.github/workflows/release.yml`: pushing a `v*` tag builds Windows (.exe) + macOS (.dmg) + Linux (.AppImage, .deb, .rpm on ubuntu-22.04), signs update
   artifacts, publishes `latest.json`. Releases are normal (non-pre-release) even for `-beta` tags, so the updater sees them; notes come from `.github/release-notes/<tag>.md` + `footer.md`.
 - Needs secrets `TAURI_SIGNING_PRIVATE_KEY` (+ `_PASSWORD`, empty). Key is `~/.tauri/quran-desktop.key`;
   the public key is in `app/src-tauri/tauri.conf.json`. Losing the key breaks updates for installs.
@@ -110,4 +110,4 @@ Replacing an installer on an existing release (only when asked): upload the exe 
 - Current: v0.0.5-beta (tag at `1ff6b55`; the Windows exe on the release was rebuilt after `4f1896e`, so it has the About website link and the macOS dmg from CI does not). Latest README commit `59458fd`.
 - Done in 0.0.5: first-run setup, continue where I left off, reorganised Settings (8 pages, search, per-setting Reset), custom tooltips, Zoom/Fit/Fill, Black and gold theme, tray-reopen window fix, uninstaller icon, site demo and calligraphy.
 - Not yet verified: the real Windows window after tray reopen, uninstaller icon on an installed copy, 0.0.4 to 0.0.5 in-app update, macOS build, SmartScreen (no code-signing cert; downloads carry Mark of the Web, local builds do not).
-- Ideas not done: tafsir, sleep timer, in-text search, true OS Do Not Disturb (no public API; only in-app quiet focus mode), Linux, code signing, licence check for the website's page fonts.
+- Ideas not done: tafsir, sleep timer, in-text search, true OS Do Not Disturb (no public API; only in-app quiet focus mode), code signing, licence check for the website's page fonts.
