@@ -103,18 +103,107 @@
     });
   });
 
-  // keep the recited verse in view, but never fight a reader who is scrolling
-  $effect(() => {
-    if (paged || !activeVerse || !scroller || !settings.autoScroll) return;
-    if (Date.now() - lastUserScroll < 2500) return;
-    untrack(() => reveal(indexOfVerse(activeVerse)));
-    const el = document.getElementById(mushafMode ? `w-${reader.activeKey}` : reading ? `t-${activeVerse}` : `v-${activeVerse}`);
-    if (!el) return;
+  /**
+   * Bring the recited verse to the middle of the window. A verse that fits is centred whole; one taller than the
+   * window is followed line by line (the word being said stays in the middle band). `force` re-centres even if the
+   * verse is already on screen.
+   */
+  /** screen position of the recited verse (all its words, or its block) and of the scroller */
+  function playingBounds() {
+    if (!scroller || !activeVerse) return null;
     const box = scroller.getBoundingClientRect();
-    const r = el.getBoundingClientRect();
-    if (r.top < box.top + box.height * 0.15 || r.bottom > box.top + box.height * 0.7) {
-      scroller.scrollTo({ top: scroller.scrollTop + (r.top - box.top - box.height * 0.3) / settings.uiScale, behavior: 'smooth' });
+    // the interface may be zoomed: scrollTop is in the scroller's own units, rects are on screen
+    const k = box.height / scroller.clientHeight || 1;
+    let top = Infinity;
+    let bottom = -Infinity;
+    const words = mushafMode || !reading ? scroller.querySelectorAll<HTMLElement>(`[id^="w-${activeVerse}-"]`) : [];
+    for (const el of words) {
+      const r = el.getBoundingClientRect();
+      top = Math.min(top, r.top);
+      bottom = Math.max(bottom, r.bottom);
     }
+    if (top === Infinity) {
+      const el = document.getElementById(reading ? `t-${activeVerse}` : `v-${activeVerse}`);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      top = r.top;
+      bottom = r.bottom;
+    }
+    return { box, k, top, bottom };
+  }
+
+  // unlocked: an arrow appears in the corner when the recited verse is out of sight
+  let away = $state<'up' | 'down' | null>(null);
+  let awayRaf = 0;
+  function checkAway() {
+    cancelAnimationFrame(awayRaf);
+    awayRaf = requestAnimationFrame(() => {
+      const b = !paged && scroller && activeVerse ? playingBounds() : null;
+      away = !b ? null : b.bottom < b.box.top ? 'up' : b.top > b.box.bottom ? 'down' : null;
+    });
+  }
+  $effect(() => {
+    activeVerse;
+    paged;
+    reader.activeKey;
+    untrack(checkAway);
+  });
+  function backToPlaying() {
+    centerPlaying(true);
+  }
+
+  let busyUntil = 0;
+  function centerPlaying(force: boolean) {
+    if (!scroller || !activeVerse) return;
+    untrack(() => reveal(indexOfVerse(activeVerse)));
+    const b = playingBounds();
+    if (!b) return;
+    const { box, k, top, bottom } = b;
+    const pad = 24 * k;
+    const view = box.height - pad * 2;
+    let want: number; // the screen y that should end up in the middle
+    if (bottom - top <= view) {
+      want = (top + bottom) / 2;
+      if (!force && top >= box.top + pad * 0.5 && bottom <= box.bottom - pad * 0.5 && Math.abs(want - (box.top + box.height / 2)) < box.height * 0.2) return;
+    } else {
+      const w = document.getElementById(`w-${reader.activeKey}`)?.getBoundingClientRect();
+      if (!w) return;
+      want = (w.top + w.bottom) / 2;
+      const rel = (want - box.top) / box.height;
+      if (!force && rel > 0.3 && rel < 0.7) return;
+    }
+    const dy = (want - (box.top + box.height / 2)) / k;
+    if (Math.abs(dy) < 2) return;
+    busyUntil = Date.now() + 900;
+    scroller.scrollTo({ top: scroller.scrollTop + dy, behavior: 'smooth' });
+  }
+
+  // keep the recited verse in view, but never fight a reader who is scrolling (unless locked on it)
+  $effect(() => {
+    if (paged || !activeVerse || !scroller) return;
+    reader.activeKey;
+    if (settings.lockPlaying) untrack(() => centerPlaying(false));
+    else if (settings.autoScroll && Date.now() - lastUserScroll >= 2500) untrack(() => centerPlaying(false));
+  });
+
+  // locked: once the reader lets go, the view returns to the playing verse
+  let snapTimer = 0;
+  let pressing = false;
+  function moved() {
+    lastUserScroll = Date.now();
+    if (!settings.lockPlaying) return;
+    clearTimeout(snapTimer);
+    snapTimer = window.setTimeout(function back() {
+      if (pressing) return void (snapTimer = window.setTimeout(back, 300));
+      centerPlaying(true);
+    }, 650);
+  }
+  const onscroll = () => {
+    checkAway();
+    if (Date.now() > busyUntil) moved();
+  };
+  $effect(() => {
+    if (settings.lockPlaying && !paged && activeVerse) untrack(() => centerPlaying(true));
   });
 
   // wheel / trackpad turns pages, one per gesture
@@ -180,7 +269,7 @@
   // instead of jumping: it is moved back to where it was and eased into place with transforms only.
   let stage = $state<HTMLElement>();
   let before: DOMRect | null = null;
-  const shape = () => `${settings.sidebar}${ui.settingsOpen}${ui.listening}${settings.listenBar}${ui.focus}`;
+  const shape = () => `${settings.sidebar}${ui.settingsOpen}${ui.listening}${settings.listenBar}${settings.playerHover}${ui.focus}`;
   const currentBook = () => {
     return stage?.querySelector<HTMLElement>('.book.cur') ?? null;
   };
@@ -194,7 +283,8 @@
       const from = before;
       before = null;
       const book = currentBook();
-      if (!from || !book || ui.settingsOpen) return;
+      // a page that was hidden (Settings was open) has no size to glide from
+      if (!from?.width || !from.height || !book || ui.settingsOpen) return;
       const to = book.getBoundingClientRect();
       if (!to.width || !to.height) return;
       const z = settings.uiScale;
@@ -224,7 +314,7 @@
   const surahName = $derived(settings.arabicNames ? player.current?.name_arabic : player.current?.name_simple);
 </script>
 
-<svelte:window onresize={windowResized} />
+<svelte:window onresize={windowResized} onpointerup={() => (pressing = false)} />
 
 <div
   class="reader"
@@ -254,6 +344,7 @@
       {/if}
     {:else}
       <label class="pick"><span>Translation</span><TranslationPicker compact onpick={setTranslation} /></label>
+      <span class="grow"></span>
       <div class="seg" role="radiogroup" aria-label="Word meanings">
         {#each MEANINGS as m (m.id)}
           <button role="radio" aria-checked={settings.wordMeaning === m.id} onclick={() => (settings.wordMeaning = m.id)}>{m.name === 'Below' ? 'Word by word' : m.name === 'Hover' ? 'Meanings on hover' : 'No meanings'}</button>
@@ -268,7 +359,12 @@
         </button>
       </div>
     {/if}
-    <span class="grow"></span>
+    {#if !paged}
+      <button class="icon" class:on={settings.lockPlaying} aria-pressed={settings.lockPlaying} aria-label="Lock on the playing verse" title="Lock on the playing verse: scrolling away returns to it" onclick={() => (settings.lockPlaying = !settings.lockPlaying)}>
+        <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">{#if settings.lockPlaying}<rect x="4.5" y="9" width="11" height="8" rx="2" /><path d="M7 9V6.5a3 3 0 0 1 6 0V9" />{:else}<rect x="4.5" y="9" width="11" height="8" rx="2" /><path d="M7 9V6.5a3 3 0 0 1 5.6-1.5" />{/if}</svg>
+      </button>
+    {/if}
+    {#if reading}<span class="grow"></span>{/if}
     {#if paged && reader.page}
       <span class="where">Page {reader.page.page} · Juz {reader.page.juz}</span>
     {/if}
@@ -306,7 +402,7 @@
       </button>
     </div>
   {:else}
-    <main class="scroll" bind:this={scroller} onwheel={() => (lastUserScroll = Date.now())} ontouchmove={() => (lastUserScroll = Date.now())}>
+    <main class="scroll" bind:this={scroller} onwheel={moved} ontouchmove={moved} onscroll={onscroll} onpointerdown={() => (pressing = true)}>
       {#if player.current}
         <div class="head">
           <p class="kicker">{player.current.revelation_place} · {player.current.verses_count} verses</p>
@@ -376,11 +472,16 @@
       {/if}
       <div class="tail"></div>
     </main>
+    {#if away && !settings.lockPlaying}
+      <button class="back" class:up={away === 'up'} onclick={backToPlaying} aria-label="Back to the verse being recited" title="Back to the verse being recited">
+        <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4v12M5 11l5 5 5-5" /></svg>
+      </button>
+    {/if}
   {/if}
 </div>
 
 <style>
-  .reader { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; font-family: var(--ui); }
+  .reader { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; font-family: var(--ui); }
   .msg { margin: auto; color: var(--ink-dim); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
   .retry { height: 34px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--ink-faint); color: var(--ink); font-weight: 550; font-size: 13px; transition: border-color 0.15s; }
   .retry:hover { border-color: var(--accent); }
@@ -391,6 +492,9 @@
   :global(.app.focus) .sub { position: fixed; top: 40px; left: 0; right: 0; z-index: 29; background: var(--bg-2); transition: transform 0.4s var(--ease), opacity 0.3s var(--ease); }
   :global(.app.focus) .sub.away { transform: translateY(-140%); opacity: 0; pointer-events: none; }
   .grow { flex: 1; }
+  .back { position: absolute; right: 22px; bottom: 18px; width: 42px; height: 42px; border-radius: 999px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 24px -8px #000b; z-index: 5; transition: transform 0.15s var(--ease), opacity 0.15s; }
+  .back:hover { transform: scale(1.06); }
+  .back.up svg { transform: rotate(180deg); }
   .where { color: var(--ink-dim); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .seg { display: inline-flex; background: color-mix(in srgb, var(--ink) 8%, transparent); border-radius: 8px; padding: 2px; flex: none; }
   .seg button { padding: 0 12px; height: 26px; border-radius: 6px; font-size: 12.5px; font-weight: 550; color: var(--ink-dim); white-space: nowrap; transition: background-color 0.2s, color 0.2s; }
@@ -411,7 +515,7 @@
   .book.before { transform: translateX(28px); }
   .book:not(.cur):not(.ready) { content-visibility: hidden; }
   .book.cur { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
-  .book.spread { --sh: min(calc(100cqh - 24px), calc((100cqw - 140px) / 1.32)); }
+  .book.spread { --sh: min(calc(100cqh - 8px), calc((100cqw - 104px) / 1.32)); }
   .turn { position: absolute; top: 50%; translate: 0 -50%; width: 44px; height: 88px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-dim); transition: background-color 0.15s, color 0.15s, opacity 0.15s; z-index: 2; }
   .turn:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
   .turn:disabled { opacity: 0.2; }

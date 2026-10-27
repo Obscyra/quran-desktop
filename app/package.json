@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "0.0.2-beta",
+  "version": "0.0.3-beta",
   "description": "",
   "type": "module",
   "scripts": {
@@ -19,6 +19,7 @@
     "@fontsource/noto-naskh-arabic": "^5.3.0",
     "@fontsource/scheherazade-new": "^5.3.0",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-autostart": "^2.7.0",
     "@tauri-apps/plugin-notification": "^2.7.0",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-process": "^2.4.0",

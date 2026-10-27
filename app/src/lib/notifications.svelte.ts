@@ -142,7 +142,7 @@ class Notifier {
     return true;
   }
 
-  /** In front of the reader: a card. Behind other windows: the system notification centre too. */
+  /** In front of the reader: a card. Behind other windows or in the tray: the system notification centre too. */
   async deliver(n: Notice) {
     ui.notice = n;
     const active = document.hasFocus() && !document.hidden;
@@ -164,6 +164,17 @@ class Notifier {
     } catch {
       /* notifications are a courtesy; the in-app card still shows */
     }
+  }
+
+  /** Said once, the first time the window is closed into the tray, so the app is not mistaken for quit. */
+  async trayHint() {
+    try {
+      if (localStorage.getItem('quran.trayhint')) return;
+      localStorage.setItem('quran.trayhint', '1');
+    } catch {
+      /* storage blocked: it may be said twice */
+    }
+    await this.system('Quran is still running', 'It stays in the tray so your reminders can arrive. Click the tray icon to open it, or right-click it to quit.');
   }
 
   /** The Settings "Send a test" button. */

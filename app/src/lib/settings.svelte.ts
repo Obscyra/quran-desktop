@@ -30,6 +30,8 @@ const defaults = {
   highlightBookmarks: true,
   script: 'mushaf' as Script,
   listenBar: 'demand' as ListenBar,
+  /** the player bar floats over the page and only shows while the mouse is at the bottom edge */
+  playerHover: false,
   wordAudio: true,
   sidebar: true,
   volume: 1,
@@ -45,11 +47,14 @@ const defaults = {
   autoAdvance: true,
   repeatSurah: false,
   autoScroll: true,
+  lockPlaying: false,
   keepAwake: true,
   /** keep surahs you listen to regularly offline, and drop them again after a month without listening */
   autoCache: true,
   autoHideChrome: true,
   checkUpdates: true,
+  /** closing the window keeps the app in the system tray, so reminders still arrive */
+  background: true,
   /** scale of the whole interface (1 = normal) */
   uiScale: 1,
   remindersOn: false,
@@ -77,6 +82,7 @@ class Settings {
   highlightBookmarks = $state(defaults.highlightBookmarks);
   script = $state(defaults.script);
   listenBar = $state(defaults.listenBar);
+  playerHover = $state(defaults.playerHover);
   wordAudio = $state(defaults.wordAudio);
   sidebar = $state(defaults.sidebar);
   volume = $state(defaults.volume);
@@ -92,10 +98,12 @@ class Settings {
   autoAdvance = $state(defaults.autoAdvance);
   repeatSurah = $state(defaults.repeatSurah);
   autoScroll = $state(defaults.autoScroll);
+  lockPlaying = $state(defaults.lockPlaying);
   keepAwake = $state(defaults.keepAwake);
   autoCache = $state(defaults.autoCache);
   autoHideChrome = $state(defaults.autoHideChrome);
   checkUpdates = $state(defaults.checkUpdates);
+  background = $state(defaults.background);
   uiScale = $state(defaults.uiScale);
   remindersOn = $state(defaults.remindersOn);
   remindTimes = $state(defaults.remindTimes);

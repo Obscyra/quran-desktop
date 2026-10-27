@@ -7,6 +7,47 @@
   const hidden = $derived(ui.focus && !ui.chromeVisible);
   const shown = $derived(ui.listening || settings.listenBar === 'always');
 
+  // "Show on hover": the bar floats over the bottom edge of the page and slides up while the mouse is
+  // there (or a control in it has the keyboard); it also shows for a moment when listening starts.
+  const float = $derived(settings.playerHover && shown);
+  let peek = $state(false);
+  let over = false;
+  let held = false;
+  let peekTimer = 0;
+  const open = $derived(shown && (!settings.playerHover || peek));
+  function enter() {
+    over = true;
+    clearTimeout(peekTimer);
+    peek = true;
+  }
+  function leave() {
+    over = false;
+    clearTimeout(peekTimer);
+    if (!held) peekTimer = window.setTimeout(() => (peek = false), 650);
+  }
+  // a mouse that leaves the window (or a window that loses focus) may never send mouseleave: close from here too
+  function away() {
+    over = false;
+    held = false;
+    clearTimeout(peekTimer);
+    peekTimer = window.setTimeout(() => (peek = false), 350);
+  }
+  let bar = $state<HTMLElement>();
+  function track(e: PointerEvent) {
+    if (!peek || !over || held || !bar) return;
+    if (!bar.contains(e.target as Node)) leave();
+  }
+  function release() {
+    held = false;
+    if (!over && peek) leave();
+  }
+  $effect(() => {
+    if (!(ui.listening && settings.playerHover)) return;
+    peek = true;
+    peekTimer = window.setTimeout(() => !over && !held && (peek = false), 2600);
+    return () => clearTimeout(peekTimer);
+  });
+
   const fmt = (s: number) => {
     s = Math.max(0, Math.floor(s || 0));
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -46,7 +87,24 @@
   }
 </script>
 
-<footer class:hidden class:closed={!shown} inert={hidden || !shown} aria-label="Listening">
+<svelte:window onpointerup={release} onpointermove={track} onblur={away} />
+<svelte:document onmouseleave={away} />
+
+{#if float && !peek}<div class="zone" role="presentation" onmouseenter={enter} onpointerenter={enter}><i></i></div>{/if}
+
+<footer
+  class:hidden
+  class:float
+  class:closed={!open}
+  inert={hidden || !open}
+  aria-label="Listening"
+  onmouseenter={enter}
+  onmouseleave={leave}
+  bind:this={bar}
+  onfocusin={(e) => e.target instanceof HTMLElement && e.target.matches(':focus-visible') && enter()}
+  onfocusout={leave}
+  onpointerdown={() => (held = true)}
+>
   <div class="now">
     <button class="np" onclick={showPlaying} title="Go to the verse being recited" aria-label="Now playing: {player.current?.name_simple ?? ''}{playingVerse ? ', verse ' + playingVerse : ''}. Go to it">
       <b>{settings.arabicNames ? (player.current?.name_arabic ?? '—') : (player.current?.name_simple ?? '—')}</b>
@@ -129,6 +187,9 @@
   }
   /* Closed, the bar leaves the layout at once (the page below it reflows one time) and slides out over the
      bottom edge. Animating its height instead made the page refit on every frame, which stuttered. */
+  footer.float { position: absolute; inset: auto 0 0 0; box-shadow: 0 -14px 34px -22px #000c; }
+  .zone { position: absolute; inset: auto 0 0 0; height: 44px; z-index: 29; display: flex; justify-content: center; align-items: flex-end; }
+  .zone i { width: 64px; height: 4px; margin-bottom: 8px; border-radius: 4px; background: var(--ink-dim); opacity: 0.45; pointer-events: none; }
   footer.closed { position: absolute; inset: auto 0 0 0; transform: translateY(100%); opacity: 0; pointer-events: none; }
   .now em { font-style: normal; font-weight: 400; color: var(--accent); }
   .chip.x { width: 28px; padding: 0; display: grid; place-items: center; }

@@ -70,9 +70,12 @@ Get the installer for your system from the **[Releases page](https://github.com/
 
 ### Comfort
 - **Themes:** Night, Black, Madinah, Slate, Paper, Stone and White & Gold, or follow the system.
-- **Interface size** from 90% to 150%, independent of the Arabic text size. The interface uses the Inter font, bundled with the app, so it looks the same on every machine.
-- **Full screen**, with the screen kept awake while you listen.
-- **Reminders** at times you choose, and the **Verse of the Day** from quran.com in your chosen translation.
+- **Interface size** from 90% to 150%, or any percentage you type (50–200%), independent of the Arabic text size. The interface font (Inter) and the Arabic fonts (Amiri Quran, Noto Naskh Arabic, Scheherazade New) are bundled with the app, so it looks the same on every machine.
+- **Full screen**, with the screen kept awake while you listen. The window opens at the size and place you left it.
+- **Player bar on hover (optional):** hide the bar until the mouse reaches the bottom edge, so the page keeps all its room.
+- **Lock on the playing verse:** in the scrolling views, scrolling away only lasts a moment and the view returns to the verse being recited, kept whole on screen (or the lines being recited, when the verse is taller than the window). With the lock off, an arrow in the corner takes you back to the verse.
+- **One window, remembered:** Quran runs as a single instance (opening it again brings the running window back from the tray), and it reopens at the size and place you left it.
+- **Runs in the system tray:** closing the window keeps Quran in the tray (turn it off in Settings), and it can start with your computer, so **reminders** and the **Verse of the Day** from quran.com arrive as system notifications even when the window is closed.
 - **In-app updates:** new versions download in the background and install when you restart (Settings → Updates).
 
 ## Screenshots
@@ -141,7 +144,7 @@ Put the printed public key in `app/src-tauri/tauri.conf.json` (`plugins.updater.
 
 - **Data and audio:** the [Quran.com](https://quran.com) / [Quran.Foundation](https://quran.foundation) public API, and the audio hosts it points to such as [quranicaudio.com](https://quranicaudio.com).
 - **Mushaf fonts, tajweed markup and IndoPak text:** Quran.com and the King Fahd Quran Printing Complex.
-- **Other Arabic fonts:** [Amiri Quran](https://fonts.google.com/specimen/Amiri+Quran), [Scheherazade New](https://software.sil.org/scheherazade/) and [Noto Naskh Arabic](https://fonts.google.com/noto/specimen/Noto+Naskh+Arabic).
+- **Other Arabic fonts** (SIL Open Font License, bundled): [Amiri Quran](https://fonts.google.com/specimen/Amiri+Quran), [Scheherazade New](https://software.sil.org/scheherazade/) and [Noto Naskh Arabic](https://fonts.google.com/noto/specimen/Noto+Naskh+Arabic).
 - **Inspiration:** this app was built by studying [Quran for Android](https://github.com/quran/quran_android), the open-source app by the Quran.com community. It is an independent project written from scratch in TypeScript and Rust. Quran for Android is also on [Google Play](https://play.google.com/store/apps/details?id=com.quran.labs.androidquran) and [IzzyOnDroid](https://apt.izzysoft.de/packages/com.quran.labs.androidquran).
 - **Open-source projects used:** [Tauri](https://tauri.app), [Svelte](https://svelte.dev) and [SvelteKit](https://svelte.dev/docs/kit), [Vite](https://vite.dev), [Amiri Quran](https://github.com/aliftype/amiri-quran).
 

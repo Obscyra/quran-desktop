@@ -42,14 +42,15 @@
     const rowH = rows[0].clientHeight;
     const avail = box.clientWidth;
     if (!rowH || !avail) return;
-    const z = settings.uiScale;
+    // Rects are in screen pixels, scaled by the interface size and by any glide the page is in the middle of
+    // (a transform): divide that out, so the size is right whenever the measuring happens.
+    const k = box.getBoundingClientRect().width / avail || 1;
     const glyph = settings.script === 'mushaf';
     const cap = rowH * (glyph ? 0.74 : 0.6);
-    // rects are in screen pixels; under a scaled interface convert them back to layout pixels
     const gap = parseFloat(getComputedStyle(rows[0]).columnGap || '0');
     const width = (ln: HTMLElement) => {
       let w = 0;
-      for (const c of ln.children) w += (c as HTMLElement).getBoundingClientRect().width / z;
+      for (const c of ln.children) w += (c as HTMLElement).getBoundingClientRect().width / k;
       return w + Math.max(0, ln.children.length - 1) * gap;
     };
     // widths scale with the font: measure every line once, solve for the right size, then check the widest line
@@ -119,7 +120,10 @@
     const ro = new ResizeObserver(schedule);
     if (lines) ro.observe(lines);
     document.fonts.ready.then(schedule);
+    // a script style's font arrives after the first measure: measure again once it is in
+    document.fonts.addEventListener('loadingdone', schedule);
     return () => {
+      document.fonts.removeEventListener('loadingdone', schedule);
       ro.disconnect();
       cancelAnimationFrame(raf);
       clearTimeout(later);
@@ -175,6 +179,8 @@
     padding: 0 clamp(14px, 6cqw, 40px);
     color: var(--ink);
   }
+  .sheet.left, .sheet.right { --row: calc(100cqh * 0.92 / 15); padding: 0 clamp(10px, 3.5cqw, 28px); }
+  .sheet.left header, .sheet.right header, .sheet.left footer, .sheet.right footer { left: clamp(10px, 3.5cqw, 28px); right: clamp(10px, 3.5cqw, 28px); }
   .look-paper { background: var(--surface); border-radius: 6px; box-shadow: 0 1px 0 var(--line), 0 24px 44px -26px #000c; }
   .look-frame {
     background: var(--surface); border-radius: 4px; box-shadow: 0 24px 44px -26px #000c;
