@@ -1,5 +1,6 @@
 <script lang="ts">
   import { player } from '$lib/player.svelte';
+  import { settings } from '$lib/settings.svelte';
   import { ui } from '$lib/ui.svelte';
 
   const n = $derived(ui.notice);
@@ -15,6 +16,9 @@
     const x = ui.notice;
     close();
     if (!x?.chapter || !x.verse) return;
+    // the verse of the day is shown verse by verse, with its translation
+    settings.mode = 'verse';
+    ui.closeSettings();
     await player.goTo(x.chapter, x.verse);
     if (listen) player.playVerse(x.verse);
   }
