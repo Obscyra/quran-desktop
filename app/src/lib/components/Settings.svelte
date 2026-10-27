@@ -806,7 +806,8 @@
           <p>Free and open source, with no ads and nothing locked. This is a beta: please report anything that looks wrong. Built on the ideas of
             <a href="https://github.com/quran/quran_android" target="_blank" rel="noreferrer">Quran for Android</a>.
             Text, timings and audio come from the Quran.com public API.</p>
-          <p><a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">Source code</a> ·
+          <p><a href="https://qurandesktop.netlify.app" target="_blank" rel="noreferrer">Website</a> ·
+            <a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">Source code</a> ·
             <a href="https://github.com/Obscyra/quran-desktop/issues" target="_blank" rel="noreferrer">Report a problem</a></p>
         </div>
       </div>
@@ -816,7 +817,7 @@
           <b>Fahim Shahriar</b>
           <p>Email: <a href="mailto:fahimonlinux@gmail.com">fahimonlinux@gmail.com</a></p>
           <p>GitHub: <a href="https://github.com/Obscyra" target="_blank" rel="noreferrer">github.com/Obscyra</a></p>
-          <p>Website: <span class="soon">coming soon</span></p>
+          <p>Website: <a href="https://qurandesktop.netlify.app" target="_blank" rel="noreferrer">qurandesktop.netlify.app</a></p>
         </div>
       </div>
     {/if}
@@ -891,7 +892,6 @@
 
   .dev b { font-size: 16px; }
   .dev p { margin-top: 4px; }
-  .dev .soon { color: var(--ink-dim); font-style: italic; }
   .intro { margin: 0 0 4px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; line-height: 1.55; color: var(--ink); }
   .preview { background: var(--surface); border-radius: 16px; padding: 22px 28px; margin-bottom: 8px; text-align: center; }
   .preview p { font-family: var(--ar-font); font-size: var(--ar-size); line-height: var(--ar-lh); color: var(--ink); }
