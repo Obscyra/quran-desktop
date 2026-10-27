@@ -48,6 +48,28 @@ export async function winClose() {
     await exit(0);
   }
 }
+/** Hide the window into the system tray (the app keeps running). */
+export const winHide = async () => (await appWindow()).hide();
+
+/** Whether the app starts with the computer (into the tray). */
+export async function getAutostart(): Promise<boolean> {
+  if (!isTauri()) return false;
+  try {
+    return await (await import('@tauri-apps/plugin-autostart')).isEnabled();
+  } catch {
+    return false;
+  }
+}
+export async function setAutostart(on: boolean): Promise<boolean> {
+  try {
+    const m = await import('@tauri-apps/plugin-autostart');
+    if (on) await m.enable();
+    else await m.disable();
+    return await m.isEnabled();
+  } catch {
+    return getAutostart();
+  }
+}
 export const winIsMaximized = async () => (await appWindow()).isMaximized();
 export async function onWindowResized(cb: () => void): Promise<() => void> {
   return (await appWindow()).onResized(cb);

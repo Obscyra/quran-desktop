@@ -2,7 +2,7 @@
   import { pickWord, sayWord } from '$lib/actions';
   import { pageFonts } from '$lib/fonts.svelte';
   import { reader } from '$lib/reader.svelte';
-  import { light } from '$lib/sweep';
+  import { light, relight } from '$lib/sweep';
   import { settings } from '$lib/settings.svelte';
   import { ui } from '$lib/ui.svelte';
   import { untrack } from 'svelte';
@@ -24,8 +24,13 @@
 
   // The player lights the word being recited straight on its element (no reactive update of every word
   // on each change). A word that appears while it is already being recited lights itself here.
+  // A new script style changes the text under the layers, so they are rebuilt from it.
+  let drawn = '';
   $effect(() => {
-    if (el && untrack(() => reader.activeKey) === key) light(el);
+    const now = `${family}|${tajweed}|${text}`;
+    const changed = drawn !== '' && drawn !== now;
+    drawn = now;
+    if (el && untrack(() => reader.activeKey) === key) (changed ? relight : light)(el);
   });
 
   const cache = new Map<string, string>();
@@ -33,10 +38,10 @@
     let out = cache.get(src);
     if (out === undefined) {
       out = src
-        .replace(/<rule class=([a-z_]+)>/g, '\u0001$1\u0002')
+        .replace(/<rule class=([a-z_-]+)>/g, '\u0001$1\u0002')
         .replace(/<\/rule>/g, '\u0003')
         .replace(/[<>&]/g, '')
-        .replace(/\u0001([a-z_]+)\u0002/g, '<span class="tj-$1">')
+        .replace(/\u0001([a-z_-]+)\u0002/g, '<span class="tj-$1">')
         .replace(/\u0003/g, '</span>');
       cache.set(src, out);
     }

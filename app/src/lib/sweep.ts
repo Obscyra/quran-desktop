@@ -49,6 +49,19 @@ export function light(w: HTMLElement) {
   w.classList.add('active');
 }
 
+/** The word being recited was redrawn (another script style): rebuild its layers from the new text. */
+export function relight(w: HTMLElement) {
+  const l = lit.get(w);
+  if (l) {
+    clearTimeout(timers.get(w));
+    l.glow.remove();
+    l.fx?.remove();
+    lit.delete(w);
+    if (current === l) current = null;
+  }
+  light(w);
+}
+
 /** How much of the current word has been said, 0 to 1. */
 export function progress(p: number) {
   if (!current?.fx || !current.inner) return;

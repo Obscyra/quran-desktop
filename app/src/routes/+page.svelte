@@ -4,7 +4,7 @@
   import { notifier } from '$lib/notifications.svelte';
   import { player } from '$lib/player.svelte';
   import { goBack, goForward } from '$lib/actions';
-  import { isTauri } from '$lib/platform';
+  import { isTauri, winHide } from '$lib/platform';
   import { reader } from '$lib/reader.svelte';
   import { settings } from '$lib/settings.svelte';
   import { applyTheme, resolveTheme } from '$lib/themes';
@@ -119,7 +119,15 @@
     if (isTauri()) {
       import('@tauri-apps/api/window').then(async ({ getCurrentWindow }) => {
         unlisten = await getCurrentWindow().onCloseRequested(async (ev) => {
-          if (!updater.pending) return;
+          if (!updater.pending) {
+            // closing the window leaves the app in the tray, where reminders keep arriving
+            if (settings.background) {
+              ev.preventDefault();
+              await winHide();
+              notifier.trayHint();
+            }
+            return;
+          }
           ev.preventDefault();
           try {
             await updater.installAndExit();

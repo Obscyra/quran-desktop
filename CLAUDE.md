@@ -47,7 +47,19 @@ of quran_android.
   its neighbours mounted (neighbours hidden, laid out when idle); long surahs render in batches (`upto` in
   `Reader.svelte`); the sweep layers are made by `sweep.ts`; Settings is an overlay over a mounted reader.
 - Left-click a word plays it; right-click opens `WordMenu`. Back/forward trail lives in `player.svelte.ts`.
-- Fonts bundled in `app/static/fonts`: KFGQPC Uthmanic Hafs, IndoPak Nastaleeq (from quran.com).
+- Fonts bundled in `app/static/fonts`: KFGQPC Uthmanic Hafs, IndoPak Nastaleeq (from quran.com), Inter, and
+  `arabic/` (Amiri Quran, Noto Naskh Arabic, Scheherazade New, OFL): Windows has none of the three.
+- Tray and background (`src-tauri/src/lib.rs`): tray icon (Open / Quit), `tauri-plugin-window-state` (size, position, maximized;
+  not VISIBLE, so a window hidden in the tray never makes the next launch start hidden), `tauri-plugin-autostart` (starts with
+  `--hidden`). Closing the window hides it when `settings.background` is on: done in the JS `onCloseRequested` in `+page.svelte`
+  (a Rust close handler would be undone by that listener). A pending update still installs on close.
+- `PageSheet.fit()` divides measured widths by the page's own transform scale (`k`), so it is right even during a glide;
+  the Reader glide skips a page that was hidden (zero size). Tajweed class names contain hyphens (`custom-alef-maksora`).
+- Single instance: `tauri-plugin-single-instance` must be the first plugin (a second launch shows the running window). Window size is saved
+  400 ms after the last resize/move by `remember_window` in `lib.rs` (the plugin alone only saves on exit, rare for a tray app).
+- Scroll views: `settings.lockPlaying` + `centerPlaying`/`playingBounds` in `Reader.svelte` (verse centred whole; taller verses follow the word);
+  unlocked, a `.back` arrow shows when the verse is off screen. Rects are divided by `k` (interface zoom).
+- Settings `playerHover`: the player bar floats over the bottom edge and shows on hover (`PlayerBar.svelte`).
 
 ## Run and test
 - UI in a browser: `cd app && npm install && npx vite dev --port 1420` then

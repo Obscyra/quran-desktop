@@ -6,7 +6,7 @@
   import { pageFonts } from '$lib/fonts.svelte';
   import * as offline from '$lib/offline';
   import { player } from '$lib/player.svelte';
-  import { isTauri } from '$lib/platform';
+  import { getAutostart, isTauri, setAutostart } from '$lib/platform';
   import { SCRIPTS, settings, type Highlight, type PageLook, type PageType, type Script, type WordMeaning } from '$lib/settings.svelte';
   import { THEMES } from '$lib/themes';
   import { translations } from '$lib/translations.svelte';
@@ -29,7 +29,7 @@
     { id: 'updates', name: 'Updates', hint: 'Version and releases', group: 'App' },
     { id: 'data', name: 'Data & about', hint: 'Storage, bookmarks, reset, credits', group: 'App' }
   ];
-  const UI_SIZES = [0.9, 1, 1.15, 1.3, 1.5];
+  const UI_SIZES = [0.9, 1, 1.1, 1.3, 1.5];
   const GROUPS = ['Look', 'Read', 'Listen', 'App'];
 
   // reminder times are kept as one "08:00,20:00" string in the settings
@@ -104,8 +104,15 @@
   let savedVisible = $state(false);
   let importMsg = $state('');
 
+  let autostart = $state(false);
+  async function toggleAutostart(on: boolean) {
+    autostart = on;
+    autostart = await setAutostart(on);
+  }
+
   onMount(async () => {
     translations.load();
+    getAutostart().then((on) => (autostart = on));
     pageFonts.ensure([1]); // the script previews draw page 1 in its own font
     if (isTauri()) version = await (await import('@tauri-apps/api/app')).getVersion();
     usedBytes = await offline.blobSizes();
@@ -249,6 +256,15 @@
           {#each UI_SIZES as u (u)}
             <button role="radio" aria-checked={settings.uiScale === u} class:on={settings.uiScale === u} onclick={() => (settings.uiScale = u)}>{u === 1 ? 'Default' : `${Math.round(u * 100)}%`}</button>
           {/each}
+          <label class="custom" class:on={!UI_SIZES.includes(settings.uiScale)}>
+            <input type="number" min="50" max="200" step="1" inputmode="numeric" placeholder="Custom" aria-label="Custom interface size in percent"
+              value={UI_SIZES.includes(settings.uiScale) ? '' : Math.round(settings.uiScale * 100)}
+              onchange={(e) => {
+                const n = parseFloat(e.currentTarget.value);
+                if (Number.isFinite(n)) settings.uiScale = Math.min(2, Math.max(0.5, Math.round(n) / 100));
+                else e.currentTarget.value = '';
+              }} />%
+          </label>
         </div>
       </div>
       <div class="row">
@@ -369,6 +385,10 @@
         </div>
       </div>
       <div class="row">
+        <div class="label"><h3>Show the bar only on hover</h3><p>Hides the bar until you move the mouse to the bottom edge of the window, and the page keeps all its room. It also appears for a moment when you start listening.</p></div>
+        {@render toggle(settings.playerHover, (v) => (settings.playerHover = v), 'Show the player only on hover')}
+      </div>
+      <div class="row">
         <div class="label"><h3>Reciter</h3><p>Switching keeps your place in the surah.</p></div>
         <div class="rp-wrap"><ReciterPicker /></div>
       </div>
@@ -400,6 +420,10 @@
       <div class="row">
         <div class="label"><h3>Follow the recitation</h3><p>Scroll automatically so the current verse stays in view. Scrolling yourself pauses it for a moment.</p></div>
         {@render toggle(settings.autoScroll, (v) => (settings.autoScroll = v), 'Auto-scroll')}
+      </div>
+      <div class="row">
+        <div class="label"><h3>Lock on the playing verse</h3><p>In the scrolling views, scrolling away only lasts a moment: once you let go, the view returns to the verse being recited, with all of it on screen (or the lines being recited, if the verse is taller than the window). Also on the lock button in the bar above the text.</p></div>
+        {@render toggle(settings.lockPlaying, (v) => (settings.lockPlaying = v), 'Lock on the playing verse')}
       </div>
       <div class="row">
         <div class="label"><h3>Say a word when clicked</h3><p>Clicking a word plays just that word, with no menu. Needs a connection unless the surah is downloaded.</p></div>
@@ -467,13 +491,25 @@
     {/if}
 
     {#if ui.area === 'reminders'}
+      {#if isTauri()}
+        <h3 class="grp">Background</h3>
+        <div class="row">
+          <div class="label"><h3>Keep running in the tray</h3><p>Closing the window leaves Quran in the system tray, so reminders and the verse of the day still arrive. Click the tray icon to open it again, or right-click it to quit. Off: closing the window quits.</p></div>
+          {@render toggle(settings.background, (v) => (settings.background = v), 'Keep running in the tray')}
+        </div>
+        <div class="row">
+          <div class="label"><h3>Start with the computer</h3><p>Starts quietly in the tray when you sign in, without opening a window.</p></div>
+          {@render toggle(autostart, toggleAutostart, 'Start with the computer')}
+        </div>
+        <h3 class="grp">Reminders</h3>
+      {/if}
       <div class="row">
-        <div class="label"><h3>Verse of the day</h3><p>One verse from quran.com each day, shown here when you are in the app, from the time you choose.</p></div>
+        <div class="label"><h3>Verse of the day</h3><p>One verse from quran.com each day, from the time you choose: a card in the app, or a notification when the window is behind other apps or in the tray.</p></div>
         {@render toggle(settings.dailyVerse, (v) => (settings.dailyVerse = v), 'Verse of the day')}
       </div>
       {#if settings.dailyVerse}
         <div class="row">
-          <div class="label"><h3>Show it from</h3><p>It appears the first time you open the app after this time.</p></div>
+          <div class="label"><h3>Show it from</h3><p>It appears at this time while the app is running (in the tray too), or the first time you open the app after it.</p></div>
           <input class="time" type="time" bind:value={settings.dailyVerseTime} aria-label="Verse of the day time" />
         </div>
         <div class="row">
@@ -509,7 +545,7 @@
         </div>
       {/if}
       <div class="row">
-        <div class="label"><h3>Use system notifications</h3><p>When the window is behind other apps, notify through Windows or macOS as well. Do Not Disturb and Focus still apply.</p></div>
+        <div class="label"><h3>Use system notifications</h3><p>When the window is behind other apps or in the tray, notify through Windows or macOS as well. Do Not Disturb and Focus still apply.</p></div>
         {@render toggle(settings.systemNotify, (v) => (settings.systemNotify = v), 'System notifications')}
       </div>
       <div class="row">
@@ -692,6 +728,10 @@
   .seg { display: inline-flex; background: var(--surface); border-radius: 12px; padding: 3px; gap: 2px; flex-wrap: wrap; }
   .seg button { padding: 8px 14px; border-radius: 9px; color: var(--ink-dim); transition: background-color 0.2s, color 0.2s; }
   .seg button:hover { color: var(--ink); }
+  .seg .custom { display: inline-flex; align-items: center; gap: 2px; padding: 0 10px; border-radius: 9px; color: var(--ink-dim); }
+  .seg .custom.on { background: var(--accent-soft); color: var(--accent); }
+  .seg .custom input { width: 58px; background: transparent; border: 0; color: inherit; font: inherit; text-align: right; outline: none; }
+  .seg .custom input:focus-visible { box-shadow: 0 1px 0 var(--accent); }
   .seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 550; }
 
   input[type='range'] { width: min(100%, 360px); accent-color: var(--accent); height: 28px; }
@@ -743,7 +783,7 @@
   .script { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 16px 12px 14px; border-radius: 14px; background: var(--surface); outline: 2px solid transparent; text-align: center; transition: outline-color 0.2s; }
   .script:hover { outline-color: var(--accent-soft); }
   .script.on { outline-color: var(--accent); }
-  .script .sample { font-size: 26px; line-height: 1.9; color: var(--ink); white-space: nowrap; }
+  .script .sample { font-size: 22px; line-height: 1.8; color: var(--ink); max-width: 100%; min-height: 3.6em; display: flex; align-items: center; justify-content: center; text-align: center; text-wrap: balance; }
   .script b { font-size: 13.5px; font-weight: 600; margin-top: 4px; }
   .script small { color: var(--ink-dim); font-size: 12px; line-height: 1.4; }
   .looks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
