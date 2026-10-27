@@ -44,6 +44,11 @@
       "icons/icon.ico"
     ],
     "createUpdaterArtifacts": true,
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      }
+    },
     "windows": {
       "nsis": {
         "installMode": "currentUser",

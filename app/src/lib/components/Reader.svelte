@@ -290,6 +290,8 @@
     lastTurn = now;
     reader.go(e.deltaY > 0 ? 1 : -1);
   }
+  /** the Arabic text size as a percentage of the default, for the verse view's zoom buttons */
+  const sizePct = $derived(Math.round((settings.size / 56) * 100));
   const zoomPage = (d: number) => (settings.pageZoom = Math.min(3, Math.max(0.5, Math.round((settings.pageZoom + d) * 10) / 10)));
   const fitPage = (f: 'fit' | 'fill') => {
     settings.pageFit = f;
@@ -420,11 +422,11 @@
           <button role="radio" aria-checked={settings.flow === 'scroll'} onclick={() => (settings.flow = 'scroll')}>Scroll</button>
         </div>
         <div class="size" role="group" aria-label="Page size">
-          <button class="icon" aria-label="Zoom out" title={`Zoom out · ${Math.round(settings.pageZoom * 100)}% → ${Math.round(Math.max(0.5, settings.pageZoom - 0.1) * 100)}%`} disabled={settings.pageZoom <= 0.5} onclick={() => zoomPage(-0.1)}>
+          <button class="icon" aria-label="Zoom out" title={`Zoom out · ${Math.round(settings.pageZoom * 100)}%`} disabled={settings.pageZoom <= 0.5} onclick={() => zoomPage(-0.1)}>
             <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5" /></svg>
           </button>
           <span class="pct" aria-live="polite" title="Page zoom: {Math.round(settings.pageZoom * 100)}%">{Math.round(settings.pageZoom * 100)}%</span>
-          <button class="icon" aria-label="Zoom in" title={`Zoom in · ${Math.round(settings.pageZoom * 100)}% → ${Math.round(Math.min(3, settings.pageZoom + 0.1) * 100)}%`} disabled={settings.pageZoom >= 3} onclick={() => zoomPage(0.1)}>
+          <button class="icon" aria-label="Zoom in" title={`Zoom in · ${Math.round(settings.pageZoom * 100)}%`} disabled={settings.pageZoom >= 3} onclick={() => zoomPage(0.1)}>
             <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5M8.5 6v5" /></svg>
           </button>
         </div>
@@ -449,10 +451,10 @@
         {/each}
       </div>
       <div class="size" role="group" aria-label="Arabic text size">
-        <button class="icon" aria-label="Zoom out" title={`Zoom out · ${Math.round(settings.pageZoom * 100)}% → ${Math.round(Math.max(0.5, settings.pageZoom - 0.1) * 100)}%`} disabled={settings.size <= 24} onclick={() => (settings.size = Math.max(24, settings.size - 4))}>
+        <button class="icon" aria-label="Zoom out" title={`Zoom out · ${sizePct}%`} disabled={settings.size <= 24} onclick={() => (settings.size = Math.max(24, settings.size - 4))}>
           <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5" /></svg>
         </button>
-        <button class="icon" aria-label="Zoom in" title={`Zoom in · ${Math.round(settings.pageZoom * 100)}% → ${Math.round(Math.min(3, settings.pageZoom + 0.1) * 100)}%`} disabled={settings.size >= 96} onclick={() => (settings.size = Math.min(96, settings.size + 4))}>
+        <button class="icon" aria-label="Zoom in" title={`Zoom in · ${sizePct}%`} disabled={settings.size >= 96} onclick={() => (settings.size = Math.min(96, settings.size + 4))}>
           <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5M8.5 6v5" /></svg>
         </button>
       </div>
@@ -647,7 +649,8 @@
   .scroll.fill .pg { --sh: calc(100cqw * var(--pz, 1) / 0.66); }
   .pct { min-width: 44px; text-align: center; font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--ink-dim); }
   .verses { max-width: 900px; margin: 0 auto; }
-  .verse { padding: 18px 14px 22px; border-radius: 14px; transition: background-color 0.3s; border-bottom: 1px solid var(--line); }
+  /* verses off screen are not laid out: a change of text size only has to lay out what is in view */
+  .verse { content-visibility: auto; contain-intrinsic-size: auto 240px; padding: 18px 14px 22px; border-radius: 14px; transition: background-color 0.3s; border-bottom: 1px solid var(--line); }
   .verse.target, .tflow p.target { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 3px 0 0 var(--accent), 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 10px; }
   .verse.now { background: color-mix(in srgb, var(--accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
   .tools { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }

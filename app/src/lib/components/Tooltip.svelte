@@ -44,6 +44,7 @@
     lastShown = Date.now();
   }
   function hide() {
+    watch?.disconnect();
     clearTimeout(timer);
     tip = null;
     el = null;
@@ -56,23 +57,26 @@
     const text = read(t);
     if (!text) return;
     el = t;
+    follow(t);
     // the first tip waits a moment; moving along a toolbar shows the next one at once
     timer = window.setTimeout(() => place(t, text), Date.now() - lastShown < 400 ? 0 : 450);
   }
-  // a click can change what the tip says (zoom 100% to 110%): say it again, in place
-  function again() {
-    const t = el;
-    if (!t) return;
-    setTimeout(() => {
-      if (el !== t) return;
+  // what the tip says can change while it is shown (the zoom level after a click): say it again, in place, the moment
+  // the page sets a new title on the element
+  let watch: MutationObserver | undefined;
+  function follow(t: HTMLElement) {
+    watch?.disconnect();
+    watch = new MutationObserver(() => {
+      if (el !== t || t.getAttribute('title') === null) return;
       const text = read(t);
       if (text) place(t, text);
       else hide();
-    }, 40);
+    });
+    watch.observe(t, { attributes: true, attributeFilter: ['title'] });
   }
 </script>
 
-<svelte:window onpointerover={over} onpointerup={again} onpointerdown={() => clearTimeout(timer)} onscrollcapture={hide} onkeydown={hide} onblur={hide} />
+<svelte:window onpointerover={over} onpointerdown={() => clearTimeout(timer)} onscrollcapture={hide} onkeydown={hide} onblur={hide} />
 <svelte:document onpointerleave={hide} />
 
 {#if tip}

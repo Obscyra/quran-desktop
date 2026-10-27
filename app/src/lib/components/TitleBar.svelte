@@ -13,7 +13,8 @@
   let maximized = $state(false);
 
   onMount(() => {
-    if (os !== 'windows' && os !== 'linux') return;
+    // only Windows draws its own window buttons; macOS and Linux have the system's title bar
+    if (os !== 'windows') return;
     const sync = () => winIsMaximized().then((m) => (maximized = m)).catch(() => {});
     sync();
     let off: (() => void) | undefined;
@@ -22,7 +23,7 @@
   });
 </script>
 
-<header class="bar" class:hidden class:mac={os === 'mac'} inert={hidden} data-tauri-drag-region>
+<header class="bar" class:hidden inert={hidden} data-tauri-drag-region>
   <div class="left" data-tauri-drag-region>
     <button class="tool" class:active={settings.sidebar} onclick={() => ui.toggleSidebar()} aria-label="Toggle surah list (B)" aria-pressed={settings.sidebar} title="Surah list (B)">
       <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5" /><path d="M7.5 3.5v13" />{#if settings.sidebar}<path d="M2.5 6a2.5 2.5 0 0 1 2.5-2.5h2.5v13H5A2.5 2.5 0 0 1 2.5 14z" fill="currentColor" stroke="none" opacity=".35" />{/if}</svg>
@@ -73,7 +74,7 @@
       <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
     </button>
 
-    {#if os === 'windows' || os === 'linux'}
+    {#if os === 'windows'}
       <div class="win" role="group" aria-label="Window controls">
         <button onclick={() => winMinimize()} aria-label="Minimize">
           <svg aria-hidden="true" viewBox="0 0 10 10" width="10" height="10"><path d="M0 5.5h10" stroke="currentColor" stroke-width="1" /></svg>
@@ -100,7 +101,6 @@
     background: var(--bg-2); user-select: none; -webkit-user-select: none; position: relative; z-index: 30;
     transition: transform 0.4s var(--ease), opacity 0.3s var(--ease);
   }
-  .bar.mac .left { padding-left: 80px; } /* room for the native traffic lights */
   .bar.hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
   :global(.app.focus) .bar { position: fixed; inset: 0 0 auto 0; }
   .left, .right { display: flex; align-items: center; height: 100%; min-width: 0; }
