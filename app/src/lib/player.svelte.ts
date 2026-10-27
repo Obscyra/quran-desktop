@@ -1,3 +1,5 @@
+import { wordLanguage } from './languages';
+import { translations } from './translations.svelte';
 import { BUNDLED_TRANSLATION, fetchChapterAudio, fetchChapters, fetchIndo, fetchReciters, fetchVerses, isPartial } from './api';
 import { autocache } from './autocache.svelte';
 import { pageFonts } from './fonts.svelte';
@@ -337,7 +339,7 @@ class Player {
 
   private async fetchText(ch: number) {
     const tr = settings.translation;
-    const v = await fetchVerses(ch, tr);
+    const v = await fetchVerses(ch, tr, wordLanguage(translations.list.find((x) => x.id === tr)?.language));
     // the bundled text is already on disk; a translation that could not be fetched must not be remembered as empty
     if (tr !== BUNDLED_TRANSLATION && !isPartial(v)) offline.putText(ch, tr, v);
     this.lastPartial = isPartial(v);

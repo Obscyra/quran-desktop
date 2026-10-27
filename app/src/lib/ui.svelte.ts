@@ -25,6 +25,8 @@ export interface Pick {
 export const FOCUS_MODE = false;
 
 class Ui {
+  /** the first-run setup (theme, reading style, language) */
+  welcome = $state(settings.firstRun);
   settingsOpen = $state(false);
   area = $state<SettingsArea>('appearance');
   focus = $state(false);

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import { pageFonts } from '$lib/fonts.svelte';
+  import { dataSync } from '$lib/datasync.svelte';
   import { notifier } from '$lib/notifications.svelte';
   import { player } from '$lib/player.svelte';
   import { goBack, goForward } from '$lib/actions';
@@ -17,6 +18,7 @@
   import Settings from '$lib/components/Settings.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import NoticeCard from '$lib/components/NoticeCard.svelte';
+  import Welcome from '$lib/components/Welcome.svelte';
   import WordMenu from '$lib/components/WordMenu.svelte';
   import TitleBar from '$lib/components/TitleBar.svelte';
 
@@ -71,7 +73,7 @@
 
   function keys(e: KeyboardEvent) {
     const t = e.target as HTMLElement;
-    if (t.matches('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (ui.welcome || t.matches('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.code === 'Space') {
       e.preventDefault();
       player.toggle();
@@ -105,6 +107,7 @@
   onMount(() => {
     player.init();
     notifier.start();
+    dataSync.start();
     ui.syncFullscreen();
     const mq = matchMedia('(prefers-color-scheme: dark)');
     const onMq = () => (systemDark = mq.matches);
@@ -164,6 +167,7 @@
   <NetBar />
   <WordMenu />
   <NoticeCard />
+  {#if ui.welcome}<Welcome />{/if}
   <ConfirmDialog />
 
   {#if updater.pending && !ui.focus}

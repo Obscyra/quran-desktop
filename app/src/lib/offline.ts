@@ -32,10 +32,14 @@ async function tx<T>(store: Store, mode: IDBTransactionMode, fn: (s: IDBObjectSt
 
 const audioKey = (reciter: number, chapter: number) => `${reciter}:${chapter}`;
 
-const textKey = (ch: number, tr: number) => `${ch}:${tr}`;
+// the 2 marks text whose word meanings follow the translation's language (earlier saves have English ones)
+const textKey = (ch: number, tr: number) => `${ch}:${tr}:2`;
 export const getText = (ch: number, tr: number) =>
   tx<Verse[] | undefined>('text', 'readonly', (s) => s.get(textKey(ch, tr)));
 export const putText = (ch: number, tr: number, v: Verse[]) => tx('text', 'readwrite', (s) => s.put(v, textKey(ch, tr)));
+/** The Quran text as the provider has it now, when it differs from the copy in the installer (key `<surah>:fresh`). */
+export const getFresh = (ch: number) => tx<Verse[] | undefined>('text', 'readonly', (s) => s.get(`${ch}:fresh`));
+export const putFresh = (ch: number, v: Verse[]) => tx('text', 'readwrite', (s) => s.put(v, `${ch}:fresh`));
 export const clearAll = async () => {
   for (const store of STORES) await tx(store, 'readwrite', (s) => s.clear());
 };

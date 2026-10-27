@@ -66,6 +66,10 @@ of quran_android.
   Tajweed markup and IndoPak spelling, and the 604 page fonts into `app/static/data/` and `app/static/fonts/qcf/` (about 120 MB, gitignored,
   so every checkout and CI run must run it: `release.yml` does). The installer carries them; `api.ts` and `fonts.svelte.ts` read them first
   and only go online for other translations and audio (audio is never bundled; the Audio manager downloads it).
+- `datasync.svelte.ts`: a weekly background check (25 s after start, online only) compares the provider's text, IndoPak spelling and page-font sizes (`data/manifest.json`, written by the bundle script) with what the app has, and keeps changes in IndexedDB (`<surah>:fresh`, `fonts`, `quran.fresh.fonts`), read before the bundled copy. Changes must pass `sound()` (no verse or word lost).
+- Word meanings follow the translation's language (`languages.ts`, `api.extrasOf`); the bundled words are English. Cached text keys end in `:2`.
+- First run (`settings.firstRun`): `Welcome.svelte` (theme, size, mode, script, language, word meanings; Skip on every step; flag `quran.welcomed`).
+- App icon master is `app/src-tauri/icon-source.png` (`npx tauri icon src-tauri/icon-source.png`, then delete the generated `icons/android` and `icons/ios`).
 - Run `npm run bundle` once before a local build or dev session; a build without the files still works but fetches from the network.
 
 ## Run and test

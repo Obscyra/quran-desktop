@@ -1,0 +1,211 @@
+<script lang="ts">
+  import { onMount, tick } from 'svelte';
+  import { player } from '$lib/player.svelte';
+  import { SCRIPTS, settings, type WordMeaning } from '$lib/settings.svelte';
+  import { THEMES } from '$lib/themes';
+  import { translations } from '$lib/translations.svelte';
+  import { ui } from '$lib/ui.svelte';
+
+  const STEPS = ['Look', 'Reading', 'Language', 'Ready'] as const;
+  let step = $state(0);
+  let card = $state<HTMLElement>();
+
+  const SIZES = [0.9, 1, 1.1, 1.3];
+  const MEANINGS: { id: WordMeaning; name: string }[] = [
+    { id: 'hover', name: 'On hover' },
+    { id: 'below', name: 'Under each word' },
+    { id: 'off', name: 'Off' }
+  ];
+  const SAMPLE = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ';
+
+  // the language of the chosen translation (0 is the Arabic alone)
+  const language = $derived(settings.translation === 0 ? '' : (translations.list.find((t) => t.id === settings.translation)?.language ?? 'English'));
+  const inLanguage = $derived(translations.list.filter((t) => t.language === language));
+  const languages = $derived(translations.grouped.map(([l]) => l));
+
+  function setTranslation(id: number) {
+    settings.translation = id;
+    player.refreshText();
+  }
+  function pickLanguage(l: string) {
+    if (!l) return setTranslation(0);
+    const options = translations.list.filter((t) => t.language === l);
+    // English keeps the translation that comes with the app
+    setTranslation((l === 'English' && options.find((t) => t.id === 20)?.id) || options[0]?.id || settings.translation);
+  }
+
+  function finish() {
+    try {
+      localStorage.setItem('quran.welcomed', '1');
+    } catch {
+      /* it may show again next time */
+    }
+    ui.welcome = false;
+  }
+  const go = (n: number) => {
+    step = Math.min(STEPS.length - 1, Math.max(0, n));
+    tick().then(() => card?.querySelector<HTMLElement>('button.pri')?.focus());
+  };
+
+  onMount(() => {
+    translations.load();
+    card?.querySelector<HTMLElement>('button.pri')?.focus();
+  });
+  function key(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      finish();
+    }
+  }
+</script>
+
+<svelte:window onkeydowncapture={key} />
+
+<div class="scrim" role="presentation">
+  <div class="card" bind:this={card} role="dialog" aria-modal="true" aria-labelledby="w-t">
+    <header>
+      <ol aria-label="Setup progress">
+        {#each STEPS as s, i (s)}<li class:on={i === step} class:done={i < step} aria-current={i === step ? 'step' : undefined}><span>{i + 1}</span>{s}</li>{/each}
+      </ol>
+      <button class="skip" onclick={finish}>Skip setup</button>
+    </header>
+
+    {#if step === 0}
+      <h2 id="w-t">Welcome. Choose how it looks.</h2>
+      <p class="sub">Everything here can be changed later in Settings, the gear at the top right.</p>
+      <div class="themes" role="radiogroup" aria-label="Theme">
+        <button class="th" role="radio" aria-checked={settings.theme === 'auto'} class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>
+          <span class="sw auto"></span>Match system
+        </button>
+        {#each THEMES as t (t.id)}
+          <button class="th" role="radio" aria-checked={settings.theme === t.id} class:on={settings.theme === t.id} onclick={() => (settings.theme = t.id)}>
+            <span class="sw" style:background={t.bg} style:border-color={t.accent}><i style:background={t.accent}></i><i style:background={t.ink}></i></span>{t.name}
+          </button>
+        {/each}
+      </div>
+      <h3>Interface size</h3>
+      <div class="row" role="radiogroup" aria-label="Interface size">
+        {#each SIZES as u (u)}
+          <button class="chip" role="radio" aria-checked={settings.uiScale === u} class:on={settings.uiScale === u} onclick={() => (settings.uiScale = u)}>{u === 1 ? 'Default' : `${Math.round(u * 100)}%`}</button>
+        {/each}
+      </div>
+    {:else if step === 1}
+      <h2 id="w-t">How do you like to read?</h2>
+      <p class="sub">Start with a verse at a time with its meaning, or with the printed Mushaf page.</p>
+      <div class="modes" role="radiogroup" aria-label="Reading mode">
+        <button class="mode" role="radio" aria-checked={settings.mode === 'verse'} class:on={settings.mode === 'verse'} onclick={() => (settings.mode = 'verse')}>
+          <b>Verse by Verse</b><span>Each verse with its translation and tools.</span>
+        </button>
+        <button class="mode" role="radio" aria-checked={settings.mode === 'reading'} class:on={settings.mode === 'reading'} onclick={() => (settings.mode = 'reading')}>
+          <b>Reading</b><span>The pages as in the printed Mushaf.</span>
+        </button>
+      </div>
+      <h3>Arabic style</h3>
+      <div class="scripts" role="radiogroup" aria-label="Arabic style">
+        {#each SCRIPTS as s (s.id)}
+          <button class="sc" role="radio" aria-checked={settings.script === s.id} class:on={settings.script === s.id} onclick={() => (settings.script = s.id)}>
+            <span class="ar" dir="rtl" lang="ar" style:font-family={s.family || "'KFGQPC Uthmanic Hafs'"}>{SAMPLE}</span>
+            <b>{s.name}</b>
+          </button>
+        {/each}
+      </div>
+    {:else if step === 2}
+      <h2 id="w-t">Which language do you read in?</h2>
+      <p class="sub">The translation under each verse, and the meaning shown for each word, follow this language.</p>
+      {#if translations.list.length}
+        <div class="fields">
+          <label>Language
+            <select value={language} onchange={(e) => pickLanguage(e.currentTarget.value)}>
+              <option value="">None (Arabic only)</option>
+              {#each languages as l (l)}<option value={l}>{l}</option>{/each}
+            </select>
+          </label>
+          {#if language}
+            <label>Translation
+              <select value={settings.translation} onchange={(e) => setTranslation(Number(e.currentTarget.value))}>
+                {#each inLanguage as t (t.id)}<option value={t.id}>{t.name}</option>{/each}
+              </select>
+            </label>
+          {/if}
+        </div>
+      {:else}
+        <p class="note">The list of translations needs an internet connection. English (Saheeh International) is set for now; you can choose another in Settings later.</p>
+      {/if}
+      <h3>Word-by-word meanings</h3>
+      <div class="row" role="radiogroup" aria-label="Word meanings">
+        {#each MEANINGS as m (m.id)}
+          <button class="chip" role="radio" aria-checked={settings.wordMeaning === m.id} class:on={settings.wordMeaning === m.id} onclick={() => (settings.wordMeaning = m.id)}>{m.name}</button>
+        {/each}
+      </div>
+    {:else}
+      <h2 id="w-t">You are ready.</h2>
+      <p class="sub">The whole Quran is inside the app, so you can read without a connection. Audio is downloaded when you need it.</p>
+      <ul class="tips">
+        <li>Press <kbd>B</kbd> for the list of surahs, or type a place like <kbd>55:13</kbd>.</li>
+        <li>Click a word to hear it. Right-click a word or a verse for its meaning and more.</li>
+        <li>Open <b>Settings</b> with the gear icon, or <kbd>,</kbd>, to change anything you chose here.</li>
+      </ul>
+    {/if}
+
+    <footer>
+      {#if step > 0}<button class="ghost" onclick={() => go(step - 1)}>Back</button>{:else}<span></span>{/if}
+      {#if step < STEPS.length - 1}
+        <button class="pri" onclick={() => go(step + 1)}>Next</button>
+      {:else}
+        <button class="pri" onclick={finish}>Start reading</button>
+      {/if}
+    </footer>
+  </div>
+</div>
+
+<style>
+  .scrim { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; background: #0009; animation: fade 0.25s; }
+  @keyframes fade { from { opacity: 0; } }
+  .card {
+    width: min(620px, calc((100vw - 32px) / var(--zoom, 1))); max-height: calc((100vh - 32px) / var(--zoom, 1)); overflow: auto;
+    min-height: min(500px, calc((100vh - 32px) / var(--zoom, 1))); display: flex; flex-direction: column;
+    padding: 20px 24px 20px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line);
+    box-shadow: 0 28px 70px -18px #000d; animation: pop 0.3s var(--ease);
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(0.985); } }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+  ol { display: flex; gap: 14px; list-style: none; padding: 0; margin: 0; font-size: 12.5px; color: var(--ink-dim); }
+  li { display: flex; align-items: center; gap: 6px; }
+  li span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line); font-size: 11px; font-variant-numeric: tabular-nums; }
+  li.on { color: var(--ink); font-weight: 600; }
+  li.on span, li.done span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .skip { color: var(--ink-dim); font-size: 13px; padding: 6px 10px; border-radius: 8px; }
+  .skip:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  h2 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+  .sub { margin-top: 6px; color: var(--ink-dim); font-size: 14px; line-height: 1.55; }
+  h3 { margin: 20px 0 8px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); font-weight: 600; }
+  .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+  .th { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 10px 4px 9px; border-radius: 12px; border: 1px solid var(--line); font-size: 12.5px; }
+  .sw { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; max-width: 74px; height: 38px; border-radius: 8px; border: 1px solid; }
+  .sw i { width: 14px; height: 14px; border-radius: 50%; }
+  .sw.auto { background: linear-gradient(105deg, #0e0c09 50%, #fffdf7 50%); border-color: var(--line); }
+  .th:hover, .chip:hover, .sc:hover, .mode:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+  .on { border-color: var(--accent) !important; background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); font-size: 13.5px; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .mode { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); }
+  .mode b { font-size: 15px; }
+  .mode span { color: var(--ink-dim); font-size: 12.5px; line-height: 1.4; }
+  .scripts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sc { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 12px; border: 1px solid var(--line); font-size: 12px; min-width: 0; }
+  .sc .ar { font-size: 17px; line-height: 1.7; white-space: nowrap; overflow: hidden; max-width: 100%; text-overflow: clip; }
+  .fields { display: grid; gap: 12px; margin-top: 16px; }
+  label { display: grid; gap: 6px; font-size: 12px; letter-spacing: 0.04em; color: var(--ink-dim); }
+  select { height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; }
+  .note { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; line-height: 1.55; }
+  .tips { margin: 16px 0 0; padding-left: 18px; display: grid; gap: 10px; font-size: 14px; line-height: 1.55; }
+  kbd { padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); font: inherit; font-size: 12.5px; }
+  footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 22px; }
+  .ghost { padding: 9px 16px; border-radius: 10px; color: var(--ink-dim); }
+  .ghost:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  .pri { padding: 10px 22px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .pri:hover { opacity: 0.92; }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 560px) { .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
+</style>

@@ -112,6 +112,15 @@ class Settings {
   dailyVerseTime = $state(defaults.dailyVerseTime);
   systemNotify = $state(defaults.systemNotify);
 
+  /** no saved settings yet: the app has never been opened on this computer (the welcome setup is for them) */
+  readonly firstRun: boolean = (() => {
+    try {
+      return localStorage.getItem(KEY) === null && localStorage.getItem('quran.welcomed') === null;
+    } catch {
+      return false;
+    }
+  })();
+
   constructor() {
     try {
       const saved = JSON.parse(localStorage.getItem(KEY) ?? '{}');
