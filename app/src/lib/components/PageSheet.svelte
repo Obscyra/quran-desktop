@@ -1,6 +1,9 @@
 <script module lang="ts">
   // A page that scrolls out of the window and back is built again; its fitted size does not change, so remember it.
   const fitted = new Map<string, { fs: string; short: boolean[] }>();
+  // Zooming only scales the page: its text size stays the same fraction of the page width, so after one measuring
+  // a new zoom level is a multiplication, not a measuring of every word again (which made zoom lag).
+  const scaled = new Map<string, { r: number; aspect: number; short: boolean[] }>();
 </script>
 
 <script lang="ts">
@@ -58,6 +61,17 @@
       rows.forEach((ln, i) => ln.classList.toggle('short', hit.short[i]));
       return;
     }
+    const sKey = `${page?.page}|${settings.script}|${settings.layout}|${settings.uiScale}|${settings.fontFamily}|${pageFonts.tick}|${rows.length}`;
+    const aspect = avail / rowH;
+    const near = scaled.get(sKey);
+    if (near && Math.abs(aspect / near.aspect - 1) < 0.05) {
+      // a hair under, so rounding to whole pixels can never push the widest line past the edge
+      const fs = (near.r * avail * 0.998).toFixed(2);
+      box.style.setProperty('--fs', `${fs}px`);
+      rows.forEach((ln, i) => ln.classList.toggle('short', near.short[i]));
+      fitted.set(key, { fs: `${fs}px`, short: near.short });
+      return;
+    }
     const cap = rowH * (glyph ? 0.74 : 0.6);
     const gap = parseFloat(getComputedStyle(rows[0]).columnGap || '0');
     const width = (ln: HTMLElement) => {
@@ -93,6 +107,7 @@
     const short = natural.map((w) => w < avail * 0.62);
     rows.forEach((ln, i) => ln.classList.toggle('short', short[i]));
     fitted.set(key, { fs: box.style.getPropertyValue('--fs'), short });
+    scaled.set(sKey, { r: fs / avail, aspect, short });
   }
 
   let raf = 0;

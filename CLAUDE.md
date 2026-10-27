@@ -1,6 +1,6 @@
 # Quran for Desktop — project memory
 
-Free, open-source (GPL-3.0), ad-free desktop Quran app for Windows and macOS, with Linux builds (AppImage, deb) added; no rpm: RPM versions cannot contain a hyphen, so `0.0.5-beta` fails to bundle. Add `rpm` back once a version has no pre-release suffix, or map it to `~beta` to CI and untested.
+Free, open-source (GPL-3.0), ad-free desktop Quran app for Windows and macOS, with Linux builds (AppImage, deb) from CI, untested on a real Linux desktop.
 Tauri 2 + SvelteKit (adapter-static, ssr=false) + Svelte 5 runes + TypeScript. Repo:
 https://github.com/Obscyra/quran-desktop (branch `main`, public). Inspired by
 https://github.com/quran/quran_android (credit it and keep its Android links in the README; the app now has its own icon).
@@ -61,6 +61,9 @@ of quran_android.
 - Scroll views: `settings.lockPlaying` + `centerPlaying`/`playingBounds` in `Reader.svelte` (verse centred whole; taller verses follow the word);
   unlocked, a `.back` arrow shows when the verse is off screen. Rects are divided by `k` (interface zoom).
 - Window fit (`+page.svelte`): `fit()`/`refit()` write the real `window.innerHeight` to `--vh` (used by `.app` height) and reset the scroll on resize, focus, scroll and visibilitychange. A window hidden in the tray can come back with a stale 100vh and a scrolled page (top bar and player lost); this fixes it. Check it on real Windows, not in a browser.
+- Continue where I left off (`player.svelte.ts`): the verse is saved in `quran.verse`, and how far the recitation got in `quran.time` (every 2 s while playing and on pause; cleared when the surah ends or another opens). On launch `restoreTime()` fetches the audio, seeks, opens the player bar and stays paused. Skipped when offline and not downloaded, or when the app was opened on a `#/surah` link.
+- Zoom speed: `.verse` uses `content-visibility: auto` (a text-size change only lays out what is in view); `PageSheet.fit()` keeps a `scaled` map (text size as a fraction of page width) so a page zoom does not measure every word again. The Verse by Verse zoom buttons show the text size as a percentage of 56 px; `Tooltip.svelte` follows a changed `title` with a MutationObserver.
+- Window frame: Windows draws its own title bar and buttons (`decorations: false`); macOS (`tauri.macos.conf.json`) and Linux (`tauri.linux.conf.json`) use the system's native title bar, and `TitleBar.svelte` shows window buttons only on Windows.
 - Settings `playerHover`: the player bar floats over the bottom edge and shows on hover (`PlayerBar.svelte`).
 
 ## Bundled Quran data (works with no connection)
@@ -103,11 +106,14 @@ Replacing an installer on an existing release (only when asked): upload the exe 
   the public key is in `app/src-tauri/tauri.conf.json`. Losing the key breaks updates for installs.
 - Installed apps only see updates from a public repo's non-prerelease `latest`.
 - Uninstaller (`src-tauri/windows/hooks.nsi`) removes app data unless `$UpdateMode`; verified earlier. The same hooks file defines `MUI_UNICON` so the uninstaller shows the Quran icon (hooks are included before Tauri's `UNINSTALLERICON` check).
+- Linux AppImage audio: without GStreamer plugins inside it, pressing play froze the UI on Fedora. `bundle.linux.appimage.bundleMediaFramework` is on and the CI job installs the GStreamer packages (including ugly and libav for MP3). Unverified on Fedora until tested.
+- No rpm: RPM versions cannot contain a hyphen, so `0.0.5-beta` fails to bundle (it broke the first Linux run). Add `rpm` back once a version has no pre-release suffix, or build it in CI from the deb as `0.0.5~beta`.
+- Moving a release: delete it with `gh release delete <tag> --cleanup-tag -y`, make sure the tag is gone locally and on the remote (`git push origin :refs/tags/<tag>`), then tag the new commit and push the tag. Cancel a running build first (`gh run cancel`).
 - Version lives in `app/package.json`, `app/src-tauri/tauri.conf.json`, `app/src-tauri/Cargo.toml`
   (CI overrides from the tag).
 
 ## Status
-- Current: v0.0.5-beta (tag at `1ff6b55`; the Windows exe on the release was rebuilt after `4f1896e`, so it has the About website link and the macOS dmg from CI does not). Latest README commit `59458fd`.
-- Done in 0.0.5: first-run setup, continue where I left off, reorganised Settings (8 pages, search, per-setting Reset), custom tooltips, Zoom/Fit/Fill, Black and gold theme, tray-reopen window fix, uninstaller icon, site demo and calligraphy.
-- Not yet verified: the real Windows window after tray reopen, uninstaller icon on an installed copy, 0.0.4 to 0.0.5 in-app update, macOS build, SmartScreen (no code-signing cert; downloads carry Mark of the Web, local builds do not).
+- Current: v0.0.5-beta, released (tag at `0baf45d`; Windows, macOS and Linux all built in CI; the release was deleted and rebuilt several times, so the earlier hand-built 0.0.5-beta exe is a different file with the same version and will not be offered an update).
+- Done in 0.0.5: first-run setup, continue where I left off (including the playback position), reorganised Settings (8 pages, search, per-setting Reset), custom tooltips, Zoom/Fit/Fill, Black and gold theme, tray-reopen window fix, uninstaller icon, Linux AppImage and deb, site demo, calligraphy and a Linux download popup (AppImage or deb, direct links).
+- Not yet verified: any Linux build on a real desktop (window controls, tray, audio, AppImage updates), the real Windows window after tray reopen, uninstaller icon on an installed copy, 0.0.4 to 0.0.5 in-app update, macOS build, SmartScreen (no code-signing cert; downloads carry Mark of the Web, local builds do not).
 - Ideas not done: tafsir, sleep timer, in-text search, true OS Do Not Disturb (no public API; only in-app quiet focus mode), code signing, licence check for the website's page fonts.
