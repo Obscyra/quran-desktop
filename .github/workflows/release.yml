@@ -109,3 +109,19 @@ jobs:
           prerelease: false
           includeUpdaterJson: true
           args: ${{ matrix.args }}
+
+      # An RPM version cannot contain a hyphen, so 0.0.5-beta cannot be packaged as it is. Build the RPM in a second
+      # pass with the version split the way Fedora names pre-releases: version 0.0.5, release 0.beta.1 (sorts before
+      # the final 0.0.5-1). Not part of the app's own updater: RPM users download new versions.
+      - name: Build the .rpm
+        if: matrix.os == 'ubuntu-22.04'
+        working-directory: app
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FULL=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          BASE="${FULL%%-*}"
+          RELEASE=1
+          if [ "$FULL" != "$BASE" ]; then RELEASE="0.${FULL#*-}.1"; fi
+          npx tauri build --bundles rpm --config "{\"version\":\"$BASE\",\"bundle\":{\"createUpdaterArtifacts\":false,\"linux\":{\"rpm\":{\"release\":\"$RELEASE\",\"depends\":[\"webkit2gtk4.1\",\"gtk3\",\"libappindicator-gtk3\"]}}}}"
+          gh release upload "$GITHUB_REF_NAME" src-tauri/target/release/bundle/rpm/*.rpm --clobber
