@@ -100,14 +100,14 @@ WSL2 with Windows interop. Build happens in `C:\Users\magnum\quran-build` (copy 
 Replacing an installer on an existing release (only when asked): upload the exe and its `.sig` with `gh release upload --clobber` and put the new signature in `latest.json`. The copy can fail with "Permission denied" if an installer is running; don't kill the owner's process. Don't install on the owner's PC unless asked. Don't use `-ExecutionPolicy Bypass`.
 
 ## Releases and updates
-- `.github/workflows/release.yml`: pushing a `v*` tag builds Windows (.exe) + macOS (.dmg) + Linux (.AppImage, .deb on ubuntu-22.04), signs update
+- `.github/workflows/release.yml`: pushing a `v*` tag builds Windows (.exe) + macOS (.dmg) + Linux (.AppImage, .deb, .rpm on ubuntu-22.04), signs update
   artifacts, publishes `latest.json`. Releases are normal (non-pre-release) even for `-beta` tags, so the updater sees them; notes come from `.github/release-notes/<tag>.md` + `footer.md`.
 - Needs secrets `TAURI_SIGNING_PRIVATE_KEY` (+ `_PASSWORD`, empty). Key is `~/.tauri/quran-desktop.key`;
   the public key is in `app/src-tauri/tauri.conf.json`. Losing the key breaks updates for installs.
 - Installed apps only see updates from a public repo's non-prerelease `latest`.
 - Uninstaller (`src-tauri/windows/hooks.nsi`) removes app data unless `$UpdateMode`; verified earlier. The same hooks file defines `MUI_UNICON` so the uninstaller shows the Quran icon (hooks are included before Tauri's `UNINSTALLERICON` check).
 - Linux AppImage audio: without GStreamer plugins inside it, pressing play froze the UI on Fedora. `bundle.linux.appimage.bundleMediaFramework` is on and the CI job installs the GStreamer packages (including ugly and libav for MP3). Unverified on Fedora until tested.
-- No rpm: RPM versions cannot contain a hyphen, so `0.0.5-beta` fails to bundle (it broke the first Linux run). Add `rpm` back once a version has no pre-release suffix, or build it in CI from the deb as `0.0.5~beta`.
+- rpm: RPM versions cannot contain a hyphen, so `rpm` is not in `bundle.targets`; the last step of the Linux job builds it separately (`tauri build --bundles rpm` with the version split into version `0.0.5` and release `0.beta.1`) and uploads it with `gh release upload`. It is not in `latest.json` (no in-app updates for rpm or deb).
 - Moving a release: delete it with `gh release delete <tag> --cleanup-tag -y`, make sure the tag is gone locally and on the remote (`git push origin :refs/tags/<tag>`), then tag the new commit and push the tag. Cancel a running build first (`gh run cancel`).
 - Version lives in `app/package.json`, `app/src-tauri/tauri.conf.json`, `app/src-tauri/Cargo.toml`
   (CI overrides from the tag).
