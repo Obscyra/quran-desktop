@@ -26,8 +26,9 @@
   let lastUserScroll = 0;
 
   // A long surah is put on the page in small batches (a few frames each), so switching to one never freezes the window.
-  const FIRST = { pages: 2, flow: 30, verses: 6 } as const;
-  const MAXBATCH = { pages: 2, flow: 30, verses: 8 } as const;
+  // (printed pages are not batched: every page is a cheap placeholder until it is near the window, see `near`)
+  const FIRST = { pages: 999, flow: 30, verses: 6 } as const;
+  const MAXBATCH = { pages: 999, flow: 30, verses: 8 } as const;
   const kind = $derived(mushafMode ? 'pages' : reading ? 'flow' : 'verses');
   const total = $derived(mushafMode ? reader.pages.length : player.verses.length);
   let upto = $state(0);
@@ -55,6 +56,35 @@
     });
     return () => cancelAnimationFrame(raf);
   });
+  // Scroll mode: a surah can be 50 printed pages (thousands of words). Only the pages near the window are built;
+  // the others are empty boxes of the same size, so the scrollbar and positions stay exact and scrolling stays light.
+  let near = $state.raw(new Set<number>());
+  let jumpPage = $state(-1);
+  const playPage = $derived(mushafMode && reader.activeKey ? (reader.wordPage.get(reader.activeKey) ?? -1) : -1);
+  const built = (i: number) => near.has(i) || i === jumpPage || (playPage >= 0 && Math.abs(i - playPage) <= 1);
+  let pageWatch: IntersectionObserver | undefined;
+  let pageWatchRoot: Element | null = null;
+  function watchPage(node: HTMLElement) {
+    const root = node.closest('.scroll');
+    if (!pageWatch || pageWatchRoot !== root) {
+      pageWatch?.disconnect();
+      pageWatchRoot = root;
+      pageWatch = new IntersectionObserver(
+        (entries) => {
+          const next = new Set(near);
+          for (const e of entries) {
+            const i = Number((e.target as HTMLElement).dataset.i);
+            if (e.isIntersecting) next.add(i);
+            else next.delete(i);
+          }
+          near = next;
+        },
+        { root, rootMargin: '1400px 0px' }
+      );
+    }
+    pageWatch.observe(node);
+    return { destroy: () => pageWatch?.unobserve(node) };
+  }
   /** make sure the item at this index is on the page (before scrolling to it) */
   const reveal = (i: number) => {
     if (i >= upto) upto = Math.min(total, i + 8);
@@ -65,6 +95,7 @@
   $effect(() => {
     player.chapter;
     reader.pageIdx = 0;
+    near = new Set();
     scroller?.scrollTo({ top: 0 });
   });
   $effect(() => {
@@ -96,8 +127,19 @@
         if (i !== undefined) reader.show(i);
       } else {
         const id = mushafMode ? `w-${j.verse}-1` : reading ? `t-${j.verse}` : `v-${j.verse}`;
-        reveal(indexOfVerse(j.verse));
-        requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'center' }));
+        const idx = indexOfVerse(j.verse);
+        reveal(idx);
+        if (mushafMode) {
+          // go to the page's box first so the page gets built, then to the word in it
+          jumpPage = idx;
+          scroller?.querySelector(`.pg[data-i="${idx}"]`)?.scrollIntoView({ block: 'center' });
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              document.getElementById(id)?.scrollIntoView({ block: 'center' });
+              jumpPage = -1;
+            })
+          );
+        } else requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'center' }));
       }
       player.jump = null;
     });
@@ -123,7 +165,7 @@
       bottom = Math.max(bottom, r.bottom);
     }
     if (top === Infinity) {
-      const el = document.getElementById(reading ? `t-${activeVerse}` : `v-${activeVerse}`);
+      const el = mushafMode ? scroller.querySelector(`.pg[data-i="${playPage}"]`) : document.getElementById(reading ? `t-${activeVerse}` : `v-${activeVerse}`);
       if (!el) return null;
       const r = el.getBoundingClientRect();
       top = r.top;
@@ -424,7 +466,7 @@
         <!-- scroll: the printed pages one after another -->
         <div class="pages hl-{settings.highlight}">
           {#each reader.pages.slice(0, upto) as pg, i (pg.page)}
-            <div class="pg"><PageSheet page={pg} last={i === lastIdx} /></div>
+            <div class="pg" data-i={i} use:watchPage>{#if built(i)}<PageSheet page={pg} last={i === lastIdx} />{/if}</div>
           {/each}
         </div>
       {:else if reading}
@@ -537,7 +579,7 @@
   .tail { height: 120px; }
 
   .pages { display: flex; flex-direction: column; align-items: center; gap: 28px; padding-top: 8px; }
-  .pg { --sh: calc(min(760px, 100cqw) / 0.66); }
+  .pg { --sh: calc(min(760px, 100cqw) / 0.66); height: var(--sh); aspect-ratio: 0.66; flex: none; }
 
   .verses { max-width: 900px; margin: 0 auto; }
   .verse { padding: 18px 14px 22px; border-radius: 14px; transition: background-color 0.3s; border-bottom: 1px solid var(--line); }
