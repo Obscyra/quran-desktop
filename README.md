@@ -19,7 +19,7 @@ Read the exact printed Mushaf, follow the recitation word by word, and keep ever
 
 <br/>
 
-<img src="assets/screenshots/reading-spread.png" alt="Quran app two-page Madani Mushaf spread with the recited word highlighted" width="900"/>
+<img src="assets/screenshots/verse-by-verse-playing.webp" alt="Quran desktop app, Verse by Verse view with word-by-word meanings and the recited word highlighted" width="900"/>
 
 </div>
 
@@ -83,16 +83,16 @@ Get the installer for your system from the **[Releases page](https://github.com/
 
 <table>
   <tr>
-    <td width="50%"><img src="assets/screenshots/verse-by-verse.png" alt="Verse by Verse with word-by-word meanings"/><br/><sub><b>Verse by Verse</b> with translation and word-by-word meanings</sub></td>
-    <td width="50%"><img src="assets/screenshots/white-gold.png" alt="White and Gold theme"/><br/><sub><b>White &amp; Gold</b> theme on a single Mushaf page</sub></td>
+    <td width="50%"><img src="assets/screenshots/reading-spread.webp" alt="Two-page Madani Mushaf spread in the White and Gold theme"/><br/><sub><b>Reading</b> a two-page Madani Mushaf spread (White &amp; Gold)</sub></td>
+    <td width="50%"><img src="assets/screenshots/theme-night.webp" alt="Verse by Verse in the dark Night theme"/><br/><sub><b>Night</b> theme, Verse by Verse with the translation</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="assets/screenshots/audio-manager.png" alt="Audio manager with reciter list"/><br/><sub><b>Audio manager:</b> choose a reciter, then download or delete surahs</sub></td>
-    <td width="50%"><img src="assets/screenshots/settings.png" alt="Settings"/><br/><sub><b>Settings</b>, organised into Look, Read, Listen and App</sub></td>
+    <td width="50%"><img src="assets/screenshots/audio-manager.webp" alt="Audio manager: choose a reciter, download or delete surahs"/><br/><sub><b>Audio manager:</b> choose a reciter, then download or delete surahs</sub></td>
+    <td width="50%"><img src="assets/screenshots/settings.webp" alt="Settings organised into Look, Read, Listen and App"/><br/><sub><b>Settings</b>, organised into Look, Read, Listen and App</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="assets/screenshots/surah-menu.png" alt="Right-click menu on a surah"/><br/><sub><b>Right-click a surah</b> to read it, listen, or keep its audio offline</sub></td>
-    <td width="50%"><img src="assets/screenshots/translation-picker.png" alt="Searchable translation picker"/><br/><sub><b>Translations:</b> search by name, translator or language</sub></td>
+    <td width="50%"><img src="assets/screenshots/theme-gold.webp" alt="Verse by Verse in the White and Gold theme"/><br/><sub><b>White &amp; Gold</b> theme</sub></td>
+    <td width="50%"><img src="assets/screenshots/compact-window.webp" alt="The app in a small window with the player bar"/><br/><sub><b>Small window:</b> everything still fits, player bar included</sub></td>
   </tr>
 </table>
 
