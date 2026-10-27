@@ -1,11 +1,12 @@
 <div align="center">
 
-<img src="assets/icon.png" alt="Quran for Desktop" width="120"/>
+<img src="assets/icon.png" alt="Quran for Desktop: free open-source Quran app for Windows and macOS" width="120"/>
 
 # Quran for Desktop
 
 **A free, open-source Quran app for Windows and macOS.**<br/>
-Read the exact printed Mushaf, follow the recitation word by word, and keep everything offline.
+Read the exact printed Mushaf, follow the recitation word by word, and keep everything offline.<br/>
+<sub>Quran reader and Quran recitation player for PC: Arabic text with tajweed, 120+ translations, 17 reciters, bookmarks, no ads.</sub>
 
 [![Download](https://img.shields.io/badge/Download-Beta_Release-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Obscyra/quran-desktop/releases)
 
@@ -18,7 +19,7 @@ Read the exact printed Mushaf, follow the recitation word by word, and keep ever
 
 <br/>
 
-<img src="assets/screenshots/reading-spread.png" alt="Two-page Mushaf spread with the recited word highlighted" width="900"/>
+<img src="assets/screenshots/reading-spread.png" alt="Quran app two-page Madani Mushaf spread with the recited word highlighted" width="900"/>
 
 </div>
 
