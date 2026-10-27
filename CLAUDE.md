@@ -2,7 +2,7 @@
 
 Free, open-source (GPL-3.0), ad-free desktop Quran app for Windows and macOS (Linux later).
 Tauri 2 + SvelteKit (adapter-static, ssr=false) + Svelte 5 runes + TypeScript. Repo:
-https://github.com/Obscyra/quran-desktop (branch `main`, currently private). Inspired by
+https://github.com/Obscyra/quran-desktop (branch `main`, public). Inspired by
 https://github.com/quran/quran_android (credit it and keep its Android links in the README; the app now has its own icon).
 Data from the Quran.com public API v4. App code is in `app/`; `reference/` (gitignored) holds a clone
 of quran_android.
@@ -81,7 +81,7 @@ Don't install on the owner's PC unless asked. Don't use `-ExecutionPolicy Bypass
 
 ## Releases and updates
 - `.github/workflows/release.yml`: pushing a `v*` tag builds Windows (.exe) + macOS (.dmg), signs update
-  artifacts, publishes `latest.json`. Tags with a suffix (`-beta.1`) become pre-releases.
+  artifacts, publishes `latest.json`. Releases are normal (non-pre-release) even for `-beta` tags, so the updater sees them; notes come from `.github/release-notes/<tag>.md` + `footer.md`.
 - Needs secrets `TAURI_SIGNING_PRIVATE_KEY` (+ `_PASSWORD`, empty). Key is `~/.tauri/quran-desktop.key`;
   the public key is in `app/src-tauri/tauri.conf.json`. Losing the key breaks updates for installs.
 - Installed apps only see updates from a public repo's non-prerelease `latest`.
