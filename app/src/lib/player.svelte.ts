@@ -20,7 +20,9 @@ const fromHash = () => {
 class Player {
   chapters = $state<Chapter[]>([]);
   reciters = $state<Reciter[]>([]);
-  chapter = $state(fromHash() || read(LS.chapter, 1));
+  /** opened on a link to a surah: that wins over the place that was saved */
+  private readonly linked = fromHash() > 0;
+  chapter = $state(fromHash() || (settings.resume ? read(LS.chapter, 1) : 1));
   reciterId = $state(read(LS.reciter, 7));
   verses = $state<Verse[]>([]);
   audio = $state<ChapterAudio | null>(null);
@@ -126,8 +128,9 @@ class Player {
     }
     this.trail = [{ chapter: this.chapter, verse: 1 }];
     this.at = 0;
+    // read before load(), which forgets the saved verse of the surah it leaves
+    const saved = settings.resume && !this.linked ? Number(localStorage.getItem(LS.verse)) : 0;
     await this.load(this.chapter, false);
-    const saved = Number(localStorage.getItem(LS.verse));
     if (saved > 1) this.jump = { verse: saved, n: Date.now() };
   }
 

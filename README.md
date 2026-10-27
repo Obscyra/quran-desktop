@@ -49,7 +49,7 @@ New versions are offered inside the app (Settings → Updates).
 - **100+ translations**, with word-by-word meanings in the translation's language, and transliteration.
 - **17 reciters** with word-by-word tracking that follows the recitation, plus **90+ more** to listen to surah by surah.
 - **Audio manager** to download any surah, or all 114, for offline listening.
-- **Bookmarks with notes**, and jump to any verse by typing `55:13`.
+- **Bookmarks with notes**, jump to any verse by typing `55:13`, and the app reopens where you left off.
 - **Seven themes**, interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode, and Settings has a search bar.
 - **Runs in the system tray** with optional reminders and the Verse of the Day.
 

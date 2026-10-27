@@ -74,7 +74,7 @@ of quran_android.
 - Run `npm run bundle` once before a local build or dev session; a build without the files still works but fetches from the network.
 
 ## Website
-- Own repo https://github.com/Obscyra/quran-desktop-site (GitHub Pages from `main`, live at https://obscyra.github.io/quran-desktop-site/), kept in `website/` here (excluded from this repo via `.git/info/exclude`; commit and push from inside that folder). The download buttons ask the GitHub API for the latest release's `.exe` / `.dmg` (`app.js`, `data-dl`).
+- Own repo https://github.com/Obscyra/quran-desktop-site, hosted on Netlify at https://qurandesktop.netlify.app (GitHub Pages is switched off). The site address is written into `index.html`, `robots.txt`, `sitemap.xml` and `llms.txt`: change all four if a custom domain is added. `_headers` holds the security headers and CSP (keep `connect-src` in step with what `app.js` fetches). Kept in `website/` here (excluded from this repo via `.git/info/exclude`; commit and push from inside that folder). The download buttons ask the GitHub API for the latest release's `.exe` / `.dmg` (`app.js`, `data-dl`).
 
 ## Run and test
 - UI in a browser: `cd app && npm install && npx vite dev --port 1420` then

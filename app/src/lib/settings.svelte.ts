@@ -33,7 +33,7 @@ const defaults = {
   script: 'mushaf' as Script,
   listenBar: 'demand' as ListenBar,
   /** the player bar floats over the page and only shows while the mouse is at the bottom edge */
-  playerHover: false,
+  playerHover: true,
   wordAudio: true,
   sidebar: true,
   volume: 1,
@@ -54,6 +54,7 @@ const defaults = {
   /** keep surahs you listen to regularly offline, and drop them again after a month without listening */
   autoCache: true,
   autoHideChrome: true,
+  resume: true,
   checkUpdates: true,
   /** closing the window keeps the app in the system tray, so reminders still arrive */
   background: true,
@@ -108,6 +109,8 @@ class Settings {
   keepAwake = $state(defaults.keepAwake);
   autoCache = $state(defaults.autoCache);
   autoHideChrome = $state(defaults.autoHideChrome);
+  /** reopen at the surah and verse that was being read */
+  resume = $state(defaults.resume);
   checkUpdates = $state(defaults.checkUpdates);
   background = $state(defaults.background);
   uiScale = $state(defaults.uiScale);
@@ -168,6 +171,14 @@ class Settings {
 
   reset() {
     Object.assign(this, defaults);
+  }
+
+  /** true when every one of these settings still has its default value */
+  isDefault(keys: readonly (keyof SettingsShape)[]) {
+    return keys.every((k) => (this as unknown as Record<string, unknown>)[k] === defaults[k]);
+  }
+  resetKeys(keys: readonly (keyof SettingsShape)[]) {
+    for (const k of keys) (this as unknown as Record<string, unknown>)[k] = defaults[k];
   }
 }
 

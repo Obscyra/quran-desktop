@@ -8,7 +8,7 @@
   import * as offline from '$lib/offline';
   import { player } from '$lib/player.svelte';
   import { getAutostart, isTauri, setAutostart } from '$lib/platform';
-  import { SCRIPTS, settings, type Highlight, type PageLook, type PageType, type Script, type WordMeaning } from '$lib/settings.svelte';
+  import { SCRIPTS, settings, type SettingsShape, type Highlight, type PageLook, type PageType, type Script, type WordMeaning } from '$lib/settings.svelte';
   import { THEMES } from '$lib/themes';
   import { translations } from '$lib/translations.svelte';
   import { autocache, KEEP_DAYS } from '$lib/autocache.svelte';
@@ -42,6 +42,7 @@
     { area: 'text', title: 'Script style', text: 'font madani mushaf tajweed uthmani indopak naskh amiri scheherazade arabic writing' },
     { area: 'text', title: 'Text size', text: 'font arabic bigger larger' },
     { area: 'text', title: 'Line spacing', text: 'height lines gap' },
+    { area: 'reading', title: 'Continue where I left off', text: 'resume reopen last place surah verse start remember position' },
     { area: 'reading', title: 'Open in', text: 'start view verse by verse reading mode default' },
     { area: 'reading', title: 'Translation', text: 'language english urdu meaning verse' },
     { area: 'reading', title: 'Translation size', text: 'font bigger' },
@@ -81,7 +82,27 @@
     { area: 'about', title: 'About', text: 'credits licence license open source version' },
     { area: 'about', title: 'Developer', text: 'author contact fahim shahriar github email website who made' }
   ];
+  // the settings behind each row, so a row can say it was changed and go back to its default
+  const ROW_KEYS: Record<string, (keyof SettingsShape)[]> = {
+    'Theme': ['theme'], 'Interface size': ['uiScale'], 'Surah names in Arabic': ['arabicNames'],
+    'Script style': ['script', 'pageType'], 'Text size': ['size'], 'Line spacing': ['spacing'],
+    'Open in': ['mode'], 'Continue where I left off': ['resume'], 'Translation': ['translation'], 'Translation size': ['translationSize'], 'Word meanings': ['wordMeaning'], 'Transliteration': ['transliteration'],
+    'Page type': ['pageType'], 'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'],
+    'Listening bar': ['listenBar'], 'Show the bar only on hover': ['playerHover'], 'Playback speed': ['speed'], 'Play the next surah': ['autoAdvance'], 'Repeat surah': ['repeatSurah'],
+    'Say a word when clicked': ['wordAudio'], 'Highlight style': ['highlight'], 'Follow the recitation': ['autoScroll'], 'Lock on the playing verse': ['lockPlaying'], 'Keep favourites offline': ['autoCache'],
+    'Verse of the day': ['dailyVerse'], 'Show it from': ['dailyVerseTime'], 'Reading reminders': ['remindersOn'], 'Times': ['remindTimes'], 'Message': ['remindMessage'], 'Use system notifications': ['systemNotify'],
+    'Keep the screen on': ['keepAwake'], 'Keep running in the tray': ['background'], 'Update automatically': ['checkUpdates']
+  };
+  const changed = (title: string) => !!ROW_KEYS[title] && !settings.isDefault(ROW_KEYS[title]);
+  function resetRow(title: string) {
+    settings.resetKeys(ROW_KEYS[title]);
+    if (title === 'Translation') player.refreshText();
+  }
+  const changedRows = $derived(ROWS.filter((r) => changed(r.title) && (isTauri() || r.title !== 'Keep running in the tray')));
+  let showChanged = $state(false);
   let query = $state('');
+  // the pages show only when neither the search nor the list of changed settings is on
+  const browse = $derived(!query && !showChanged);
   let searchEl = $state<HTMLInputElement>();
   const areaName = (id: Section) => AREAS.find((a) => a.id === pageOf(id))?.name ?? '';
   const found = $derived.by(() => {
@@ -101,6 +122,7 @@
   });
   async function openResult(r: { area: Section; title: string }) {
     query = '';
+    showChanged = false;
     ui.area = pageOf(r.area);
     await tick();
     const row = [...document.querySelectorAll<HTMLElement>('.view .row')].find((el) => el.querySelector('.label h3')?.textContent?.trim() === r.title);
@@ -280,6 +302,10 @@
   </div>
 {/snippet}
 
+{#snippet rst(title: string)}
+  {#if changed(title)}<button class="reset" onclick={() => resetRow(title)} title="Back to the default">Reset</button>{/if}
+{/snippet}
+
 {#snippet toggle(on: boolean, set: (v: boolean) => void, label: string)}
   <button class="toggle" class:on role="switch" aria-checked={on} aria-label={label} onclick={() => set(!on)}><i></i></button>
 {/snippet}
@@ -291,10 +317,13 @@
       <svg aria-hidden="true" viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m13 13 4 4" /></svg>
       <input bind:this={searchEl} bind:value={query} onkeydown={searchKey} type="search" placeholder="Search settings" aria-label="Search settings" autocomplete="off" spellcheck="false" />
     </label>
+    <button class="chg" class:on={showChanged} aria-pressed={showChanged} onclick={() => { showChanged = !showChanged; query = ''; }}>
+      <span>Changed from default</span><b>{changedRows.length}</b>
+    </button>
     {#each GROUPS as g (g)}
       <h2 class="ngrp">{g}</h2>
       {#each AREAS.filter((a) => a.group === g) as a (a.id)}
-        <button class:on={ui.area === a.id} onclick={() => (ui.area = a.id)} aria-current={ui.area === a.id ? 'page' : undefined}>
+        <button class:on={ui.area === a.id && !showChanged} onclick={() => { ui.area = a.id; showChanged = false; }} aria-current={ui.area === a.id && !showChanged ? 'page' : undefined}>
           <b>{a.name}</b><small>{a.hint}</small>
         </button>
       {/each}
@@ -306,7 +335,7 @@
       <button class="back" onclick={() => ui.closeSettings()} aria-label="Back to reading" title="Back (Esc)">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5" /></svg>
       </button>
-      <h2>{query ? 'Search results' : AREAS.find((a) => a.id === ui.area)?.name}</h2>
+      <h2>{query ? 'Search results' : showChanged ? 'Changed settings' : AREAS.find((a) => a.id === ui.area)?.name}</h2>
       <span class="saved" class:show={savedVisible} data-t={savedAt}>Saved</span>
       <button class="close" onclick={() => ui.closeSettings()} aria-label="Close settings">Done</button>
     </header>
@@ -319,10 +348,24 @@
           <li class="none">No setting matches "{query}". Try another word, such as theme, font, reciter or notification.</li>
         {/each}
       </ul>
+    {:else if showChanged}
+      <ul class="results changed" aria-label="Changed settings">
+        {#each changedRows as r (r.area + r.title)}
+          <li>
+            <button class="go" onclick={() => openResult(r)}><b>{r.title}</b><small>{areaName(r.area)}</small></button>
+            <button class="again" onclick={() => resetRow(r.title)}>Reset</button>
+          </li>
+        {:else}
+          <li class="none">Everything is at its default. Settings you change will be listed here.</li>
+        {/each}
+      </ul>
+      {#if changedRows.length}
+        <div class="row"><div class="label"><h3>Reset everything</h3><p>Sends every setting back to its default in one step.</p></div><button class="secondary" onclick={resetSettings}>Reset all…</button></div>
+      {/if}
     {:else if ui.area === 'appearance'}
       <h3 class="grp">Colour</h3>
       <div class="row wide">
-        <div class="label"><h3>Theme</h3><p>Seven palettes, each tuned for comfortable contrast. Auto follows your system.</p></div>
+        <div class="label"><h3>Theme</h3>{@render rst('Theme')}<p>Seven palettes, each tuned for comfortable contrast. Auto follows your system.</p></div>
         <div class="themes">
           <button class="theme auto" class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>
             <span class="sw"><i style:background="#0e0c09"></i><i style:background="#ede8de"></i></span>
@@ -340,7 +383,7 @@
         </div>
       </div>
       <div class="row">
-        <div class="label"><h3>Interface size</h3><p>Makes the menus, lists, buttons and every other piece of interface text bigger or smaller. Currently {Math.round(settings.uiScale * 100)}%. The Arabic text has its own size under Arabic text.</p></div>
+        <div class="label"><h3>Interface size</h3>{@render rst('Interface size')}<p>Makes the menus, lists, buttons and every other piece of interface text bigger or smaller. Currently {Math.round(settings.uiScale * 100)}%. The Arabic text has its own size under Arabic text.</p></div>
         <div class="seg" role="radiogroup" aria-label="Interface size">
           {#each UI_SIZES as u (u)}
             <button role="radio" aria-checked={settings.uiScale === u} class:on={settings.uiScale === u} onclick={() => (settings.uiScale = u)}>{u === 1 ? 'Default' : `${Math.round(u * 100)}%`}</button>
@@ -358,16 +401,16 @@
       </div>
       <h3 class="grp">Names</h3>
       <div class="row">
-        <div class="label"><h3>Surah names in Arabic</h3><p>Show the Arabic name first in the list and player.</p></div>
+        <div class="label"><h3>Surah names in Arabic</h3>{@render rst('Surah names in Arabic')}<p>Show the Arabic name first in the list and player.</p></div>
         {@render toggle(settings.arabicNames, (v) => (settings.arabicNames = v), 'Arabic surah names')}
       </div>
     {/if}
 
-    {#if !query && onPage('text')}
+    {#if browse && onPage('text')}
       {@render preview()}
       <h3 class="grp">Arabic script</h3>
       <div class="row wide">
-        <div class="label"><h3>Script style</h3><p>How the Arabic is written. Madani Mushaf is the exact printed page; it is fetched once per page, then kept for offline use. Every card shows the same verse.</p></div>
+        <div class="label"><h3>Script style</h3>{@render rst('Script style')}<p>How the Arabic is written. Madani Mushaf is the exact printed page; it is fetched once per page, then kept for offline use. Every card shows the same verse.</p></div>
         <div class="scripts">
           {#each SCRIPTS as sc (sc.id)}
             <button class="script" class:on={settings.script === sc.id} onclick={() => setScript(sc.id)} aria-pressed={settings.script === sc.id}>
@@ -382,38 +425,42 @@
       <p class="intro">Choosing <b>Madani Mushaf</b> or <b>IndoPak</b> also sets the matching page type under Mushaf pages, so the pages and the text agree.</p>
       <h3 class="grp">Size</h3>
       <div class="row">
-        <div class="label"><h3>Text size</h3><p>{settings.size}px, for Verse by Verse. Mushaf pages always fill the page.</p></div>
+        <div class="label"><h3>Text size</h3>{@render rst('Text size')}<p>{settings.size}px, for Verse by Verse. Mushaf pages always fill the page.</p></div>
         <input type="range" min="24" max="96" step="2" bind:value={settings.size} aria-label="Text size" />
       </div>
       <div class="row">
-        <div class="label"><h3>Line spacing</h3><p>{settings.spacing.toFixed(1)}</p></div>
+        <div class="label"><h3>Line spacing</h3>{@render rst('Line spacing')}<p>{settings.spacing.toFixed(1)}</p></div>
         <input type="range" min="1.3" max="3.2" step="0.1" bind:value={settings.spacing} aria-label="Line spacing" />
       </div>
     {/if}
 
-    {#if !query && onPage('reading')}
+    {#if browse && onPage('reading')}
       <h3 class="grp">Start</h3>
       <div class="row">
-        <div class="label"><h3>Open in</h3><p>What you see first. Switch any time from the top bar.</p></div>
+        <div class="label"><h3>Open in</h3>{@render rst('Open in')}<p>What you see first. Switch any time from the top bar.</p></div>
         <div class="seg">
           <button class:on={settings.mode === 'reading'} onclick={() => (settings.mode = 'reading')}>Reading</button>
           <button class:on={settings.mode === 'verse'} onclick={() => (settings.mode = 'verse')}>Verse by Verse</button>
         </div>
       </div>
+      <div class="row">
+        <div class="label"><h3>Continue where I left off</h3>{@render rst('Continue where I left off')}<p>Reopen at the surah and verse you were reading. Off: start from the beginning of Al-Fatihah.</p></div>
+        {@render toggle(settings.resume, (v) => (settings.resume = v), 'Continue where I left off')}
+      </div>
       <h3 class="grp">Translation</h3>
       <div class="row">
-        <div class="label"><h3>Translation</h3><p>Shown under each verse and in Reading → Translation. Saved with the surah for offline use.</p></div>
+        <div class="label"><h3>Translation</h3>{@render rst('Translation')}<p>Shown under each verse and in Reading → Translation. Saved with the surah for offline use.</p></div>
         <TranslationPicker onpick={setTranslation} />
       </div>
       {#if settings.translation}
         <div class="row">
-          <div class="label"><h3>Translation size</h3><p>{settings.translationSize}px</p></div>
+          <div class="label"><h3>Translation size</h3>{@render rst('Translation size')}<p>{settings.translationSize}px</p></div>
           <input type="range" min="13" max="30" step="1" bind:value={settings.translationSize} aria-label="Translation text size" />
         </div>
       {/if}
       <h3 class="grp">Word by word</h3>
       <div class="row">
-        <div class="label"><h3>Word meanings</h3><p>Word-by-word translation in Verse by Verse. Right-click any word to see its meaning and play options.</p></div>
+        <div class="label"><h3>Word meanings</h3>{@render rst('Word meanings')}<p>Word-by-word translation in Verse by Verse. Right-click any word to see its meaning and play options.</p></div>
         <div class="seg">
           {#each MEANINGS as m (m.id)}
             <button class:on={settings.wordMeaning === m.id} onclick={() => (settings.wordMeaning = m.id)}>{m.name}</button>
@@ -422,17 +469,17 @@
       </div>
       {#if settings.wordMeaning === 'below'}
         <div class="row wide">
-          <div class="label"><h3>Transliteration</h3><p>Show how each word is pronounced, in Latin letters.</p></div>
+          <div class="label"><h3>Transliteration</h3>{@render rst('Transliteration')}<p>Show how each word is pronounced, in Latin letters.</p></div>
           {@render toggle(settings.transliteration, (v) => (settings.transliteration = v), 'Transliteration')}
         </div>
       {/if}
     {/if}
 
-    {#if !query && onPage('pages')}
+    {#if browse && onPage('pages')}
       <p class="intro">These options are for <b>Reading</b> mode, the printed Mushaf pages. Verse by Verse ignores them.</p>
       <h3 class="grp">Page</h3>
       <div class="row">
-        <div class="label"><h3>Page type</h3><p>Which printed Mushaf the pages follow. Same text, different line breaks and page numbers.</p></div>
+        <div class="label"><h3>Page type</h3>{@render rst('Page type')}<p>Which printed Mushaf the pages follow. Same text, different line breaks and page numbers.</p></div>
         <div class="layouts">
           {#each PAGE_TYPES as l (l.id)}
             <button class="layout" class:on={settings.layout === l.id} onclick={() => setPageType(l.id)} aria-pressed={settings.layout === l.id}>
@@ -442,7 +489,7 @@
         </div>
       </div>
       <div class="row wide">
-        <div class="label"><h3>Page look</h3><p>The paper the Mushaf page is drawn on.</p></div>
+        <div class="label"><h3>Page look</h3>{@render rst('Page look')}<p>The paper the Mushaf page is drawn on.</p></div>
         <div class="looks">
           {#each LOOKS as l (l.id)}
             <button class="look" class:on={settings.pageLook === l.id} onclick={() => (settings.pageLook = l.id)} aria-pressed={settings.pageLook === l.id}>
@@ -453,38 +500,38 @@
         </div>
       </div>
       <div class="row">
-        <div class="label"><h3>Page flow</h3><p>Turn one page at a time, or scroll the pages like a long sheet.</p></div>
+        <div class="label"><h3>Page flow</h3>{@render rst('Page flow')}<p>Turn one page at a time, or scroll the pages like a long sheet.</p></div>
         <div class="seg">
           <button class:on={settings.flow === 'page'} onclick={() => (settings.flow = 'page')}>Pages</button>
           <button class:on={settings.flow === 'scroll'} onclick={() => (settings.flow = 'scroll')}>Scroll</button>
         </div>
       </div>
       <div class="row">
-        <div class="label"><h3>Two-page spread</h3><p>Show facing pages like an open book: odd pages on the right, even on the left. Needs a wide window. Press T.</p></div>
+        <div class="label"><h3>Two-page spread</h3>{@render rst('Two-page spread')}<p>Show facing pages like an open book: odd pages on the right, even on the left. Needs a wide window. Press T.</p></div>
         {@render toggle(settings.spread, (v) => (settings.spread = v), 'Two-page spread')}
       </div>
       <h3 class="grp">On the page</h3>
       <div class="row">
-        <div class="label"><h3>Page info</h3><p>Show the surah name, juz and page number on each page.</p></div>
+        <div class="label"><h3>Page info</h3>{@render rst('Page info')}<p>Show the surah name, juz and page number on each page.</p></div>
         {@render toggle(settings.showPageInfo, (v) => (settings.showPageInfo = v), 'Page info')}
       </div>
       <div class="row">
-        <div class="label"><h3>Highlight bookmarks</h3><p>Mark bookmarked verses with a filled verse-end ornament.</p></div>
+        <div class="label"><h3>Highlight bookmarks</h3>{@render rst('Highlight bookmarks')}<p>Mark bookmarked verses with a filled verse-end ornament.</p></div>
         {@render toggle(settings.highlightBookmarks, (v) => (settings.highlightBookmarks = v), 'Highlight bookmarks')}
       </div>
     {/if}
 
-    {#if !query && onPage('audio')}
+    {#if browse && onPage('audio')}
       <h3 class="grp">Player</h3>
       <div class="row">
-        <div class="label"><h3>Listening bar</h3><p>Reading comes first. The bar opens when you press Listen or play a verse, and ✕ closes it. Choose "Always" to keep it docked.</p></div>
+        <div class="label"><h3>Listening bar</h3>{@render rst('Listening bar')}<p>Reading comes first. The bar opens when you press Listen or play a verse, and ✕ closes it. Choose "Always" to keep it docked.</p></div>
         <div class="seg">
           <button class:on={settings.listenBar === 'demand'} onclick={() => (settings.listenBar = 'demand')}>On demand</button>
           <button class:on={settings.listenBar === 'always'} onclick={() => (settings.listenBar = 'always')}>Always</button>
         </div>
       </div>
       <div class="row">
-        <div class="label"><h3>Show the bar only on hover</h3><p>Hides the bar until you move the mouse to the bottom edge of the window, and the page keeps all its room. It also appears for a moment when you start listening.</p></div>
+        <div class="label"><h3>Show the bar only on hover</h3>{@render rst('Show the bar only on hover')}<p>Hides the bar until you move the mouse to the bottom edge of the window, and the page keeps all its room. It also appears for a moment when you start listening.</p></div>
         {@render toggle(settings.playerHover, (v) => (settings.playerHover = v), 'Show the player only on hover')}
       </div>
       <h3 class="grp">Recitation</h3>
@@ -493,7 +540,7 @@
         <div class="rp-wrap"><ReciterPicker /></div>
       </div>
       <div class="row">
-        <div class="label"><h3>Playback speed</h3><p>Pitch is preserved.</p></div>
+        <div class="label"><h3>Playback speed</h3>{@render rst('Playback speed')}<p>Pitch is preserved.</p></div>
         <div class="seg">
           {#each SPEEDS as sp (sp)}
             <button class:on={settings.speed === sp} onclick={() => { settings.speed = sp; player.applySpeed(); }}>{sp}×</button>
@@ -501,20 +548,20 @@
         </div>
       </div>
       <div class="row">
-        <div class="label"><h3>Play the next surah</h3><p>Continue automatically when a surah ends.</p></div>
+        <div class="label"><h3>Play the next surah</h3>{@render rst('Play the next surah')}<p>Continue automatically when a surah ends.</p></div>
         {@render toggle(settings.autoAdvance, (v) => (settings.autoAdvance = v), 'Auto-advance')}
       </div>
       <div class="row">
-        <div class="label"><h3>Repeat surah</h3><p>Loop the current surah, handy for memorising.</p></div>
+        <div class="label"><h3>Repeat surah</h3>{@render rst('Repeat surah')}<p>Loop the current surah, handy for memorising.</p></div>
         {@render toggle(settings.repeatSurah, (v) => (settings.repeatSurah = v), 'Repeat surah')}
       </div>
       <div class="row">
-        <div class="label"><h3>Say a word when clicked</h3><p>Clicking a word plays just that word, with no menu. Needs a connection unless the surah is downloaded.</p></div>
+        <div class="label"><h3>Say a word when clicked</h3>{@render rst('Say a word when clicked')}<p>Clicking a word plays just that word, with no menu. Needs a connection unless the surah is downloaded.</p></div>
         {@render toggle(settings.wordAudio, (v) => (settings.wordAudio = v), 'Word audio')}
       </div>
       <h3 class="grp">Following along</h3>
       <div class="row">
-        <div class="label"><h3>Highlight style</h3><p>How the recited word is marked.</p></div>
+        <div class="label"><h3>Highlight style</h3>{@render rst('Highlight style')}<p>How the recited word is marked.</p></div>
         <div class="seg">
           {#each HIGHLIGHTS as h (h.id)}
             <button class:on={settings.highlight === h.id} onclick={() => (settings.highlight = h.id)}>{h.name}</button>
@@ -522,23 +569,23 @@
         </div>
       </div>
       <div class="row">
-        <div class="label"><h3>Follow the recitation</h3><p>Scroll automatically so the current verse stays in view. Scrolling yourself pauses it for a moment.</p></div>
+        <div class="label"><h3>Follow the recitation</h3>{@render rst('Follow the recitation')}<p>Scroll automatically so the current verse stays in view. Scrolling yourself pauses it for a moment.</p></div>
         {@render toggle(settings.autoScroll, (v) => (settings.autoScroll = v), 'Auto-scroll')}
       </div>
       <div class="row">
-        <div class="label"><h3>Lock on the playing verse</h3><p>In the scrolling views, scrolling away only lasts a moment: once you let go, the view returns to the verse being recited, with all of it on screen (or the lines being recited, if the verse is taller than the window). Also on the lock button in the bar above the text.</p></div>
+        <div class="label"><h3>Lock on the playing verse</h3>{@render rst('Lock on the playing verse')}<p>In the scrolling views, scrolling away only lasts a moment: once you let go, the view returns to the verse being recited, with all of it on screen (or the lines being recited, if the verse is taller than the window). Also on the lock button in the bar above the text.</p></div>
         {@render toggle(settings.lockPlaying, (v) => (settings.lockPlaying = v), 'Lock on the playing verse')}
       </div>
     {/if}
 
-    {#if !query && onPage('manager')}
+    {#if browse && onPage('manager')}
       <h3 class="grp">Audio downloads</h3>
       <div class="row mgr">
         <div class="label"><h3>Audio manager</h3><p>First choose a reciter, then download or delete the surahs you want. Each reciter's recitations are stored separately.</p></div>
         <div class="rp-wrap"><ReciterPicker value={dlReciter} onpick={(id) => (dlReciter = id)} /></div>
       </div>
       <div class="row">
-        <div class="label"><h3>Keep favourites offline</h3><p>A surah you listen to on three different days in a month is saved for offline use by itself. If you do not listen to it for {KEEP_DAYS} days, it is removed again. Recitations you download yourself are never removed.</p></div>
+        <div class="label"><h3>Keep favourites offline</h3>{@render rst('Keep favourites offline')}<p>A surah you listen to on three different days in a month is saved for offline use by itself. If you do not listen to it for {KEEP_DAYS} days, it is removed again. Recitations you download yourself are never removed.</p></div>
         {@render toggle(settings.autoCache, (v) => (settings.autoCache = v), 'Keep favourites offline')}
       </div>
       <div class="row">
@@ -591,14 +638,14 @@
       </ul>
     {/if}
 
-    {#if !query && onPage('reminders')}
+    {#if browse && onPage('reminders')}
       <div class="row">
-        <div class="label"><h3>Verse of the day</h3><p>One verse from quran.com each day, from the time you choose: a card in the app, or a notification when the window is behind other apps or in the tray.</p></div>
+        <div class="label"><h3>Verse of the day</h3>{@render rst('Verse of the day')}<p>One verse from quran.com each day, from the time you choose: a card in the app, or a notification when the window is behind other apps or in the tray.</p></div>
         {@render toggle(settings.dailyVerse, (v) => (settings.dailyVerse = v), 'Verse of the day')}
       </div>
       {#if settings.dailyVerse}
         <div class="row">
-          <div class="label"><h3>Show it from</h3><p>It appears at this time while the app is running (in the tray too), or the first time you open the app after it.</p></div>
+          <div class="label"><h3>Show it from</h3>{@render rst('Show it from')}<p>It appears at this time while the app is running (in the tray too), or the first time you open the app after it.</p></div>
           <input class="time" type="time" bind:value={settings.dailyVerseTime} aria-label="Verse of the day time" />
         </div>
         <div class="row">
@@ -610,12 +657,12 @@
         </div>
       {/if}
       <div class="row">
-        <div class="label"><h3>Reading reminders</h3><p>A nudge at the times below, as long as the app is running.</p></div>
+        <div class="label"><h3>Reading reminders</h3>{@render rst('Reading reminders')}<p>A nudge at the times below, as long as the app is running.</p></div>
         {@render toggle(settings.remindersOn, (v) => (settings.remindersOn = v), 'Reading reminders')}
       </div>
       {#if settings.remindersOn}
         <div class="row">
-          <div class="label"><h3>Times</h3><p>Every day. Add as many as you like.</p></div>
+          <div class="label"><h3>Times</h3>{@render rst('Times')}<p>Every day. Add as many as you like.</p></div>
           <div class="times">
             {#each times as t, i (i)}
               <span class="tm">
@@ -629,12 +676,12 @@
           </div>
         </div>
         <div class="row">
-          <div class="label"><h3>Message</h3><p>What the reminder says.</p></div>
+          <div class="label"><h3>Message</h3>{@render rst('Message')}<p>What the reminder says.</p></div>
           <input class="text" type="text" maxlength="120" bind:value={settings.remindMessage} aria-label="Reminder message" />
         </div>
       {/if}
       <div class="row">
-        <div class="label"><h3>Use system notifications</h3><p>When the window is behind other apps or in the tray, notify through Windows or macOS as well. Do Not Disturb and Focus still apply.</p></div>
+        <div class="label"><h3>Use system notifications</h3>{@render rst('Use system notifications')}<p>When the window is behind other apps or in the tray, notify through Windows or macOS as well. Do Not Disturb and Focus still apply.</p></div>
         {@render toggle(settings.systemNotify, (v) => (settings.systemNotify = v), 'System notifications')}
       </div>
       <div class="row">
@@ -643,7 +690,7 @@
       </div>
     {/if}
 
-    {#if !query && onPage('focus')}
+    {#if browse && onPage('focus')}
       <h3 class="grp">Window</h3>
       {#if FOCUS_MODE}
       <div class="row">
@@ -656,7 +703,7 @@
         <button class="secondary" onclick={() => ui.toggleFullscreen()}>{ui.fullscreen ? 'Exit full screen' : 'Enter full screen'}</button>
       </div>
       <div class="row">
-        <div class="label"><h3>Keep the screen on</h3><p>Stop the display sleeping while a recitation plays.</p></div>
+        <div class="label"><h3>Keep the screen on</h3>{@render rst('Keep the screen on')}<p>Stop the display sleeping while a recitation plays.</p></div>
         {@render toggle(settings.keepAwake, (v) => (settings.keepAwake = v), 'Keep screen on')}
       </div>
       {#if FOCUS_MODE}
@@ -668,7 +715,7 @@
       {#if isTauri()}
         <h3 class="grp">Background</h3>
         <div class="row">
-          <div class="label"><h3>Keep running in the tray</h3><p>Closing the window leaves Quran in the system tray, so reminders and the verse of the day still arrive. Click the tray icon to open it again, or right-click it to quit. Off: closing the window quits.</p></div>
+          <div class="label"><h3>Keep running in the tray</h3>{@render rst('Keep running in the tray')}<p>Closing the window leaves Quran in the system tray, so reminders and the verse of the day still arrive. Click the tray icon to open it again, or right-click it to quit. Off: closing the window quits.</p></div>
           {@render toggle(settings.background, (v) => (settings.background = v), 'Keep running in the tray')}
         </div>
         <div class="row">
@@ -678,7 +725,7 @@
       {/if}
     {/if}
 
-    {#if !query && onPage('shortcuts')}
+    {#if browse && onPage('shortcuts')}
       <h3 class="grp">Keyboard shortcuts</h3>
       <div class="row wide">
         <div class="label"><h3>Keyboard</h3><p>Everything is reachable without the mouse.</p></div>
@@ -699,7 +746,7 @@
       </div>
     {/if}
 
-    {#if !query && onPage('updates')}
+    {#if browse && onPage('updates')}
       <h3 class="grp">Updates</h3>
       <div class="row">
         <div class="label"><h3>Version</h3><p>{version} <span class="beta">Beta</span></p></div>
@@ -724,12 +771,12 @@
         </div>
       </div>
       <div class="row">
-        <div class="label"><h3>Update automatically</h3><p>New versions download quietly in the background. You only restart to finish.</p></div>
+        <div class="label"><h3>Update automatically</h3>{@render rst('Update automatically')}<p>New versions download quietly in the background. You only restart to finish.</p></div>
         {@render toggle(settings.checkUpdates, (v) => (settings.checkUpdates = v), 'Update automatically')}
       </div>
     {/if}
 
-    {#if !query && onPage('data')}
+    {#if browse && onPage('data')}
       <h3 class="grp">Your data</h3>
       <div class="row">
         <div class="label"><h3>Offline downloads</h3><p>{mb(usedBytes)} MB of audio stored on this device. Download or delete recitations under Listening → Audio downloads.</p></div>
@@ -751,7 +798,7 @@
       </div>
     {/if}
 
-    {#if !query && onPage('about')}
+    {#if browse && onPage('about')}
       <h3 class="grp">The app</h3>
       <div class="row about">
         <div class="label"><h3>About</h3></div>
@@ -786,6 +833,16 @@
   .find input::placeholder { color: var(--ink-dim); }
   .find input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .results { list-style: none; margin: 0; padding: 0; display: grid; }
+  nav .chg { flex-direction: row; width: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 4px 0; padding: 8px 12px; border-radius: 10px; font-size: 13px; color: var(--ink-dim); border: 1px dashed var(--line); text-align: left; }
+  nav .chg b { min-width: 20px; padding: 1px 7px; border-radius: 99px; text-align: center; font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent); }
+  nav .chg:hover { color: var(--ink); }
+  nav .chg.on { color: var(--ink); border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
+  .results.changed li { display: flex; align-items: center; gap: 8px; }
+  .results.changed .go { flex: 1; }
+  .results.changed .again, .reset { flex: none; width: auto; display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 12px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  .results.changed .again:hover, .reset:hover { background: var(--accent-soft); }
+  .label { position: relative; }
+  .reset { position: absolute; top: -1px; right: 0; }
   .results li + li { border-top: 1px solid var(--line); }
   .results button { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; width: 100%; padding: 14px 8px; text-align: left; border-radius: 8px; }
   .results button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
