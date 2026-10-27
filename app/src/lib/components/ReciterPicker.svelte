@@ -2,6 +2,7 @@
   import { tick } from 'svelte';
   import { player } from '$lib/player.svelte';
   import { settings } from '$lib/settings.svelte';
+  import type { Reciter } from '$lib/types';
   import Qari from './Qari.svelte';
 
   let { compact = false, value, onpick }: { compact?: boolean; value?: number; onpick?: (id: number) => void } = $props();
@@ -17,6 +18,19 @@
   const shown = $derived.by(() => {
     const q = query.trim().toLowerCase();
     return q ? player.reciters.filter((r) => `${r.name} ${r.style ?? ''}`.toLowerCase().includes(q)) : player.reciters;
+  });
+
+  // recitations that follow along (verse and word highlight) come first, then the listen-only ones
+  type Row = { head?: string; note?: string; r?: Reciter };
+  const rows = $derived.by((): Row[] => {
+    const synced = shown.filter((r) => !r.plain);
+    const plain = shown.filter((r) => r.plain);
+    if (!plain.length) return synced.map((r) => ({ r }));
+    return [
+      ...(synced.length ? [{ head: 'Follow along', note: 'Verse and word highlight, play from any verse' }, ...synced.map((r) => ({ r }))] : []),
+      { head: 'Listen only', note: 'Whole surah, no highlight or verse stepping' },
+      ...plain.map((r) => ({ r }))
+    ];
   });
 
   async function toggle() {
@@ -69,7 +83,11 @@
       <input bind:this={search} bind:value={query} placeholder="Search reciters" aria-label="Search reciters" />
     </div>
     <ul class="rp-list" role="listbox" aria-label="Reciters">
-      {#each shown as r (r.id)}
+      {#each rows as row (row.head ?? row.r?.id)}
+        {#if row.head}
+          <li class="hd" role="presentation"><b>{row.head}</b><small>{row.note}</small></li>
+        {:else if row.r}
+          {@const r = row.r}
         <li role="option" aria-selected={r.id === selected} class:on={r.id === selected}>
           <button onclick={() => choose(r.id)}>
             <Qari {r} size={52} />
@@ -79,6 +97,7 @@
             {/if}
           </button>
         </li>
+        {/if}
       {:else}
         <li class="none">No reciter matches “{query}”</li>
       {/each}
@@ -108,5 +127,8 @@
   .who b { font-size: 15.5px; font-weight: 600; }
   .who small { font-size: 12px; color: var(--ink-dim); }
   .rp-list li.on .who small { color: inherit; opacity: 0.8; }
+  .hd { position: sticky; top: 0; z-index: 1; display: flex; flex-direction: column; gap: 1px; padding: 12px 10px 6px; background: var(--panel); }
+  .hd b { font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
+  .hd small { font-size: 12px; color: var(--ink-dim); }
   .none { padding: 18px; text-align: center; color: var(--ink-dim); font-size: 13px; }
 </style>

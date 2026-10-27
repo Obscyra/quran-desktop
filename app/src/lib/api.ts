@@ -1,5 +1,6 @@
 import * as offline from './offline';
 import { RECITERS, REMOVED_RECITERS } from './reciters';
+import { QURANICAUDIO } from './reciters-qa';
 import type { Chapter, ChapterAudio, Reciter, TranslationInfo, Verse, WordTiming } from './types';
 
 const V4 = 'https://api.quran.com/api/v4';
@@ -47,7 +48,17 @@ export async function fetchChapters(): Promise<Chapter[]> {
   return d.chapters;
 }
 
-/** quran.com's own list (with portraits), plus any recitation its API offers that the list lacks. */
+/** recitations from quranicaudio.com keep their ids above this, so they never meet quran.com's */
+export const QA_BASE = 10000;
+const plainPaths = new Map<number, string>();
+// quranicaudio.com's own list cannot be read from a browser (no CORS), so a copy ships with the app (scripts/update-reciters.mjs)
+const QA_RECITERS: Reciter[] = QURANICAUDIO.map(([id, name, folder]) => ({ id: QA_BASE + id, name, style: 'Murattal', plain: folder }));
+for (const r of QA_RECITERS) plainPaths.set(r.id, r.plain!);
+
+/**
+ * quran.com's own list (with portraits), plus any recitation its API offers that the list lacks, plus the whole-surah
+ * recordings of quranicaudio.com (listen only: they come without verse or word timings).
+ */
 export async function fetchReciters(): Promise<Reciter[]> {
   const out = [...RECITERS];
   try {
@@ -62,6 +73,8 @@ export async function fetchReciters(): Promise<Reciter[]> {
   } catch {
     /* the bundled list is complete enough on its own */
   }
+  out.push(...QA_RECITERS);
+  for (const r of out) if (r.plain) plainPaths.set(r.id, r.plain);
   return out;
 }
 
@@ -213,6 +226,8 @@ export async function fetchIndoOnline(chapter: number): Promise<Record<string, {
 }
 
 export async function fetchChapterAudio(reciter: number, chapter: number): Promise<ChapterAudio> {
+  const folder = plainPaths.get(reciter);
+  if (folder) return { url: `https://download.quranicaudio.com/quran/${folder}${String(chapter).padStart(3, '0')}.mp3`, timings: [], plain: true };
   const d = await getJson<{
     audio_file: {
       audio_url: string;

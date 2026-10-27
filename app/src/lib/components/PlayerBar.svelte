@@ -123,7 +123,7 @@
       <button class="ctl" onclick={() => player.prev()} aria-label="Previous surah" title="Previous surah">
         <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M5 5h3v14H5zM20 5.2v13.6a.8.8 0 0 1-1.25.66L9 12.66a.8.8 0 0 1 0-1.32l9.75-6.8A.8.8 0 0 1 20 5.2z" fill="currentColor" /></svg>
       </button>
-      <button class="ctl" onclick={() => player.stepVerse(-1)} aria-label="Previous verse" title="Previous verse">
+      <button class="ctl" onclick={() => player.stepVerse(-1)} disabled={!!player.audio?.plain} aria-label="Previous verse" title={player.audio?.plain ? 'This reciter plays whole surahs only' : 'Previous verse'}>
         <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 5.5-6.5 6.5 6.5 6.5" /></svg>
       </button>
       <button class="play" onclick={() => player.toggle()} aria-label={player.loadingAudio ? 'Loading the recitation' : player.playing ? 'Pause' : 'Play'} aria-busy={player.loadingAudio}>
@@ -135,7 +135,7 @@
           <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24"><path d="M7.5 4.6v14.8a.8.8 0 0 0 1.22.68l12-7.4a.8.8 0 0 0 0-1.36l-12-7.4a.8.8 0 0 0-1.22.68z" fill="currentColor" /></svg>
         {/if}
       </button>
-      <button class="ctl" onclick={() => player.stepVerse(1)} aria-label="Next verse" title="Next verse">
+      <button class="ctl" onclick={() => player.stepVerse(1)} disabled={!!player.audio?.plain} aria-label="Next verse" title={player.audio?.plain ? 'This reciter plays whole surahs only' : 'Next verse'}>
         <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 5.5 6.5 6.5-6.5 6.5" /></svg>
       </button>
       <button class="ctl" onclick={() => player.next()} aria-label="Next surah" title="Next surah">
@@ -153,9 +153,12 @@
   </div>
 
   <div class="tools">
-    <button class="chip" onclick={cycleSpeed} title="Playback speed" aria-label="Playback speed {settings.speed}×">{settings.speed}×</button>
+    <button class="chip speed" onclick={cycleSpeed} title="Playback speed" aria-label="Playback speed {settings.speed}×">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 17a8.5 8.5 0 1 1 15.6 0" /><path d="m12 13 4-4.5" /><circle cx="12" cy="13.5" r="1.2" fill="currentColor" stroke="none" /></svg>
+      {settings.speed}×
+    </button>
     <label class="vol" title="Volume">
-      <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8v4h3l4 3.5v-11L6 8z" /><path d="M13.5 7.5a3.5 3.5 0 0 1 0 5" /></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9.5v5h3.8l5 4.2V5.3L7.3 9.5z" /><path d="M16 9a4.2 4.2 0 0 1 0 6" />{#if settings.volume > 0.5}<path d="M18.6 6.6a8 8 0 0 1 0 10.8" />{/if}{#if settings.volume === 0}<path d="m16 9.5 4.5 5M20.5 9.5 16 14.5" />{/if}</svg>
       <input type="range" min="0" max="1" step="0.05" bind:value={settings.volume} oninput={() => player.applyVolume()} aria-label="Volume" />
     </label>
     {#if player.isDownloaded}
@@ -222,6 +225,7 @@
   .mid { display: flex; flex-direction: column; gap: 6px; align-items: center; }
   .btns { display: flex; align-items: center; gap: 10px; }
   .ctl { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; color: var(--ink); transition: background-color 0.15s, color 0.15s; }
+  .ctl:disabled { opacity: 0.35; pointer-events: auto; cursor: not-allowed; }
   .ctl:hover { background: color-mix(in srgb, var(--ink) 9%, transparent); color: var(--ink); }
   .play { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); transition: transform 0.15s var(--ease), opacity 0.15s; }
   .play:hover:not(:disabled) { transform: scale(1.06); }
@@ -237,6 +241,7 @@
   .chip { height: 28px; padding: 0 11px; border-radius: 7px; color: var(--ink-dim); font-size: 12px; font-weight: 500; background: color-mix(in srgb, var(--ink) 8%, transparent); transition: background-color 0.15s, color 0.15s; font-variant-numeric: tabular-nums; }
   .chip:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 14%, transparent); color: var(--ink); }
   .chip:disabled { opacity: 0.5; }
-  .vol { display: flex; align-items: center; gap: 6px; color: var(--ink-dim); }
-  .vol input { width: 78px; height: 20px; accent-color: var(--accent); }
+  .chip.speed { height: 36px; padding: 0 13px 0 10px; display: inline-flex; align-items: center; gap: 7px; font-size: 14px; border-radius: 9px; }
+  .vol { display: flex; align-items: center; gap: 8px; color: var(--ink-dim); }
+  .vol input { width: 96px; height: 24px; accent-color: var(--accent); }
 </style>

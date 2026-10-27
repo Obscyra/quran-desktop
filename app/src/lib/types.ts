@@ -18,6 +18,8 @@ export interface Reciter {
   photo?: string | null;
   /** no word-level timings: the word highlight is estimated within each verse */
   approx?: boolean;
+  /** quranicaudio.com folder: a whole-surah recording with no verse or word timings (listen only) */
+  plain?: string;
 }
 
 export interface Word {
@@ -71,4 +73,6 @@ export interface ChapterAudio {
   spans?: { verse: number; start: number; end: number }[];
   /** the word timings were estimated from verse boundaries */
   approx?: boolean;
+  /** a whole-surah file with no timings at all: no highlight, no verse stepping */
+  plain?: boolean;
 }
