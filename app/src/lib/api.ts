@@ -1,3 +1,4 @@
+import * as offline from './offline';
 import { RECITERS, REMOVED_RECITERS } from './reciters';
 import type { Chapter, ChapterAudio, Reciter, TranslationInfo, Verse, WordTiming } from './types';
 
@@ -113,34 +114,56 @@ async function allVerses(chapter: number, query: string): Promise<ApiVerse[]> {
   return out;
 }
 
-/** Just the verse translations of a surah (no words), to put under the bundled Arabic. */
-async function translationsOf(chapter: number, translation: number): Promise<Map<number, string>> {
-  const out = new Map<number, string>();
+/**
+ * The verse translations of a surah to put under the bundled Arabic, and, when the language is not English, the word
+ * meanings in that language (the bundled ones are English).
+ */
+async function extrasOf(chapter: number, translation: number, lang: string) {
+  const tr = new Map<number, string>();
+  const words = new Map<string, string>();
+  const body = lang === 'en' ? 'words=false' : `words=true&language=${lang}`;
+  const want = translation ? `&translations=${translation}` : '';
   for (let page = 1; ; page++) {
-    const d = await getJson<Paged>(`${V4}/verses/by_chapter/${chapter}?words=false&per_page=50&page=${page}&translations=${translation}`);
-    for (const v of d.verses) if (v.translations?.[0]) out.set(v.verse_number, stripTags(v.translations[0].text));
+    const d = await getJson<Paged>(`${V4}/verses/by_chapter/${chapter}?${body}&per_page=50&page=${page}${want}`);
+    for (const v of d.verses) {
+      if (v.translations?.[0]) tr.set(v.verse_number, stripTags(v.translations[0].text));
+      for (const w of v.words ?? []) if (w.char_type_name === 'word' && w.translation?.text) words.set(`${v.verse_number}-${w.position}`, w.translation.text);
+    }
     if (!d.pagination.next_page) break;
   }
-  return out;
+  return { tr, words };
 }
 
-export async function fetchVerses(chapter: number, translation: number): Promise<Verse[]> {
-  const local = await bundled<Verse[]>(`verses/${chapter}.json`);
+/** `lang` is the word-meaning language (see languages.ts); the bundled text is English. */
+export async function fetchVerses(chapter: number, translation: number, lang = 'en'): Promise<Verse[]> {
+  // text the provider has corrected since the installer was built (see datasync.svelte.ts) wins over the bundled copy
+  const local = (await offline.getFresh(chapter).catch(() => undefined)) ?? (await bundled<Verse[]>(`verses/${chapter}.json`));
   if (local) {
-    if (!translation || translation === BUNDLED_TRANSLATION) return translation ? local : local.map((v) => ({ ...v, translation: undefined }));
+    const own = !translation || translation === BUNDLED_TRANSLATION;
+    if (own && lang === 'en') return translation ? local : local.map((v) => ({ ...v, translation: undefined }));
     try {
-      const tr = await translationsOf(chapter, translation);
-      return local.map((v) => ({ ...v, translation: tr.get(v.n) }));
+      const x = await extrasOf(chapter, own ? 0 : translation, lang);
+      return local.map((v) => ({
+        ...v,
+        translation: own ? (translation ? v.translation : undefined) : x.tr.get(v.n),
+        words: lang === 'en' ? v.words : v.words.map((w) => ({ ...w, translation: x.words.get(`${v.n}-${w.pos}`) ?? w.translation }))
+      }));
     } catch {
       // offline and this translation was never downloaded: the Arabic is still all there
-      const bare = local.map((v) => ({ ...v, translation: undefined }));
+      const bare = local.map((v) => ({ ...v, translation: own && translation ? v.translation : undefined }));
       partial.add(bare);
       return bare;
     }
   }
+  return fetchVersesOnline(chapter, translation, lang);
+}
+
+/** The same text straight from the API (what scripts/bundle-data.mjs saves). */
+export async function fetchVersesOnline(chapter: number, translation: number, lang = 'en'): Promise<Verse[]> {
   const tr = translation ? `&translations=${translation}` : '';
+  const wl = lang === 'en' ? '' : `&language=${lang}`;
   const fields = 'text_uthmani,text_uthmani_tajweed,code_v2,v2_page';
-  const verses = await allVerses(chapter, `word_fields=${fields}${tr}`);
+  const verses = await allVerses(chapter, `word_fields=${fields}${tr}${wl}`);
   return verses.map((v) => {
     const end = v.words.find((w) => w.char_type_name === 'end');
     return {
@@ -168,9 +191,18 @@ export async function fetchVerses(chapter: number, translation: number): Promise
 }
 
 /** IndoPak spelling and page/line of every word (the 15-line Pakistani print), keyed "verse-pos". */
+/** The bundled copy of a surah's IndoPak spelling, for comparing with the provider's. */
+export const bundledIndo = (chapter: number) => bundled<Record<string, { text: string; page: number; line: number }>>(`indo/${chapter}.json`);
+/** The bundled copy of a surah's text. */
+export const bundledVerses = (chapter: number) => bundled<Verse[]>(`verses/${chapter}.json`);
+
 export async function fetchIndo(chapter: number): Promise<Record<string, { text: string; page: number; line: number }>> {
   const local = await bundled<Record<string, { text: string; page: number; line: number }>>(`indo/${chapter}.json`);
   if (local) return local;
+  return fetchIndoOnline(chapter);
+}
+
+export async function fetchIndoOnline(chapter: number): Promise<Record<string, { text: string; page: number; line: number }>> {
   const verses = await allVerses(chapter, 'word_fields=text_indopak&mushaf=3');
   const out: Record<string, { text: string; page: number; line: number }> = {};
   for (const v of verses)

@@ -3,10 +3,11 @@
 //   static/data/verses/<n>.json       every verse of surah n: words, glyphs, tajweed, default translation (same shape as api.fetchVerses)
 //   static/data/indo/<n>.json         IndoPak spelling and page/line of every word (same shape as api.fetchIndo)
 //   static/fonts/qcf/p<n>.woff2       the 604 Mushaf page fonts
+//   static/data/manifest.json         when it was built and the size of every font, so the app can tell which ones the provider has changed since
 // Run it again to refresh. It skips files that already exist (use --force to redo them).
 // Audio is not bundled (many gigabytes); it is downloaded per reciter from the Audio manager.
 // Keep the mapping below in step with src/lib/api.ts.
-import { mkdir, writeFile, access } from 'node:fs/promises';
+import { mkdir, writeFile, access, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -110,4 +111,7 @@ await pool(Array.from({ length: 604 }, (_, i) => i + 1), 8, async (p) => {
   if (!force && (await exists(join(root, `fonts/qcf/p${p}.woff2`)))) return;
   await save(`fonts/qcf/p${p}.woff2`, await get(`${FONTS}/p${p}.woff2`, true));
 });
+const fonts = {};
+for (let p = 1; p <= 604; p++) fonts[p] = (await stat(join(root, `fonts/qcf/p${p}.woff2`))).size;
+await save('data/manifest.json', JSON.stringify({ built: new Date().toISOString(), fonts }));
 console.log('done');
