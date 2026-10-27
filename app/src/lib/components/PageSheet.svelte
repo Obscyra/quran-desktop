@@ -1,3 +1,8 @@
+<script module lang="ts">
+  // A page that scrolls out of the window and back is built again; its fitted size does not change, so remember it.
+  const fitted = new Map<string, { fs: string; short: boolean[] }>();
+</script>
+
 <script lang="ts">
   import { onMount, tick, untrack } from 'svelte';
   import { pageFonts } from '$lib/fonts.svelte';
@@ -46,6 +51,13 @@
     // (a transform): divide that out, so the size is right whenever the measuring happens.
     const k = box.getBoundingClientRect().width / avail || 1;
     const glyph = settings.script === 'mushaf';
+    const key = `${page?.page}|${settings.script}|${settings.layout}|${settings.uiScale}|${settings.fontFamily}|${pageFonts.tick}|${avail}|${rowH}|${rows.length}`;
+    const hit = fitted.get(key);
+    if (hit) {
+      box.style.setProperty('--fs', hit.fs);
+      rows.forEach((ln, i) => ln.classList.toggle('short', hit.short[i]));
+      return;
+    }
     const cap = rowH * (glyph ? 0.74 : 0.6);
     const gap = parseFloat(getComputedStyle(rows[0]).columnGap || '0');
     const width = (ln: HTMLElement) => {
@@ -78,7 +90,9 @@
     }
     box.style.setProperty('--fs', `${fs.toFixed(2)}px`);
     // lines far shorter than the page (a surah's closing line) are centred, not stretched
-    rows.forEach((ln, i) => ln.classList.toggle('short', natural[i] < avail * 0.62));
+    const short = natural.map((w) => w < avail * 0.62);
+    rows.forEach((ln, i) => ln.classList.toggle('short', short[i]));
+    fitted.set(key, { fs: box.style.getPropertyValue('--fs'), short });
   }
 
   let raf = 0;
@@ -119,7 +133,7 @@
   onMount(() => {
     const ro = new ResizeObserver(schedule);
     if (lines) ro.observe(lines);
-    document.fonts.ready.then(schedule);
+    if (document.fonts.status !== 'loaded') document.fonts.ready.then(schedule);
     // a script style's font arrives after the first measure: measure again once it is in
     document.fonts.addEventListener('loadingdone', schedule);
     return () => {
