@@ -115,7 +115,25 @@
     }
   }
 
+  /* After the window comes back from the tray the page can keep a stale height and a scroll offset, which hides
+     the top bar and the player. Measure the real window again, and put the page back at the top. */
+  function fit() {
+    document.documentElement.style.setProperty('--vh', window.innerHeight + 'px');
+    const s = document.scrollingElement;
+    if (s && (s.scrollTop || s.scrollLeft)) s.scrollTo(0, 0);
+    if (document.body.scrollTop || document.body.scrollLeft) document.body.scrollTo(0, 0);
+  }
+  function refit() {
+    fit();
+    for (const ms of [60, 300, 1000]) window.setTimeout(fit, ms);
+  }
+
   onMount(() => {
+    fit();
+    window.addEventListener('resize', refit);
+    window.addEventListener('focus', refit);
+    window.addEventListener('scroll', fit);
+    document.addEventListener('visibilitychange', refit);
     player.init();
     notifier.start();
     dataSync.start();
@@ -154,6 +172,10 @@
     }
     return () => {
       mq.removeEventListener('change', onMq);
+      window.removeEventListener('resize', refit);
+      window.removeEventListener('focus', refit);
+      window.removeEventListener('scroll', fit);
+      document.removeEventListener('visibilitychange', refit);
       clearInterval(timer);
       unlisten?.();
     };
@@ -193,7 +215,7 @@
 
 <style>
   /* `zoom` scales the interface; the height is divided back so the app still fills the window exactly */
-  .app { position: relative; display: flex; flex-direction: column; height: calc(100vh / var(--zoom, 1)); zoom: var(--zoom, 1); }
+  .app { position: relative; display: flex; flex-direction: column; height: calc(var(--vh, 100vh) / var(--zoom, 1)); zoom: var(--zoom, 1); }
   .app.idle { cursor: none; }
   .body { flex: 1; min-height: 0; display: flex; position: relative; }
   .main { flex: 1; min-width: 0; display: flex; position: relative; }
