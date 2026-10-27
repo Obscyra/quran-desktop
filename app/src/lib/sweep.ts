@@ -30,17 +30,17 @@ export function light(w: HTMLElement) {
       current = null;
       return;
     }
+    // the rule colours of a tajweed word are kept in the swept part too: its copy is made from the same markup
+    const markup = w.classList.contains('tj') ? t.innerHTML : '';
     l = { glow: layer('gl', text) };
     t.prepend(l.glow);
-    if (!w.classList.contains('tj')) {
-      // tajweed words keep their rule colours, so they only glow
-      const fx = layer('fx', '');
-      const inner = layer('', text);
-      fx.append(inner);
-      t.prepend(fx);
-      l.fx = fx;
-      l.inner = inner;
-    }
+    const fx = layer('fx', '');
+    const inner = layer('', markup ? '' : text);
+    if (markup) inner.innerHTML = markup;
+    fx.append(inner);
+    t.prepend(fx);
+    l.fx = fx;
+    l.inner = inner;
     lit.set(w, l);
     void getComputedStyle(l.glow).opacity; // commit the faded-out state so the fade-in has somewhere to start
   }
