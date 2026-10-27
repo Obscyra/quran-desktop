@@ -47,7 +47,7 @@ New versions are offered inside the app (Settings → Updates).
 - **Two ways to read:** *Verse by Verse* with translation and tools, or *Reading* the printed Mushaf as a two-page spread, single pages or one long scroll.
 - **Seven script styles**, including colour-coded Tajweed, and the Madani and IndoPak page layouts.
 - **100+ translations**, with word-by-word meanings and transliteration.
-- **17 reciters** with word-by-word tracking that follows the recitation, a verse or a single word at a time.
+- **17 reciters** with word-by-word tracking that follows the recitation, plus **90+ more** to listen to surah by surah.
 - **Audio manager** to download any surah, or all 114, for offline listening.
 - **Bookmarks with notes**, and jump to any verse by typing `55:13`.
 - **Seven themes**, interface size from 50% to 200%, full screen, and a player bar that can hide until you need it.

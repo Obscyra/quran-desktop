@@ -12,7 +12,7 @@ Everything Quran for Desktop can do. For a short overview see the [README](../RE
 - **Back and forward** history through the surahs you opened, with the arrows in the title bar or the side buttons of your mouse.
 
 ## Listening
-- **17 reciters**, with their portraits, speed control, repeat and automatic next surah.
+- **17 reciters that follow along**, and 90+ more that play whole surahs without highlighting (grouped as "Listen only" in the list), with portraits for the first group, speed control, repeat and automatic next surah.
 - **Word-by-word tracking** that follows the recitation, with a smooth sweep inside each word.
 - **Play one verse or one word.** Click a word to hear it, or a verse number to hear the whole verse. Right-click either one for its meaning, play from here, repeat, bookmark or copy.
 - **Change reciter mid-surah** and the new voice carries on from the same verse.

@@ -82,6 +82,10 @@ class Player {
     // stalls on a slow connection are shown, not left to look like a hang
     for (const ev of ['waiting', 'stalled'] as const) this.el.addEventListener(ev, () => (this.buffering = !this.el.paused && !this.el.ended));
     for (const ev of ['playing', 'canplay', 'error', 'ended', 'emptied'] as const) this.el.addEventListener(ev, () => (this.buffering = false));
+    // a recording of quranicaudio.com that has no file for this surah
+    this.el.addEventListener('error', () => {
+      if (this.audio?.plain && navigator.onLine && this.el.src) this.error = 'This reciter has no recording of this surah. Choose another reciter.';
+    });
     this.el.addEventListener('pause', () => {
       this.buffering = false;
       this.playing = false;
@@ -118,7 +122,7 @@ class Player {
     } catch {
       // offline: fall back to the last lists we saw
       this.chapters = JSON.parse(localStorage.getItem('quran.chapters') ?? '[]');
-      this.reciters = RECITERS;
+      this.reciters = await fetchReciters(); // never throws: the built-in lists are used offline
     }
     this.trail = [{ chapter: this.chapter, verse: 1 }];
     this.at = 0;
@@ -496,7 +500,7 @@ class Player {
     ui.listening = true;
     if (!(await this.prepareAudio())) return;
     const span = this.verseSpan(n);
-    if (!span) return;
+    if (!span) return this.wholeSurahOnly();
     this.range = { ...span, loop };
     this.loopVerse = loop ? n : null;
     this.jumpTo(span.start);
@@ -504,12 +508,17 @@ class Player {
     this.el.play().catch(() => (this.playing = false));
   }
 
+  /** A recording without timings cannot start at a verse or a word. */
+  private wholeSurahOnly() {
+    if (this.audio?.plain) this.error = 'This reciter plays whole surahs only. Choose another reciter to start from a verse or a word.';
+  }
+
   /** Play on from a word to the end of the surah. */
   async playFrom(n: number, pos: number) {
     ui.listening = true;
     if (!(await this.prepareAudio())) return;
     const t = this.audio?.timings.find((x) => x.verse === n && x.pos === pos);
-    if (!t) return;
+    if (!t) return this.wholeSurahOnly();
     this.range = null;
     this.loopVerse = null;
     this.jumpTo(t.start);
@@ -549,6 +558,7 @@ class Player {
   /** Step to the next (+1) or previous (-1) verse; a verse-only play carries on in the same way. */
   async stepVerse(delta: -1 | 1) {
     if (!(await this.prepareAudio())) return;
+    if (this.audio?.plain) return this.wholeSurahOnly();
     const cur = this.activeTiming?.verse ?? 1;
     const target = Math.min(this.verses.length, Math.max(1, cur + delta));
     if (target === cur && delta > 0) return;
@@ -703,7 +713,12 @@ class Player {
       this.trackListening(now);
     } else this.heardAt = 0;
     const timings = this.audio?.timings;
-    if (!timings?.length) return;
+    if (!timings?.length) {
+      // a whole-surah recording without timings: only the clock and the seek bar move
+      if (Math.abs(ct - this.time) >= 0.1 || ct < this.time) this.time = ct;
+      if (this.duration && ct / this.duration > 0.75) this.warmNext();
+      return;
+    }
     let lo = 0;
     let hi = timings.length - 1;
     let idx = -1;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import ReciterPicker from './ReciterPicker.svelte';
   import TranslationPicker from './TranslationPicker.svelte';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { pageFonts } from '$lib/fonts.svelte';
   import * as offline from '$lib/offline';
@@ -24,11 +24,93 @@
     { id: 'audio', name: 'Listening', hint: 'Player, reciter, follow along', group: 'Listen' },
     { id: 'manager', name: 'Audio manager', hint: 'Download or delete recitations', group: 'Listen' },
     { id: 'reminders', name: 'Reminders', hint: 'Notifications, verse of the day', group: 'App' },
-    { id: 'focus', name: 'Screen', hint: 'Full screen, keep awake', group: 'App' },
+    { id: 'focus', name: 'System', hint: 'Window, tray, start-up', group: 'App' },
     { id: 'shortcuts', name: 'Shortcuts', hint: 'Keyboard commands', group: 'App' },
     { id: 'updates', name: 'Updates', hint: 'Version and releases', group: 'App' },
     { id: 'data', name: 'Data & about', hint: 'Storage, bookmarks, reset, credits', group: 'App' }
   ];
+
+  // ───── search ─────
+  // every setting, with the words people may look for it by (the area it lives in is added when searching)
+  const ROWS: { area: SettingsArea; title: string; text: string }[] = [
+    { area: 'appearance', title: 'Theme', text: 'colour color dark light night black madinah slate paper stone gold white auto system' },
+    { area: 'appearance', title: 'Interface size', text: 'zoom scale bigger smaller menus buttons' },
+    { area: 'appearance', title: 'Surah names in Arabic', text: 'arabic names list player' },
+    { area: 'text', title: 'Script style', text: 'font madani mushaf tajweed uthmani indopak naskh amiri scheherazade arabic writing' },
+    { area: 'text', title: 'Text size', text: 'font arabic bigger larger' },
+    { area: 'text', title: 'Line spacing', text: 'height lines gap' },
+    { area: 'reading', title: 'Open in', text: 'start view verse by verse reading mode default' },
+    { area: 'reading', title: 'Translation', text: 'language english urdu meaning verse' },
+    { area: 'reading', title: 'Translation size', text: 'font bigger' },
+    { area: 'reading', title: 'Word meanings', text: 'word by word hover below under each word language' },
+    { area: 'reading', title: 'Transliteration', text: 'pronounce latin letters' },
+    { area: 'pages', title: 'Page type', text: 'madani indopak 15 lines mushaf print 604 610' },
+    { area: 'pages', title: 'Page look', text: 'paper frame plain border background' },
+    { area: 'pages', title: 'Page flow', text: 'scroll turn one page long sheet' },
+    { area: 'pages', title: 'Two-page spread', text: 'facing book open wide T' },
+    { area: 'pages', title: 'Page info', text: 'surah name juz page number header footer' },
+    { area: 'pages', title: 'Highlight bookmarks', text: 'ornament marker verse end' },
+    { area: 'audio', title: 'Listening bar', text: 'player bar always on demand dock' },
+    { area: 'audio', title: 'Show the bar only on hover', text: 'player hide bottom edge' },
+    { area: 'audio', title: 'Reciter', text: 'qari sheikh voice recitation' },
+    { area: 'audio', title: 'Playback speed', text: 'faster slower rate' },
+    { area: 'audio', title: 'Play the next surah', text: 'auto advance continue' },
+    { area: 'audio', title: 'Repeat surah', text: 'loop memorise memorize' },
+    { area: 'audio', title: 'Say a word when clicked', text: 'word audio click play' },
+    { area: 'audio', title: 'Highlight style', text: 'sweep glow underline recited word' },
+    { area: 'audio', title: 'Follow the recitation', text: 'auto scroll follow along' },
+    { area: 'audio', title: 'Lock on the playing verse', text: 'scroll return centre center keep verse' },
+    { area: 'manager', title: 'Audio manager', text: 'download delete recitation offline surah storage' },
+    { area: 'manager', title: 'Keep favourites offline', text: 'auto cache save automatically' },
+    { area: 'reminders', title: 'Verse of the day', text: 'daily notification card' },
+    { area: 'reminders', title: 'Reading reminders', text: 'notify nudge times alarm' },
+    { area: 'reminders', title: 'Use system notifications', text: 'windows macos toast do not disturb' },
+    { area: 'focus', title: 'Full screen', text: 'fullscreen display F' },
+    { area: 'focus', title: 'Keep the screen on', text: 'awake sleep display wake lock' },
+    { area: 'focus', title: 'Keep running in the tray', text: 'background close system tray hide quit' },
+    { area: 'focus', title: 'Start with the computer', text: 'autostart startup boot login sign in' },
+    { area: 'shortcuts', title: 'Keyboard', text: 'shortcuts keys hotkeys commands' },
+    { area: 'updates', title: 'Version', text: 'about release beta' },
+    { area: 'updates', title: 'Update automatically', text: 'updates download new version' },
+    { area: 'data', title: 'Offline downloads', text: 'storage space size audio' },
+    { area: 'data', title: 'Bookmarks', text: 'export import backup notes' },
+    { area: 'data', title: 'Reset settings', text: 'defaults restore' },
+    { area: 'data', title: 'About', text: 'credits licence license open source' }
+  ];
+  let query = $state('');
+  let searchEl = $state<HTMLInputElement>();
+  const areaName = (id: SettingsArea) => AREAS.find((a) => a.id === id)?.name ?? '';
+  const found = $derived.by(() => {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    // these only exist in the desktop app
+    const desktopOnly = new Set(['Keep running in the tray', 'Start with the computer']);
+    return ROWS.filter((r) => isTauri() || !desktopOnly.has(r.title)).map((r) => {
+      const title = r.title.toLowerCase();
+      const hay = `${title} ${r.text} ${areaName(r.area).toLowerCase()}`;
+      if (!words.every((w) => hay.includes(w))) return null;
+      return { r, rank: words.every((w) => title.includes(w)) ? 0 : 1 };
+    })
+      .filter((x) => x !== null)
+      .sort((a, b) => a.rank - b.rank)
+      .map((x) => x.r);
+  });
+  async function openResult(r: { area: SettingsArea; title: string }) {
+    query = '';
+    ui.area = r.area;
+    await tick();
+    const row = [...document.querySelectorAll<HTMLElement>('.view .row')].find((el) => el.querySelector('.label h3')?.textContent?.trim() === r.title);
+    if (!row) return;
+    row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    row.classList.add('flash');
+    setTimeout(() => row.classList.remove('flash'), 1800);
+  }
+  function searchKey(e: KeyboardEvent) {
+    if (e.key === 'Escape' && query) {
+      e.stopPropagation();
+      query = '';
+    } else if (e.key === 'Enter' && found.length) openResult(found[0]);
+  }
   const UI_SIZES = [0.9, 1, 1.1, 1.3, 1.5];
   const GROUPS = ['Look', 'Read', 'Listen', 'App'];
 
@@ -211,6 +293,10 @@
 <section class="settings">
   <nav aria-label="Settings areas">
     <h1>Settings</h1>
+    <label class="find">
+      <svg aria-hidden="true" viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m13 13 4 4" /></svg>
+      <input bind:this={searchEl} bind:value={query} onkeydown={searchKey} type="search" placeholder="Search settings" aria-label="Search settings" autocomplete="off" spellcheck="false" />
+    </label>
     {#each GROUPS as g (g)}
       <h2 class="ngrp">{g}</h2>
       {#each AREAS.filter((a) => a.group === g) as a (a.id)}
@@ -226,12 +312,21 @@
       <button class="back" onclick={() => ui.closeSettings()} aria-label="Back to reading" title="Back (Esc)">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5" /></svg>
       </button>
-      <h2>{AREAS.find((a) => a.id === ui.area)?.name}</h2>
+      <h2>{query ? 'Search results' : AREAS.find((a) => a.id === ui.area)?.name}</h2>
       <span class="saved" class:show={savedVisible} data-t={savedAt}>Saved</span>
       <button class="close" onclick={() => ui.closeSettings()} aria-label="Close settings">Done</button>
     </header>
 
-    {#if ui.area === 'appearance'}
+    {#if query}
+      <ul class="results" aria-label="Search results">
+        {#each found as r (r.area + r.title)}
+          <li><button onclick={() => openResult(r)}><b>{r.title}</b><small>{areaName(r.area)}</small></button></li>
+        {:else}
+          <li class="none">No setting matches "{query}". Try another word, such as theme, font, reciter or notification.</li>
+        {/each}
+      </ul>
+    {:else if ui.area === 'appearance'}
+      <h3 class="grp">Colour</h3>
       <div class="row wide">
         <div class="label"><h3>Theme</h3><p>Seven palettes, each tuned for comfortable contrast. Auto follows your system.</p></div>
         <div class="themes">
@@ -267,14 +362,16 @@
           </label>
         </div>
       </div>
+      <h3 class="grp">Names</h3>
       <div class="row">
         <div class="label"><h3>Surah names in Arabic</h3><p>Show the Arabic name first in the list and player.</p></div>
         {@render toggle(settings.arabicNames, (v) => (settings.arabicNames = v), 'Arabic surah names')}
       </div>
     {/if}
 
-    {#if ui.area === 'text'}
+    {#if !query && ui.area === 'text'}
       {@render preview()}
+      <h3 class="grp">Script</h3>
       <div class="row wide">
         <div class="label"><h3>Script style</h3><p>How the Arabic is written. Madani Mushaf is the exact printed page; it is fetched once per page, then kept for offline use. Every card shows the same verse.</p></div>
         <div class="scripts">
@@ -288,6 +385,7 @@
           {/each}
         </div>
       </div>
+      <h3 class="grp">Size</h3>
       <div class="row">
         <div class="label"><h3>Text size</h3><p>{settings.size}px, for Verse by Verse. Mushaf pages always fill the page.</p></div>
         <input type="range" min="24" max="96" step="2" bind:value={settings.size} aria-label="Text size" />
@@ -298,7 +396,8 @@
       </div>
     {/if}
 
-    {#if ui.area === 'reading'}
+    {#if !query && ui.area === 'reading'}
+      <h3 class="grp">Start</h3>
       <div class="row">
         <div class="label"><h3>Open in</h3><p>What you see first. Switch any time from the top bar.</p></div>
         <div class="seg">
@@ -306,6 +405,7 @@
           <button class:on={settings.mode === 'verse'} onclick={() => (settings.mode = 'verse')}>Verse by Verse</button>
         </div>
       </div>
+      <h3 class="grp">Translation</h3>
       <div class="row">
         <div class="label"><h3>Translation</h3><p>Shown under each verse and in Reading → Translation. Saved with the surah for offline use.</p></div>
         <TranslationPicker onpick={setTranslation} />
@@ -316,6 +416,7 @@
           <input type="range" min="13" max="30" step="1" bind:value={settings.translationSize} aria-label="Translation text size" />
         </div>
       {/if}
+      <h3 class="grp">Word by word</h3>
       <div class="row">
         <div class="label"><h3>Word meanings</h3><p>Word-by-word translation in Verse by Verse. Right-click any word to see its meaning and play options.</p></div>
         <div class="seg">
@@ -332,7 +433,8 @@
       {/if}
     {/if}
 
-    {#if ui.area === 'pages'}
+    {#if !query && ui.area === 'pages'}
+      <h3 class="grp">Page</h3>
       <div class="row">
         <div class="label"><h3>Page type</h3><p>Which printed Mushaf the pages follow. Same text, different line breaks and page numbers.</p></div>
         <div class="layouts">
@@ -365,6 +467,7 @@
         <div class="label"><h3>Two-page spread</h3><p>Show facing pages like an open book: odd pages on the right, even on the left. Needs a wide window. Press T.</p></div>
         {@render toggle(settings.spread, (v) => (settings.spread = v), 'Two-page spread')}
       </div>
+      <h3 class="grp">On the page</h3>
       <div class="row">
         <div class="label"><h3>Page info</h3><p>Show the surah name, juz and page number on each page.</p></div>
         {@render toggle(settings.showPageInfo, (v) => (settings.showPageInfo = v), 'Page info')}
@@ -375,7 +478,7 @@
       </div>
     {/if}
 
-    {#if ui.area === 'audio'}
+    {#if !query && ui.area === 'audio'}
       <h3 class="grp">Player</h3>
       <div class="row">
         <div class="label"><h3>Listening bar</h3><p>Reading comes first. The bar opens when you press Listen or play a verse, and ✕ closes it. Choose "Always" to keep it docked.</p></div>
@@ -388,6 +491,7 @@
         <div class="label"><h3>Show the bar only on hover</h3><p>Hides the bar until you move the mouse to the bottom edge of the window, and the page keeps all its room. It also appears for a moment when you start listening.</p></div>
         {@render toggle(settings.playerHover, (v) => (settings.playerHover = v), 'Show the player only on hover')}
       </div>
+      <h3 class="grp">Recitation</h3>
       <div class="row">
         <div class="label"><h3>Reciter</h3><p>Switching keeps your place in the surah.</p></div>
         <div class="rp-wrap"><ReciterPicker /></div>
@@ -408,6 +512,10 @@
         <div class="label"><h3>Repeat surah</h3><p>Loop the current surah, handy for memorising.</p></div>
         {@render toggle(settings.repeatSurah, (v) => (settings.repeatSurah = v), 'Repeat surah')}
       </div>
+      <div class="row">
+        <div class="label"><h3>Say a word when clicked</h3><p>Clicking a word plays just that word, with no menu. Needs a connection unless the surah is downloaded.</p></div>
+        {@render toggle(settings.wordAudio, (v) => (settings.wordAudio = v), 'Word audio')}
+      </div>
       <h3 class="grp">Following along</h3>
       <div class="row">
         <div class="label"><h3>Highlight style</h3><p>How the recited word is marked.</p></div>
@@ -425,13 +533,9 @@
         <div class="label"><h3>Lock on the playing verse</h3><p>In the scrolling views, scrolling away only lasts a moment: once you let go, the view returns to the verse being recited, with all of it on screen (or the lines being recited, if the verse is taller than the window). Also on the lock button in the bar above the text.</p></div>
         {@render toggle(settings.lockPlaying, (v) => (settings.lockPlaying = v), 'Lock on the playing verse')}
       </div>
-      <div class="row">
-        <div class="label"><h3>Say a word when clicked</h3><p>Clicking a word plays just that word, with no menu. Needs a connection unless the surah is downloaded.</p></div>
-        {@render toggle(settings.wordAudio, (v) => (settings.wordAudio = v), 'Word audio')}
-      </div>
     {/if}
 
-    {#if ui.area === 'manager'}
+    {#if !query && ui.area === 'manager'}
       <div class="row mgr">
         <div class="label"><h3>Audio manager</h3><p>First choose a reciter, then download or delete the surahs you want. Each reciter's recitations are stored separately.</p></div>
         <div class="rp-wrap"><ReciterPicker value={dlReciter} onpick={(id) => (dlReciter = id)} /></div>
@@ -490,19 +594,7 @@
       </ul>
     {/if}
 
-    {#if ui.area === 'reminders'}
-      {#if isTauri()}
-        <h3 class="grp">Background</h3>
-        <div class="row">
-          <div class="label"><h3>Keep running in the tray</h3><p>Closing the window leaves Quran in the system tray, so reminders and the verse of the day still arrive. Click the tray icon to open it again, or right-click it to quit. Off: closing the window quits.</p></div>
-          {@render toggle(settings.background, (v) => (settings.background = v), 'Keep running in the tray')}
-        </div>
-        <div class="row">
-          <div class="label"><h3>Start with the computer</h3><p>Starts quietly in the tray when you sign in, without opening a window.</p></div>
-          {@render toggle(autostart, toggleAutostart, 'Start with the computer')}
-        </div>
-        <h3 class="grp">Reminders</h3>
-      {/if}
+    {#if !query && ui.area === 'reminders'}
       <div class="row">
         <div class="label"><h3>Verse of the day</h3><p>One verse from quran.com each day, from the time you choose: a card in the app, or a notification when the window is behind other apps or in the tray.</p></div>
         {@render toggle(settings.dailyVerse, (v) => (settings.dailyVerse = v), 'Verse of the day')}
@@ -554,7 +646,8 @@
       </div>
     {/if}
 
-    {#if ui.area === 'focus'}
+    {#if !query && ui.area === 'focus'}
+      <h3 class="grp">Window</h3>
       {#if FOCUS_MODE}
       <div class="row">
         <div class="label"><h3>Focus mode</h3><p>Hides the surah list and controls and goes full screen. Move the mouse to bring the player back. Press Esc to leave.</p></div>
@@ -575,9 +668,20 @@
         <span class="note">Built in</span>
       </div>
       {/if}
+      {#if isTauri()}
+        <h3 class="grp">Background</h3>
+        <div class="row">
+          <div class="label"><h3>Keep running in the tray</h3><p>Closing the window leaves Quran in the system tray, so reminders and the verse of the day still arrive. Click the tray icon to open it again, or right-click it to quit. Off: closing the window quits.</p></div>
+          {@render toggle(settings.background, (v) => (settings.background = v), 'Keep running in the tray')}
+        </div>
+        <div class="row">
+          <div class="label"><h3>Start with the computer</h3><p>Starts quietly in the tray when you sign in, without opening a window.</p></div>
+          {@render toggle(autostart, toggleAutostart, 'Start with the computer')}
+        </div>
+      {/if}
     {/if}
 
-    {#if ui.area === 'shortcuts'}
+    {#if !query && ui.area === 'shortcuts'}
       <div class="row wide">
         <div class="label"><h3>Keyboard</h3><p>Everything is reachable without the mouse.</p></div>
         <dl class="keys">
@@ -597,7 +701,7 @@
       </div>
     {/if}
 
-    {#if ui.area === 'updates'}
+    {#if !query && ui.area === 'updates'}
       <div class="row">
         <div class="label"><h3>Version</h3><p>{version} <span class="beta">Beta</span></p></div>
         <div class="stack">
@@ -626,7 +730,7 @@
       </div>
     {/if}
 
-    {#if ui.area === 'data'}
+    {#if !query && ui.area === 'data'}
       <div class="row">
         <div class="label"><h3>Offline downloads</h3><p>{mb(usedBytes)} MB of audio stored on this device. Download or delete recitations in Audio manager.</p></div>
         <button class="secondary" onclick={() => (ui.area = 'manager')}>Open audio manager…</button>
@@ -662,6 +766,20 @@
   .settings { flex: 1; display: flex; min-width: 0; background: var(--bg); overflow: hidden; }
   nav { width: 264px; overflow-y: auto; flex: none; padding: 28px 14px; display: flex; flex-direction: column; gap: 2px; background: var(--bg-2); }
   .ngrp { font-size: 11px; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); padding: 16px 12px 6px; }
+  .find { position: relative; display: block; margin: 0 4px 10px; }
+  .find svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-dim); pointer-events: none; }
+  .find input { width: 100%; height: 36px; padding: 0 12px 0 33px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 13.5px; }
+  .find input::placeholder { color: var(--ink-dim); }
+  .find input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .results { list-style: none; margin: 0; padding: 0; display: grid; }
+  .results li + li { border-top: 1px solid var(--line); }
+  .results button { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; width: 100%; padding: 14px 8px; text-align: left; border-radius: 8px; }
+  .results button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+  .results b { font-weight: 550; font-size: 14.5px; }
+  .results small { color: var(--ink-dim); font-size: 12.5px; }
+  .results .none { padding: 18px 8px; color: var(--ink-dim); font-size: 14px; }
+  .row.flash { animation: flash 1.8s var(--ease); border-radius: 10px; }
+  @keyframes flash { 0%, 55% { background: var(--accent-soft); box-shadow: 0 0 0 10px var(--accent-soft); } 100% { background: transparent; box-shadow: 0 0 0 10px transparent; } }
   .grp { font-size: 12px; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); padding: 26px 0 0; }
   .grp + .row { border-top: 0; }
   nav h1 { font-size: 18px; font-weight: 600; padding: 4px 12px 14px; }
