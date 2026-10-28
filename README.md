@@ -99,7 +99,7 @@ npm run tauri build   # an installer for your system
 
 ## Contributing
 
-Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Found a security problem? See [SECURITY.md](SECURITY.md). Release notes are on the [Releases page](https://github.com/Obscyra/quran-desktop/releases).
+Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Want a feature? [Request it here](https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml). Found a security problem? See [SECURITY.md](SECURITY.md). Release notes are on the [Releases page](https://github.com/Obscyra/quran-desktop/releases).
 
 ## Credits
 
