@@ -1,6 +1,6 @@
 # Quran for Desktop — project memory
 
-Free, open-source (GPL-3.0), ad-free desktop Quran app for Windows and macOS, with Linux builds (AppImage, deb) from CI, untested on a real Linux desktop.
+Free, open-source (GPL-3.0), ad-free desktop Quran app for Windows and macOS, with Linux builds (AppImage, deb, rpm) from CI. The owner checked the macOS and Linux builds on real machines: they work.
 Tauri 2 + SvelteKit (adapter-static, ssr=false) + Svelte 5 runes + TypeScript. Repo:
 https://github.com/Obscyra/quran-desktop (branch `main`, public). Inspired by
 https://github.com/quran/quran_android (credit it and keep its Android links in the README; the app now has its own icon).
@@ -126,5 +126,5 @@ Replacing an installer on an existing release (only when asked): upload the exe 
 ## Status
 - Current: v0.0.6-beta, released (notes in `.github/release-notes/v0.0.6-beta.md`). The previous release, v0.0.5-beta (tag at `0baf45d`), was deleted and rebuilt several times in CI, so the earlier hand-built 0.0.5-beta exe is a different file with the same version.
 - Done in 0.0.6: smoother scroll reading (content-visibility, shipped page sizes, idle fit), feature hints with Show tips, page-turning tips, taskbar and system media controls, one button style (`--btn` tokens, fills only, no outlines), new language step in the first-run setup, floating player bar, updater popup, app CSP, pinned CI actions, AppImage surah fix.
-- Not yet verified: any Linux build on a real desktop (window controls, tray, audio, AppImage updates), the CSP against audio, portraits and updates in the real window, 0.0.5 to 0.0.6 in-app update, macOS build, SmartScreen (no code-signing cert; downloads carry Mark of the Web, local builds do not).
+- Not yet verified: the 0.0.5 to 0.0.6 in-app update, SmartScreen (no code-signing cert; downloads carry Mark of the Web, local builds do not).
 - Ideas not done: plain-markup words for even lighter pages, tafsir, sleep timer, in-text search, true OS Do Not Disturb (no public API; only in-app quiet focus mode), code signing, licence check for the website's page fonts; the tray "Quit" does not apply a waiting update.
