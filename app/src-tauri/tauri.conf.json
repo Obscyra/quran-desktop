@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://static.qurancdn.com; font-src 'self' data: blob:; media-src 'self' blob: https:; connect-src 'self' ipc: http://ipc.localhost https:; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://static.qurancdn.com; font-src 'self' tauri: http://tauri.localhost data: blob:; media-src 'self' blob: https:; connect-src 'self' ipc: http://ipc.localhost https:; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'"
     }
   },
   "bundle": {

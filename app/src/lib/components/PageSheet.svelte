@@ -153,7 +153,9 @@
     }
     box.style.setProperty('--fs', `${fs.toFixed(2)}px`);
     // lines far shorter than the page (a surah's closing line) are centred, not stretched
-    const short = natural.map((w) => w < avail * 0.62);
+    // a plain-text script is not made to fill a printed line (only the page glyphs are), so a line well short of the width is
+    // centred with ordinary spacing instead of being spread into wide gaps
+    const short = natural.map((w) => w < avail * (glyph ? 0.62 : 0.9));
     rows.forEach((ln, i) => ln.classList.toggle('short', short[i]));
     fitted.set(key, { fs: box.style.getPropertyValue('--fs'), short });
     scaled.set(sKey, { r: fs / avail, aspect, short });
