@@ -53,8 +53,12 @@ class PageFonts {
   private async shipped(page: number): Promise<ArrayBuffer | undefined> {
     try {
       const res = await fetch(`/fonts/qcf/p${page}.woff2`);
-      if (!res.ok || !(res.headers.get('content-type') ?? '').includes('font')) return undefined;
-      return await res.arrayBuffer();
+      if (!res.ok) return undefined;
+      const buf = await res.arrayBuffer();
+      // judged by the file's own signature ("wOF2"), not the content type: macOS serves the file under another type, and a
+      // missing file comes back as the app's HTML page
+      const sig = new Uint8Array(buf, 0, 4);
+      return sig[0] === 0x77 && sig[1] === 0x4f && sig[2] === 0x46 && sig[3] === 0x32 ? buf : undefined;
     } catch {
       return undefined;
     }
