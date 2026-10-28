@@ -3,6 +3,7 @@
   import { cubicOut } from 'svelte/easing';
   import { copyVerse, toggleBookmark } from '$lib/actions';
   import { bookmarks } from '$lib/bookmarks.svelte';
+  import { hints } from '$lib/hints.svelte';
   import { whenIdle } from '$lib/platform';
   import { player } from '$lib/player.svelte';
   import { reader } from '$lib/reader.svelte';
@@ -59,31 +60,60 @@
   // Scroll mode: a surah can be 50 printed pages (thousands of words). Only the pages near the window are built;
   // the others are empty boxes of the same size, so the scrollbar and positions stay exact and scrolling stays light.
   let near = $state.raw(new Set<number>());
+  // the pages on screen right now; the others on hand are only measured when the browser is idle
+  let inView = $state.raw(new Set<number>());
   let jumpPage = $state(-1);
   const playPage = $derived(mushafMode && reader.activeKey ? (reader.wordPage.get(reader.activeKey) ?? -1) : -1);
   const built = (i: number) => near.has(i) || i === jumpPage || (playPage >= 0 && Math.abs(i - playPage) <= 1);
-  let pageWatch: IntersectionObserver | undefined;
+  // Building a page (about 150 words and the measuring of its lines) is the heavy part of scrolling, so it is spread out:
+  // a page in view is built at once; pages on the way are built ahead of time, one per frame; and a page is only dropped
+  // once it is far away, so scrolling back does not build it again.
+  let pageWatch: IntersectionObserver[] = [];
   let pageWatchRoot: Element | null = null;
+  const ahead: number[] = [];
+  let aheadRaf = 0;
+  const flushAhead = () => {
+    aheadRaf = 0;
+    const i = ahead.shift();
+    if (i !== undefined && !near.has(i)) near = new Set(near).add(i);
+    if (ahead.length) aheadRaf = whenIdle(flushAhead);
+  };
   function watchPage(node: HTMLElement) {
     const root = node.closest('.scroll');
-    if (!pageWatch || pageWatchRoot !== root) {
-      pageWatch?.disconnect();
+    if (!pageWatch.length || pageWatchRoot !== root) {
+      pageWatch.forEach((o) => o.disconnect());
       pageWatchRoot = root;
-      pageWatch = new IntersectionObserver(
-        (entries) => {
-          const next = new Set(near);
-          for (const e of entries) {
-            const i = Number((e.target as HTMLElement).dataset.i);
-            if (e.isIntersecting) next.add(i);
-            else next.delete(i);
+      const idx = (e: IntersectionObserverEntry) => Number((e.target as HTMLElement).dataset.i);
+      pageWatch = [
+        // in view: now
+        new IntersectionObserver((es) => {
+          const seen = new Set(inView);
+          for (const e of es) e.isIntersecting ? seen.add(idx(e)) : seen.delete(idx(e));
+          inView = seen;
+          const add = [...seen].filter((i) => !near.has(i));
+          if (add.length) near = new Set([...near, ...add]);
+        }, { root }),
+        // within about two screens: ahead of time, one page per frame
+        new IntersectionObserver((es) => {
+          for (const e of es) {
+            const i = idx(e);
+            if (e.isIntersecting && !near.has(i) && !ahead.includes(i)) ahead.push(i);
           }
-          near = next;
-        },
-        { root, rootMargin: '1400px 0px' }
-      );
+          if (ahead.length && !aheadRaf) aheadRaf = whenIdle(flushAhead);
+        }, { root, rootMargin: '14000px 0px' }),
+        // far away: let go
+        new IntersectionObserver((es) => {
+          const gone = es.filter((e) => !e.isIntersecting).map(idx);
+          for (const i of gone) {
+            const at = ahead.indexOf(i);
+            if (at >= 0) ahead.splice(at, 1);
+          }
+          if (gone.some((i) => near.has(i))) near = new Set([...near].filter((i) => !gone.includes(i)));
+        }, { root, rootMargin: '30000px 0px' })
+      ];
     }
-    pageWatch.observe(node);
-    return { destroy: () => pageWatch?.unobserve(node) };
+    pageWatch.forEach((o) => o.observe(node));
+    return { destroy: () => pageWatch.forEach((o) => o.unobserve(node)) };
   }
   /** make sure the item at this index is on the page (before scrolling to it) */
   const reveal = (i: number) => {
@@ -96,7 +126,7 @@
     player.chapter;
     reader.pageIdx = 0;
     near = new Set();
-    scroller?.scrollTo({ top: 0 });
+    scroller?.scrollTo({ top: 0, behavior: 'instant' });
   });
   $effect(() => {
     translations.load();
@@ -132,14 +162,14 @@
         if (mushafMode) {
           // go to the page's box first so the page gets built, then to the word in it
           jumpPage = idx;
-          scroller?.querySelector(`.pg[data-i="${idx}"]`)?.scrollIntoView({ block: 'center' });
+          scroller?.querySelector(`.pg[data-i="${idx}"]`)?.scrollIntoView({ block: 'center', behavior: 'instant' });
           requestAnimationFrame(() =>
             requestAnimationFrame(() => {
-              document.getElementById(id)?.scrollIntoView({ block: 'center' });
+              document.getElementById(id)?.scrollIntoView({ block: 'center', behavior: 'instant' });
               jumpPage = -1;
             })
           );
-        } else requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'center' }));
+        } else requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'center', behavior: 'instant' }));
       }
       if (j.mark) markVerse(j.verse);
       player.jump = null;
@@ -200,6 +230,7 @@
     untrack(checkAway);
   });
   function backToPlaying() {
+    hints.note('backArrow');
     centerPlaying(true);
   }
 
@@ -292,7 +323,7 @@
   }
   /** the Arabic text size as a percentage of the default, for the verse view's zoom buttons */
   const sizePct = $derived(Math.round((settings.size / 56) * 100));
-  const zoomPage = (d: number) => (settings.pageZoom = Math.min(3, Math.max(0.5, Math.round((settings.pageZoom + d) * 10) / 10)));
+  const zoomPage = (d: number) => (hints.note('zoom'), settings.pageZoom = Math.min(3, Math.max(0.5, Math.round((settings.pageZoom + d) * 10) / 10)));
   const fitPage = (f: 'fit' | 'fill') => {
     settings.pageFit = f;
     settings.pageZoom = 1;
@@ -526,7 +557,7 @@
         <!-- scroll: the printed pages one after another -->
         <div class="pages hl-{settings.highlight}">
           {#each reader.pages.slice(0, upto) as pg, i (pg.page)}
-            <div class="pg" data-i={i} use:watchPage>{#if built(i)}<PageSheet page={pg} last={i === lastIdx} />{/if}</div>
+            <div class="pg" data-i={i} use:watchPage>{#if built(i)}<PageSheet page={pg} last={i === lastIdx} stagger live={inView.has(i)} />{/if}</div>
           {/each}
         </div>
       {:else if reading}
@@ -630,6 +661,8 @@
   .turn.prev { right: 14px; }
 
   /* ───── scrolling views ───── */
+  /* smooth for keys and the Back arrow; jumps to a verse or the top say `instant` themselves */
+  @media (prefers-reduced-motion: no-preference) { .scroll { scroll-behavior: smooth; } }
   .scroll { flex: 1; overflow: auto; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
   .head { text-align: center; padding: 36px 0 16px; }
   .kicker { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
@@ -643,7 +676,7 @@
   .tail { height: 120px; }
 
   .pages { display: flex; flex-direction: column; align-items: safe center; gap: 28px; padding-top: 8px; }
-  .pg { --sh: calc(min(760px, 100cqw) * var(--pz, 1) / 0.66); height: var(--sh); aspect-ratio: 0.66; flex: none; }
+  .pg { contain: layout paint style; --sh: calc(min(760px, 100cqw) * var(--pz, 1) / 0.66); height: var(--sh); aspect-ratio: 0.66; flex: none; }
 
   .scroll.fill { padding: 0 12px; }
   .scroll.fill .pg { --sh: calc(100cqw * var(--pz, 1) / 0.66); }

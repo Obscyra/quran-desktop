@@ -17,6 +17,7 @@
   import PlayerBar from '$lib/components/PlayerBar.svelte';
   import Settings from '$lib/components/Settings.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+  import HintCard from '$lib/components/HintCard.svelte';
   import NoticeCard from '$lib/components/NoticeCard.svelte';
   import Welcome from '$lib/components/Welcome.svelte';
   import CopyMenu from '$lib/components/CopyMenu.svelte';
@@ -143,9 +144,16 @@
     mq.addEventListener('change', onMq);
 
     // Updates: look at launch and every few hours; download quietly, install on restart or quit.
-    const tick = () => settings.checkUpdates && updater.check();
+    // A failed check (no connection at launch, say) is tried again soon, not in hours.
+    let retries = 0;
+    const tick = async () => {
+      if (!settings.checkUpdates) return;
+      await updater.check();
+      if (updater.state === 'error' && retries++ < 4) setTimeout(tick, 10 * 60 * 1000);
+      else if (updater.state !== 'error') retries = 0;
+    };
     setTimeout(tick, 4000);
-    const timer = window.setInterval(tick, 6 * 3600 * 1000);
+    const timer = window.setInterval(tick, 2 * 3600 * 1000);
 
     let unlisten: (() => void) | undefined;
     if (isTauri()) {
@@ -202,12 +210,13 @@
   <CopyMenu bind:this={copyMenu} />
   <Tooltip />
   <NoticeCard />
+  <HintCard />
   {#if ui.welcome}<Welcome />{/if}
   <ConfirmDialog />
 
   {#if updater.pending && !ui.focus}
     <aside class="toast" role="status">
-      <span>Version {updater.version} is ready.</span>
+      <span>Version {updater.version} is ready</span>
       <button onclick={() => updater.installAndRestart()}>Restart to update</button>
     </aside>
   {/if}
@@ -222,7 +231,7 @@
   .pane { flex: 1; min-width: 0; display: flex; }
   .pane.gone { display: none; }
   .over { position: absolute; inset: 0; display: flex; background: var(--bg); z-index: 5; }
-  .toast { position: fixed; top: 52px; right: 14px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 32px -12px #000a; animation: in 0.45s var(--ease); z-index: 40; font-size: 13px; }
+  .toast { position: fixed; bottom: 14px; left: 14px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 32px -12px #000a; animation: in 0.45s var(--ease); z-index: 40; font-size: 13px; }
   .toast button { padding: 6px 12px; border-radius: 7px; background: var(--accent); color: var(--accent-ink); font-weight: 550; }
-  @keyframes in { from { transform: translateY(-12px); opacity: 0; } }
+  @keyframes in { from { transform: translateY(12px); opacity: 0; } }
 </style>

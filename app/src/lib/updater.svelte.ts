@@ -58,7 +58,14 @@ class Updater {
 
   async installAndRestart() {
     if (!this.update) return;
-    await this.update.install();
+    try {
+      await this.update.install();
+    } catch (e) {
+      // the installer could not run: say so and look again at the next check
+      this.error = e instanceof Error ? e.message : String(e);
+      this.state = 'error';
+      return;
+    }
     const { relaunch } = await import('@tauri-apps/plugin-process');
     await relaunch();
   }

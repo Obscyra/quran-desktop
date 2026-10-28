@@ -8,6 +8,7 @@
   import * as offline from '$lib/offline';
   import { player } from '$lib/player.svelte';
   import { getAutostart, isTauri, setAutostart } from '$lib/platform';
+  import { hints } from '$lib/hints.svelte';
   import { SCRIPTS, settings, type SettingsShape, type Highlight, type PageLook, type PageType, type Script, type WordMeaning } from '$lib/settings.svelte';
   import { THEMES } from '$lib/themes';
   import { translations } from '$lib/translations.svelte';
@@ -71,6 +72,7 @@
     { area: 'reminders', title: 'Use system notifications', text: 'windows macos toast do not disturb' },
     { area: 'focus', title: 'Full screen', text: 'fullscreen display F' },
     { area: 'focus', title: 'Keep the screen on', text: 'awake sleep display wake lock' },
+    { area: 'focus', title: 'Show tips', text: 'hints suggestions popup cards help discover features' },
     { area: 'focus', title: 'Keep running in the tray', text: 'background close system tray hide quit' },
     { area: 'focus', title: 'Start with the computer', text: 'autostart startup boot login sign in' },
     { area: 'shortcuts', title: 'Keyboard', text: 'shortcuts keys hotkeys commands' },
@@ -91,7 +93,7 @@
     'Listening bar': ['listenBar'], 'Show the bar only on hover': ['playerHover'], 'Playback speed': ['speed'], 'Play the next surah': ['autoAdvance'], 'Repeat surah': ['repeatSurah'],
     'Say a word when clicked': ['wordAudio'], 'Highlight style': ['highlight'], 'Follow the recitation': ['autoScroll'], 'Lock on the playing verse': ['lockPlaying'], 'Keep favourites offline': ['autoCache'],
     'Verse of the day': ['dailyVerse'], 'Show it from': ['dailyVerseTime'], 'Reading reminders': ['remindersOn'], 'Times': ['remindTimes'], 'Message': ['remindMessage'], 'Use system notifications': ['systemNotify'],
-    'Keep the screen on': ['keepAwake'], 'Keep running in the tray': ['background'], 'Update automatically': ['checkUpdates']
+    'Keep the screen on': ['keepAwake'], 'Show tips': ['tips'], 'Keep running in the tray': ['background'], 'Update automatically': ['checkUpdates']
   };
   const changed = (title: string) => !!ROW_KEYS[title] && !settings.isDefault(ROW_KEYS[title]);
   function resetRow(title: string) {
@@ -705,6 +707,10 @@
       <div class="row">
         <div class="label"><h3>Keep the screen on</h3>{@render rst('Keep the screen on')}<p>Stop the display sleeping while a recitation plays.</p></div>
         {@render toggle(settings.keepAwake, (v) => (settings.keepAwake = v), 'Keep screen on')}
+      </div>
+      <div class="row">
+        <div class="label"><h3>Show tips</h3>{@render rst('Show tips')}<p>Now and then a small card offers a setting that suits what you are doing, such as keeping the player in view. Switch off to never see them; switching on again brings them back.</p></div>
+        {@render toggle(settings.tips, (v) => hints.enable(v), 'Show tips')}
       </div>
       {#if FOCUS_MODE}
       <div class="row">
