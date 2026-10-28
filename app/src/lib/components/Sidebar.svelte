@@ -98,6 +98,13 @@
   });
 
   let list = $state<HTMLElement>();
+  // The scrollbar takes width from the list, so its rows ended short of the search box above. Measure it once
+  // (the gutter is always reserved) and let the list reach into the sidebar's padding by that much.
+  $effect(() => {
+    if (!list) return;
+    const w = list.offsetWidth - list.clientWidth;
+    list.closest('aside')?.style.setProperty('--sb', `${w}px`);
+  });
   // bring the playing surah into view when the list opens or the surah changes
   $effect(() => {
     player.chapter;
@@ -205,7 +212,7 @@
   .search:focus-within { background: color-mix(in srgb, var(--ink) 10%, transparent); box-shadow: 0 0 0 2px var(--accent-soft); }
   input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: 14px; user-select: text; }
   input::placeholder { color: var(--ink-faint); }
-  ul { list-style: none; padding: 0 0 8px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  ul { list-style: none; padding: 0 0 8px; overflow-y: auto; scrollbar-gutter: stable; margin-right: calc(-1 * var(--sb, 0px)); flex: 1; display: flex; flex-direction: column; gap: 2px; }
   li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 11px 12px; border-radius: 10px; text-align: left; transition: background-color 0.12s; }
   li button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
   li button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); }
