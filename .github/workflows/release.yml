@@ -55,7 +55,7 @@ jobs:
       CARGO_PROFILE_RELEASE_LTO: ${{ contains(inputs.tag || github.ref_name, '-') && 'false' || 'true' }}
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ contains(inputs.tag || github.ref_name, '-') && '16' || '1' }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install the Linux libraries Tauri needs
         if: matrix.os == 'ubuntu-22.04'
@@ -67,7 +67,7 @@ jobs:
           # WebKit here uses libsoup 3; the webrtc plugin pulls in libsoup 2 and aborts the web process ("Failed to load surah")
           sudo rm -f /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstwebrtc.so
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
           cache: npm
