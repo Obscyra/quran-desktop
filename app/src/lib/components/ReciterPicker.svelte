@@ -106,9 +106,9 @@
 {/if}
 
 <style>
-  .rp-btn { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; height: 38px; padding: 0 12px 0 5px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); font-size: 13px; font-weight: 500; transition: background-color 0.15s; }
-  .rp-btn:hover { background: color-mix(in srgb, var(--ink) 14%, transparent); }
-  .rp-btn.compact { height: 28px; padding: 0 6px 0 3px; background: transparent; color: var(--ink-dim); font-size: 12.5px; margin-left: -6px; }
+  .rp-btn { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; height: 38px; padding: 0 12px 0 5px; border-radius: 8px; background: var(--btn); border: 1px solid var(--btn-line); color: var(--ink); font-size: 13px; font-weight: 500; transition: background-color 0.15s; }
+  .rp-btn:hover { background: var(--btn-hover); }
+  .rp-btn.compact { height: 28px; padding: 0 6px 0 3px; background: transparent; border-color: transparent; color: var(--ink-dim); font-size: 12.5px; margin-left: -6px; }
   .rp-btn.compact:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
   .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .chev { flex: none; opacity: 0.6; }

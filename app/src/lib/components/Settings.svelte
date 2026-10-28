@@ -931,7 +931,7 @@
   .seg .custom.on { background: var(--accent-soft); color: var(--accent); }
   .seg .custom input { width: 74px; background: transparent; border: 0; color: inherit; font: inherit; text-align: right; outline: none; }
   .seg .custom input:focus-visible { box-shadow: 0 1px 0 var(--accent); }
-  .seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 550; }
+  .seg button.on { background: var(--sel); color: var(--accent); font-weight: 600; }
 
   input[type='range'] { width: min(100%, 360px); accent-color: var(--accent); height: 28px; }
 

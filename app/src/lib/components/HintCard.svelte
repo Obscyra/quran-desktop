@@ -26,10 +26,12 @@
       </button>
     </header>
     <p>{h.body}</p>
-    <div class="row">
-      <span>{h.label}</span>
-      <button class="toggle" class:on={h.on()} role="switch" aria-checked={h.on()} aria-label={h.label} onclick={() => hints.toggle()}><i></i></button>
-    </div>
+    {#if h.label && h.on}
+      <div class="row">
+        <span>{h.label}</span>
+        <button class="toggle" class:on={h.on()} role="switch" aria-checked={h.on()} aria-label={h.label} onclick={() => hints.toggle()}><i></i></button>
+      </div>
+    {/if}
     <div class="acts">
       {#if hints.changed}
         <button class="go" onclick={() => hints.close()}>Done</button>
@@ -37,7 +39,7 @@
         <button onclick={() => hints.close()}>Not now</button>
         <button onclick={() => hints.never()}>Don't show again</button>
       {/if}
-      <button class="link" onclick={() => hints.openSettings()}>In Settings</button>
+      <button class="link" onclick={() => hints.openSettings()}>{h.link ?? 'In Settings'}</button>
     </div>
   </aside>
 {/if}

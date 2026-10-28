@@ -217,9 +217,10 @@
   .ar { font-family: var(--ar-ui, 'Amiri Quran'), serif; font-size: 22px; line-height: 1.2; color: var(--ink-dim); }
   .on .ar { color: var(--accent); }
   .dl { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
-  .tabs { display: flex; margin: 0 0 12px; background: color-mix(in srgb, var(--ink) 7%, transparent); border-radius: 10px; padding: 3px; }
-  .tabs button { flex: 1; height: 32px; border-radius: 8px; font-size: 13.5px; font-weight: 550; color: var(--ink-dim); display: flex; align-items: center; justify-content: center; gap: 7px; transition: background-color 0.2s, color 0.2s; }
-  .tabs button[aria-selected='true'] { background: var(--bg); color: var(--ink); box-shadow: 0 1px 2px #0003; }
+  .tabs { display: flex; margin: 0 0 12px; background: var(--btn); border: 1px solid var(--btn-line); border-radius: 12px; padding: 3px; }
+  .tabs button { flex: 1; height: 32px; border-radius: 8px; font-size: 13.5px; font-weight: 600; color: var(--ink-dim); display: flex; align-items: center; justify-content: center; gap: 7px; transition: background-color 0.2s, color 0.2s; }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-selected='true'] { background: var(--sel); color: var(--accent); }
   .count { font-size: 11.5px; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 0 7px; font-variant-numeric: tabular-nums; }
   .go { margin: 0 0 12px; height: 36px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 13.5px; }
   .marks li { display: flex; align-items: center; gap: 2px; }

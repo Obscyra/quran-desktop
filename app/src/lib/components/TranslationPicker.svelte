@@ -101,8 +101,8 @@
 {/snippet}
 
 <style>
-  .tp-btn { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; max-width: 100%; min-width: 240px; height: 38px; padding: 0 12px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); font-size: 13px; font-weight: 500; transition: background-color 0.15s; }
-  .tp-btn:hover { background: color-mix(in srgb, var(--ink) 14%, transparent); }
+  .tp-btn { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; max-width: 100%; min-width: 240px; height: 38px; padding: 0 12px; border-radius: 8px; background: var(--btn); border: 1px solid var(--btn-line); color: var(--ink); font-size: 13px; font-weight: 500; transition: background-color 0.15s; }
+  .tp-btn:hover { background: var(--btn-hover); }
   .tp-btn.compact { min-width: 0; height: 28px; padding: 0 8px 0 10px; max-width: 220px; font-size: 12.5px; }
   .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .chev { flex: none; opacity: 0.6; }
