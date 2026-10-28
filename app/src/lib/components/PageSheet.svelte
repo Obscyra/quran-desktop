@@ -50,6 +50,19 @@
   });
 
   let lines = $state<HTMLElement>();
+  // A page that has just been built is hidden until its text size is set, so it never shows once at the default size
+  let sized = $state(untrack(() => stagger));
+  // The same component can be handed another page (a new surah opening at the same place), still carrying the last
+  // page's text size: hide it from that moment until it is fitted, before the browser paints
+  let sizedFor = untrack(() => page?.page);
+  $effect.pre(() => {
+    const n = page?.page;
+    untrack(() => {
+      if (n === sizedFor) return;
+      sizedFor = n;
+      if (!stagger) sized = false;
+    });
+  });
   const ROWS_PER_PAGE = 15;
 
   // Rows to draw: a surah's first page reserves rows above its text for the name banner (and the
@@ -69,8 +82,11 @@
   function fit() {
     const box = lines;
     if (!box || !full) return;
+    sized = true;
     const rows = [...box.querySelectorAll<HTMLElement>('.line')];
     if (!rows.length) return;
+    // the line elements can be left over from the previous page, still carrying its "short" marks (a wider gap): measure without them
+    rows.forEach((ln) => ln.classList.remove('short'));
     const rowH = rows[0].clientHeight;
     const avail = box.clientWidth;
     if (!rowH || !avail) return;
@@ -172,7 +188,9 @@
     cancelIdle(later);
     if (live) {
       stale = false;
-      raf = requestAnimationFrame(fit);
+      // a page that has not been drawn yet is fitted before the browser paints it, not a frame later
+      if (!sized) fit();
+      else raf = requestAnimationFrame(fit);
     } else {
       stale = true;
       // fitted as soon as the browser is idle, so the page is finished before it scrolls into view
@@ -219,7 +237,7 @@
         <span>Juz {page.juz}</span>
       </header>
     {/if}
-    <div class="lines" bind:this={lines} style:grid-template-rows="repeat({geo.rows}, var(--row))">
+    <div class="lines" class:unsized={!sized} bind:this={lines} style:grid-template-rows="repeat({geo.rows}, var(--row))">
       {#if page.hasStart && player.current}
         <div class="banner" style:grid-row="1"><b>{player.current.name_arabic}</b></div>
         {#if player.current.bismillah_pre}
@@ -272,6 +290,7 @@
   .right.look-paper, .right.look-frame { border-radius: 0 6px 6px 0; background-image: linear-gradient(to left, #0000 90%, #0003); }
   .blank.look-paper, .blank.look-frame { opacity: 0.55; }
 
+  .lines.unsized { visibility: hidden; }
   .lines { --ar-size: var(--fs, 20px); --ar-lh: 1.2; display: grid; width: 100%; }
   .line { display: flex; justify-content: space-between; align-items: center; white-space: nowrap; column-gap: 0.12em; min-width: 0; }
   .line { border-radius: 0.3em; transition: background-color 0.45s ease; }

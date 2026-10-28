@@ -125,11 +125,12 @@
   @container (max-width: 900px) { .tool.labeled { width: 34px; padding: 0; justify-content: center; } .tool.labeled span { display: none; } }
   .tool:disabled { opacity: 0.35; }
 
+  /* the chosen view is a solid accent block, like the Play button, so which one is on reads at a glance */
   .seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; background: var(--btn); border: 1px solid var(--btn-line); border-radius: 10px; padding: 2px; }
-  .seg i { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 8px; background: var(--sel); transition: transform 0.28s var(--ease); }
+  .seg i { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 8px; background: var(--accent); box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--accent) 55%, transparent); transition: transform 0.28s var(--ease); }
   .seg[data-view='reading'] i { transform: translateX(100%); }
-  .seg button { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; height: 26px; border-radius: 7px; font-size: 12.5px; font-weight: 600; color: var(--ink-dim); transition: color 0.2s; }
-  .seg button[aria-checked='true'] { color: var(--accent); }
+  .seg button { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; height: 26px; border-radius: 7px; font-size: 12.5px; font-weight: 600; color: var(--ink); transition: color 0.2s; }
+  .seg button[aria-checked='true'] { color: var(--accent-ink); }
 
   .win { display: flex; height: 100%; margin-left: 4px; }
   .win button { width: 46px; height: 100%; display: grid; place-items: center; color: var(--ink); transition: background-color 0.12s; }

@@ -180,11 +180,32 @@
       </div>
     {:else}
       <h2 id="w-t">You are ready.</h2>
-      <p class="sub">The whole Quran is inside the app, so you can read without a connection. Audio is downloaded when you need it.</p>
-      <ul class="tips">
-        <li>Press <kbd>B</kbd> for the list of surahs, or type a place like <kbd>55:13</kbd>.</li>
-        <li>Click a word to hear it. Right-click a word or a verse for its meaning and more.</li>
-        <li>Open <b>Settings</b> with the gear icon, or <kbd>,</kbd>, to change anything you chose here.</li>
+      <p class="sub">The whole Quran is inside the app, so you can read without a connection. Here is where things are.</p>
+      <ul class="guide">
+        <li>
+          <i aria-hidden="true"><svg viewBox="0 0 20 20" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5" /><path d="M7.5 3.5v13" /></svg></i>
+          <div><b>Find a surah</b><span>Open the list with <kbd>B</kbd> or the button at the top left. Type a place like <kbd>55:13</kbd> to jump to a verse. Star the ones you read often to keep them at the top.</span></div>
+        </li>
+        <li>
+          <i aria-hidden="true"><svg viewBox="0 0 20 20" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12M4 8.5h12M4 12h12M4 15.5h8" /></svg></i>
+          <div><b>Two ways to read</b><span><b class="in">Verse by Verse</b> shows each verse with its translation. <b class="in">Reading</b> shows the printed Mushaf page. Switch at the top, in the middle.</span></div>
+        </li>
+        <li>
+          <i aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M7.5 4.6v14.8a.8.8 0 0 0 1.22.68l12-7.4a.8.8 0 0 0 0-1.36l-12-7.4a.8.8 0 0 0-1.22.68z" fill="currentColor" /></svg></i>
+          <div><b>Listen</b><span>Press <b class="in">Play</b> at the top right, or <kbd>Space</kbd>. The player opens at the bottom with speed, volume and repeat for the whole surah.</span></div>
+        </li>
+        <li>
+          <i aria-hidden="true"><svg viewBox="0 0 20 20" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5v8.5m0-8.5a1.2 1.2 0 0 1 2.4 0V10m0-5.5a1.2 1.2 0 0 1 2.4 0V10m0-3.5a1.2 1.2 0 0 1 2.4 0v5.2c0 3-2 4.8-4.4 4.8-2 0-3-1-4.2-2.7L3.8 11.2a1.2 1.2 0 0 1 2-1.3L7 11" /></svg></i>
+          <div><b>Click a word</b><span>Click to hear it. Right-click a word or a verse for its meaning, bookmark and more.</span></div>
+        </li>
+        <li>
+          <i aria-hidden="true"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" /></svg></i>
+          <div><b>Keep audio for later</b><span>Download a surah from the player, or use the <b class="in">Audio manager</b> in Settings to save a whole reciter for listening without a connection.</span></div>
+        </li>
+        <li>
+          <i aria-hidden="true"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /></svg></i>
+          <div><b>Change anything later</b><span>Settings is the gear at the top right, or <kbd>,</kbd>. Everything you chose here is there, and you can search it.</span></div>
+        </li>
       </ul>
     {/if}
 
@@ -211,12 +232,12 @@
   @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(0.985); } }
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
   ol { display: flex; gap: 14px; list-style: none; padding: 0; margin: 0; font-size: 12.5px; color: var(--ink-dim); }
-  li { display: flex; align-items: center; gap: 6px; }
-  li span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line); font-size: 11px; font-variant-numeric: tabular-nums; }
-  li.on { color: var(--ink); font-weight: 600; }
-  li.on span, li.done span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  li.on span { box-shadow: 0 0 0 3px var(--accent-soft); }
-  li:not(.on):not(.done) { opacity: 0.7; }
+  ol li { display: flex; align-items: center; gap: 6px; }
+  ol li span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line); font-size: 11px; font-variant-numeric: tabular-nums; }
+  ol li.on { color: var(--ink); font-weight: 600; }
+  ol li.on span, ol li.done span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  ol li.on span { box-shadow: 0 0 0 3px var(--accent-soft); }
+  ol li:not(.on):not(.done) { opacity: 0.7; }
   .skip { color: var(--ink); font-size: 13px; padding: 6px 12px; border-radius: 8px; background: var(--btn); border: 1px solid var(--btn-line); }
   .skip:hover { background: var(--btn-hover); }
   h2 { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
@@ -273,8 +294,14 @@
   @keyframes dot { from { transform: scale(0); } }
   .empty { padding: 20px 14px; text-align: center; color: var(--ink-dim); font-size: 13px; line-height: 1.5; }
   .note { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; line-height: 1.55; }
-  .tips { margin: 16px 0 0; padding-left: 18px; display: grid; gap: 10px; font-size: 14px; line-height: 1.55; }
-  kbd { padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); font: inherit; font-size: 12.5px; }
+  .guide { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .guide li { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; border-radius: 14px; background: var(--btn); }
+  .guide i { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+  .guide div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .guide div > b { font-size: 14.5px; font-weight: 600; }
+  .guide span { color: var(--ink-dim); font-size: 13px; line-height: 1.5; }
+  .guide span .in { color: var(--ink); font-size: inherit; font-weight: 600; }
+  kbd { padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 12.5px; }
   footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 16px; position: sticky; bottom: -24px; padding-bottom: 24px; margin-bottom: -24px; background: linear-gradient(transparent, var(--panel) 18px); }
   .ghost { padding: 9px 18px; border-radius: 10px; color: var(--ink); background: var(--btn); border: 1px solid var(--btn-line); font-weight: 550; }
   .ghost:hover { background: var(--btn-hover); }
@@ -282,5 +309,5 @@
   .pri:hover { opacity: 0.92; }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media (max-width: 1000px) { .themes { grid-template-columns: repeat(4, 1fr); } }
-  @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .guide { grid-template-columns: 1fr; } .duo { grid-template-columns: 1fr; } .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
 </style>
