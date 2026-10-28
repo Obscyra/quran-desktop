@@ -53,7 +53,7 @@ New versions are offered inside the app (Settings → Updates).
 - **17 reciters** with word-by-word tracking that follows the recitation, plus **90+ more** to listen to surah by surah.
 - **Audio manager** to download any surah, or all 114, for offline listening.
 - **Bookmarks with notes**, jump to any verse by typing `55:13`, and the app reopens where you left off.
-- **Thirteen themes** (ten dark, three light), interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode. Settings has a search bar, a Reset on each setting and a list of what you changed. Small tips offer a setting when you keep doing what it is for (and can be switched off).
+- **Fifteen themes** (ten dark, five light), interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode. Settings has a search bar, a Reset on each setting and a list of what you changed. Small tips offer a setting when you keep doing what it is for (and can be switched off).
 - **Runs in the system tray** with optional reminders and the Verse of the Day.
 
 The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/FEATURES.md)**.
@@ -77,7 +77,7 @@ The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/
 
 ## Themes
 
-Thirteen themes: ten dark and three light, or follow your system. The dark ones avoid pure black and pure white, which is harsher on the eyes in a dim room, and every colour pair is checked for contrast. Change the theme in Settings → Appearance.
+Fifteen themes: ten dark and five light, or follow your system. The dark ones avoid pure black and pure white, which is harsher on the eyes in a dim room, and every colour pair is checked for contrast. Change the theme in Settings → Appearance.
 
 <table>
   <tr>
@@ -102,6 +102,8 @@ Thirteen themes: ten dark and three light, or follow your system. The dark ones 
   </tr>
   <tr>
     <td width="33%"><img src="assets/screenshots/themes/stone.webp" alt="Verse by Verse in the Stone theme"/><br/><sub><b>Stone</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/sage.webp" alt="Verse by Verse in the Sage theme"/><br/><sub><b>Sage</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/rosewater.webp" alt="Verse by Verse in the Rosewater theme"/><br/><sub><b>Rosewater</b></sub></td>
   </tr>
 </table>
 
