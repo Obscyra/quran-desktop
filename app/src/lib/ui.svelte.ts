@@ -1,7 +1,7 @@
 import { getFullscreen, setFullscreen } from './platform';
 import { settings } from './settings.svelte';
 
-export type SettingsArea = 'appearance' | 'reading' | 'pages' | 'audio' | 'reminders' | 'focus' | 'data' | 'about';
+export type SettingsArea = 'appearance' | 'reading' | 'pages' | 'audio' | 'downloads' | 'reminders' | 'focus' | 'data' | 'about';
 
 /** A reminder or the verse of the day, shown as a card while the reader is in the app. */
 export interface Notice {

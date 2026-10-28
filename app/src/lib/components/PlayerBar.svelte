@@ -157,6 +157,9 @@
   </div>
 
   <div class="tools">
+    <button class="chip rep" class:on={settings.repeatSurah} onclick={() => (settings.repeatSurah = !settings.repeatSurah)} aria-pressed={settings.repeatSurah} title={settings.repeatSurah ? 'Repeating this surah. Click to stop' : 'Repeat this surah'} aria-label="Repeat this surah">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.5 20.5 6 17 9.5" /><path d="M3.5 11V10a4 4 0 0 1 4-4h13" /><path d="M7 21.5 3.5 18 7 14.5" /><path d="M20.5 13v1a4 4 0 0 1-4 4h-13" /></svg>
+    </button>
     <button class="chip speed" onclick={cycleSpeed} title="Playback speed" aria-label="Playback speed {settings.speed}×">
       <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 17a8.5 8.5 0 1 1 15.6 0" /><path d="m12 13 4-4.5" /><circle cx="12" cy="13.5" r="1.2" fill="currentColor" stroke="none" /></svg>
       {settings.speed}×
@@ -250,6 +253,8 @@
   .chip { height: 28px; padding: 0 11px; border-radius: 8px; color: var(--ink-dim); font-size: 12px; font-weight: 600; background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s; font-variant-numeric: tabular-nums; }
   .chip:hover:not(:disabled) { background: var(--btn-hover); }
   .chip:disabled { opacity: 0.5; }
+  .chip.rep { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; border-radius: 9px; color: var(--ink); }
+  .chip.rep.on { background: var(--btn-on); color: var(--accent); }
   .chip.speed { height: 36px; padding: 0 13px 0 10px; display: inline-flex; align-items: center; gap: 7px; font-size: 14px; border-radius: 9px; }
   .vol { display: flex; align-items: center; gap: 8px; color: var(--ink); }
   .vol input { appearance: none; -webkit-appearance: none; width: 96px; height: 24px; background: transparent; --v: calc(var(--vol, 1) * 100%); }

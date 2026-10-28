@@ -3,6 +3,7 @@
   import { confirm } from '$lib/confirm.svelte';
   import { player } from '$lib/player.svelte';
   import { settings } from '$lib/settings.svelte';
+  import { stars } from '$lib/stars.svelte';
   import { ui } from '$lib/ui.svelte';
 
   let query = $state('');
@@ -97,6 +98,9 @@
     );
   });
 
+  // starred surahs are also shown first, in the order they are in the Quran; they keep their place in the full list
+  const starred = $derived(shown.filter((c) => stars.has(c.id)));
+
   let list = $state<HTMLElement>();
   // The scrollbar takes width from the list, so its rows ended short of the search box above. Measure it once
   // (the gutter is always reserved) and let the list reach into the sidebar's padding by that much.
@@ -112,6 +116,23 @@
     queueMicrotask(() => list?.querySelector('.on')?.scrollIntoView({ block: 'nearest' }));
   });
 </script>
+
+{#snippet row(c: (typeof player.chapters)[number])}
+  <li class="surah">
+    <button class="pick" class:on={c.id === player.chapter} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
+      <span class="num">{c.id}</span>
+      <span class="names">
+        <b>{settings.arabicNames ? c.name_arabic : c.name_simple}</b>
+        <small>{c.translated_name.name} · {c.verses_count}</small>
+      </span>
+      {#if player.isChapterDownloaded(c.id)}<i class="dl" title="Downloaded for offline"></i>{/if}
+      <span class="ar">{settings.arabicNames ? c.name_simple : c.name_arabic}</span>
+    </button>
+    <button class="star" class:starred={stars.has(c.id)} onclick={() => stars.toggle(c.id)} aria-pressed={stars.has(c.id)} aria-label="{stars.has(c.id) ? 'Unstar' : 'Star'} {c.name_simple}" title={stars.has(c.id) ? 'Remove from starred' : 'Star: keep at the top of the list'}>
+      <svg aria-hidden="true" viewBox="0 0 20 20" width="15" height="15" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill={stars.has(c.id) ? 'currentColor' : 'none'}><path d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7z" /></svg>
+    </button>
+  </li>
+{/snippet}
 
 <aside class:closed inert={closed}>
   <div class="inner">
@@ -154,19 +175,12 @@
       <button class="go" onclick={() => { go(ref.ch.id, ref.verse); query = ''; }}>Go to {ref.ch.name_simple} {ref.ch.id}:{ref.verse}</button>
     {/if}
     <ul bind:this={list}>
-      {#each shown as c (c.id)}
-        <li>
-          <button class:on={c.id === player.chapter} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
-            <span class="num">{c.id}</span>
-            <span class="names">
-              <b>{settings.arabicNames ? c.name_arabic : c.name_simple}</b>
-              <small>{c.translated_name.name} · {c.verses_count}</small>
-            </span>
-            {#if player.isChapterDownloaded(c.id)}<i class="dl" title="Downloaded for offline"></i>{/if}
-            <span class="ar">{settings.arabicNames ? c.name_simple : c.name_arabic}</span>
-          </button>
-        </li>
-      {/each}
+      {#if starred.length}
+        <li class="head">Starred</li>
+        {#each starred as c (c.id)}{@render row(c)}{/each}
+        {#if shown.length}<li class="head">All surahs</li>{/if}
+      {/if}
+      {#each shown as c (c.id)}{@render row(c)}{/each}
     </ul>
     {/if}
   </div>
@@ -196,6 +210,9 @@
         <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" /></svg>Download audio
       </button>
     {/if}
+    <button role="menuitem" onclick={() => { stars.toggle(target!.id); closeMenu(); }}>
+      <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill={stars.has(target.id) ? 'currentColor' : 'none'}><path d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7z" /></svg>{stars.has(target.id) ? 'Unstar' : 'Star'}<em>{stars.has(target.id) ? 'Remove from top' : 'Keep at top'}</em>
+    </button>
     <button role="menuitem" onclick={copyName}>
       <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="9" height="9" rx="2" /><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /></svg>Copy name
     </button>
@@ -213,6 +230,7 @@
   input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: 14px; user-select: text; }
   input::placeholder { color: var(--ink-faint); }
   ul { list-style: none; padding: 0 0 8px; overflow-y: auto; scrollbar-gutter: stable; margin-right: calc(-1 * var(--sb, 0px)); flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  li .pick { flex: 1; min-width: 0; }
   li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 11px 12px; border-radius: 10px; text-align: left; transition: background-color 0.12s; }
   li button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
   li button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); }
@@ -241,6 +259,12 @@
   .empty svg { color: var(--ink-faint); }
   .empty p { font-size: 15px; font-weight: 600; color: var(--ink); }
   .empty small { display: block; max-width: 24ch; font-size: 13px; line-height: 1.55; white-space: normal; overflow: visible; }
+  li.surah { display: flex; align-items: center; gap: 2px; }
+  li.surah .star { width: 32px; height: 32px; flex: none; padding: 0; justify-content: center; border-radius: 8px; color: var(--ink-faint); opacity: 0; transition: opacity 0.12s, color 0.12s, background-color 0.12s; }
+  li.surah:hover .star, .star:focus-visible, .star.starred { opacity: 1; }
+  .star.starred { color: var(--accent); }
+  .star:hover { color: var(--accent); }
+  li.head { padding: 8px 12px 4px; font-size: 12px; font-weight: 600; color: var(--ink-dim); letter-spacing: 0.02em; }
   li button.ctx { background: color-mix(in srgb, var(--ink) 9%, transparent); }
 
   .cm { position: fixed; z-index: 90; width: 248px; padding: 6px; display: flex; flex-direction: column; gap: 1px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 44px -14px #000b; animation: cm 0.14s var(--ease); }

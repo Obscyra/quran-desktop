@@ -24,13 +24,14 @@
     { id: 'appearance', name: 'Appearance', hint: 'Theme, interface size, Arabic script', group: 'Look' },
     { id: 'reading', name: 'Translation & meanings', hint: 'Start view, translation, word meanings', group: 'Read' },
     { id: 'pages', name: 'Mushaf pages', hint: 'Printed page layout (Reading mode)', group: 'Read' },
-    { id: 'audio', name: 'Listening', hint: 'Reciter, player, audio downloads', group: 'Listen' },
+    { id: 'audio', name: 'Listening', hint: 'Reciter, player, following along', group: 'Listen' },
+    { id: 'downloads', name: 'Audio manager', hint: 'Download, delete, keep offline', group: 'Listen' },
     { id: 'reminders', name: 'Reminders', hint: 'Verse of the day, reading reminders', group: 'App' },
     { id: 'focus', name: 'App & window', hint: 'Window, tray, start-up', group: 'App' },
     { id: 'data', name: 'Data & help', hint: 'Bookmarks, storage, shortcuts, reset', group: 'App' },
     { id: 'about', name: 'About', hint: 'Version, updates, developer', group: 'App' }
   ];
-  const PAGE_OF: Partial<Record<Section, SettingsArea>> = { text: 'appearance', manager: 'audio', shortcuts: 'data', updates: 'about' };
+  const PAGE_OF: Partial<Record<Section, SettingsArea>> = { text: 'appearance', manager: 'downloads', shortcuts: 'data', updates: 'about' };
   const pageOf = (s: Section) => PAGE_OF[s] ?? (s as SettingsArea);
   const onPage = (s: Section) => ui.area === pageOf(s);
 
@@ -65,7 +66,7 @@
     { area: 'audio', title: 'Highlight style', text: 'sweep glow underline recited word' },
     { area: 'audio', title: 'Follow the recitation', text: 'auto scroll follow along' },
     { area: 'audio', title: 'Lock on the playing verse', text: 'scroll return centre center keep verse' },
-    { area: 'manager', title: 'Audio manager', text: 'download delete recitation offline surah storage' },
+    { area: 'manager', title: 'Reciter to manage', text: 'audio manager download delete recitation offline surah storage' },
     { area: 'manager', title: 'Keep favourites offline', text: 'auto cache save automatically' },
     { area: 'reminders', title: 'Verse of the day', text: 'daily notification card' },
     { area: 'reminders', title: 'Reading reminders', text: 'notify nudge times alarm' },
@@ -554,12 +555,16 @@
         {@render toggle(settings.autoAdvance, (v) => (settings.autoAdvance = v), 'Auto-advance')}
       </div>
       <div class="row">
-        <div class="label"><h3>Repeat surah</h3>{@render rst('Repeat surah')}<p>Loop the current surah, handy for memorising.</p></div>
+        <div class="label"><h3>Repeat surah</h3>{@render rst('Repeat surah')}<p>Loop the current surah, handy for memorising. Also the repeat button in the player.</p></div>
         {@render toggle(settings.repeatSurah, (v) => (settings.repeatSurah = v), 'Repeat surah')}
       </div>
       <div class="row">
         <div class="label"><h3>Say a word when clicked</h3>{@render rst('Say a word when clicked')}<p>Clicking a word plays just that word, with no menu. Needs a connection unless the surah is downloaded.</p></div>
         {@render toggle(settings.wordAudio, (v) => (settings.wordAudio = v), 'Word audio')}
+      </div>
+      <div class="row">
+        <div class="label"><h3>Saved recitations</h3><p>{mb(usedBytes)} MB stored on this device. Download whole reciters, delete surahs and choose what stays offline in the Audio manager.</p></div>
+        <button class="secondary" onclick={() => (ui.area = 'downloads')}>Open the audio manager…</button>
       </div>
       <h3 class="grp">Following along</h3>
       <div class="row">
@@ -581,9 +586,9 @@
     {/if}
 
     {#if browse && onPage('manager')}
-      <h3 class="grp">Audio downloads</h3>
+      <h3 class="grp">Downloads</h3>
       <div class="row mgr">
-        <div class="label"><h3>Audio manager</h3><p>First choose a reciter, then download or delete the surahs you want. Each reciter's recitations are stored separately.</p></div>
+        <div class="label"><h3>Reciter to manage</h3><p>First choose a reciter, then download or delete the surahs you want. Each reciter's recitations are stored separately.</p></div>
         <div class="rp-wrap"><ReciterPicker value={dlReciter} onpick={(id) => (dlReciter = id)} /></div>
       </div>
       <div class="row">
@@ -785,8 +790,8 @@
     {#if browse && onPage('data')}
       <h3 class="grp">Your data</h3>
       <div class="row">
-        <div class="label"><h3>Offline downloads</h3><p>{mb(usedBytes)} MB of audio stored on this device. Download or delete recitations under Listening → Audio downloads.</p></div>
-        <button class="secondary" onclick={() => (ui.area = 'audio')}>Open audio downloads…</button>
+        <div class="label"><h3>Offline downloads</h3><p>{mb(usedBytes)} MB of audio stored on this device. Download or delete recitations in the Audio manager.</p></div>
+        <button class="secondary" onclick={() => (ui.area = 'downloads')}>Open the audio manager…</button>
       </div>
       <div class="row">
         <div class="label"><h3>Bookmarks</h3><p>{bookmarks.list.length} saved. Export a copy, or merge one back in.</p></div>

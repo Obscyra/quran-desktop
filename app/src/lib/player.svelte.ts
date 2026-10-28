@@ -284,6 +284,9 @@ class Player {
       // audio is only fetched when someone listens; a downloaded copy is picked up for free
       const audio = (await offline.getAudioMeta(reciter, chapter)) ?? null;
       if (token !== this.token) return;
+      // the first pages' glyph fonts are in before the text shows, so a page never draws once with missing glyphs and again when its font arrives
+      await this.firstFonts(verses);
+      if (token !== this.token) return;
       this.verses = verses;
       this.audio = audio;
       if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
@@ -366,6 +369,22 @@ class Player {
     }
     const m = map;
     return verses.map((v) => ({ ...v, words: v.words.map((w) => ({ ...w, indo: m[`${v.n}-${w.pos}`] })) }));
+  }
+
+  private async firstFonts(verses: Verse[]) {
+    if (settings.script !== 'mushaf') return;
+    const first = new Set<number>();
+    for (const v of verses) {
+      for (const w of v.words) first.add(w.gp);
+      first.add(v.endPage);
+      if (first.size >= 3) break;
+    }
+    // bundled or cached fonts arrive in a few ms; a slow one does not hold the surah back for long
+    const pages = [...first];
+    await Promise.race([
+      pageFonts.ensure(pages).then(() => Promise.all(pages.map((n) => document.fonts.load(`1em ${pageFonts.family(n)}`, '\ue000')))),
+      new Promise((r) => setTimeout(r, 400))
+    ]);
   }
 
   private preloadFonts(verses: Verse[]) {
