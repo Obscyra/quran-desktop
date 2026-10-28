@@ -118,6 +118,11 @@
 
   function keys(e: KeyboardEvent) {
     const t = e.target as HTMLElement;
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === 'KeyI') {
+      e.preventDefault();
+      import('@tauri-apps/api/core').then(({ invoke }) => invoke('open_inspector').catch(() => {}));
+      return;
+    }
     if (ui.welcome || t.matches('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.code === 'Space') {
       e.preventDefault();

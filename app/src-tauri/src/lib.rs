@@ -123,6 +123,12 @@ fn build_tray(app: &tauri::App) -> tauri::Result<()> {
     Ok(())
 }
 
+/// Opens the web inspector (Ctrl/Cmd+Shift+I): the page hides the system right-click menu, so Inspect is not offered there.
+#[tauri::command]
+fn open_inspector(window: tauri::WebviewWindow) {
+    window.open_devtools();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default();
@@ -165,7 +171,7 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--hidden"]),
         ))
-        .invoke_handler(tauri::generate_handler![media::media_state])
+        .invoke_handler(tauri::generate_handler![media::media_state, open_inspector])
         .setup(|app| {
             build_tray(app)?;
             media::init(app);
