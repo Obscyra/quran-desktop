@@ -50,6 +50,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       TAG: ${{ inputs.tag || github.ref_name }}
+      # Betas (a hyphen in the tag) are built with the quick profile: no link-time optimisation, 16 code units in parallel.
+      # Cargo.toml keeps lto = true and codegen-units = 1 for stable releases, whose last compile step is slow and single-threaded.
+      CARGO_PROFILE_RELEASE_LTO: ${{ contains(inputs.tag || github.ref_name, '-') && 'false' || 'true' }}
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ contains(inputs.tag || github.ref_name, '-') && '16' || '1' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -77,6 +81,9 @@ jobs:
       - uses: swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: app/src-tauri
+          # A cache saved by a run on a tag cannot be read by a later tag, only the default branch's cache can. So the cache is
+          # saved by runs on main (start releases with: gh workflow run release.yml --ref main -f tag=vX.Y.Z) and every tag restores it.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Require the updater signing key
         shell: bash
