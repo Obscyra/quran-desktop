@@ -703,7 +703,7 @@
   .ref { font-size: 13px; color: var(--ink-dim); font-variant-numeric: tabular-nums; margin-right: 8px; min-width: 42px; }
   .ar { text-align: right; line-height: var(--ar-lh); }
   .ar.below { display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: flex-start; align-items: flex-start; }
-  .tr { margin-top: 12px; font-size: var(--tr-size); line-height: 1.7; color: var(--ink-dim); max-width: 68ch; user-select: text; -webkit-user-select: text; }
+  .tr { margin-top: 12px; font-size: var(--tr-size); line-height: 1.7; color: color-mix(in srgb, var(--ink) 88%, var(--bg)); max-width: 68ch; user-select: text; -webkit-user-select: text; }
 
   .tflow { max-width: 740px; margin: 0 auto; padding-top: 8px; }
   .tflow p { font-size: var(--tr-size); line-height: 1.85; padding: 8px 12px; border-radius: 10px; color: var(--ink); user-select: text; -webkit-user-select: text; transition: background-color 0.3s; }

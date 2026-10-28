@@ -46,7 +46,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 
 /* Tokens derived from the six theme roles that applyTheme() sets on :root. */
 :root {
-  --bg: #0e0c09; --surface: #1a1611; --ink: #fbf5e6; --muted: #cbbfa6; --accent: #f0c46a; --accent-ink: #1a1408;
+  --bg: #0e0c09; --surface: #1a1611; --ink: #fffaf0; --muted: #ddd2ba; --accent: #f0c46a; --accent-ink: #1a1408;
   --bg-2: color-mix(in srgb, var(--bg) 70%, var(--surface));
   --panel: var(--surface);
   --line: color-mix(in srgb, var(--ink) 13%, var(--bg));
