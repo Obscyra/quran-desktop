@@ -51,6 +51,8 @@ const defaults = {
   autoScroll: true,
   lockPlaying: false,
   keepAwake: true,
+  /** small cards that offer a setting when you keep doing what it is for (see hints.svelte.ts) */
+  tips: true,
   /** keep surahs you listen to regularly offline, and drop them again after a month without listening */
   autoCache: true,
   autoHideChrome: true,
@@ -107,6 +109,7 @@ class Settings {
   autoScroll = $state(defaults.autoScroll);
   lockPlaying = $state(defaults.lockPlaying);
   keepAwake = $state(defaults.keepAwake);
+  tips = $state(defaults.tips);
   autoCache = $state(defaults.autoCache);
   autoHideChrome = $state(defaults.autoHideChrome);
   /** reopen at the surah and verse that was being read */

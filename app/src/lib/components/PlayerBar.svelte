@@ -1,5 +1,6 @@
 <script lang="ts">
   import { player } from '$lib/player.svelte';
+  import { hints } from '$lib/hints.svelte';
   import { settings } from '$lib/settings.svelte';
   import { ui } from '$lib/ui.svelte';
   import ReciterPicker from './ReciterPicker.svelte';
@@ -16,6 +17,7 @@
   let peekTimer = 0;
   const open = $derived(shown && (!settings.playerHover || peek));
   function enter() {
+    if (float && !peek) hints.note('barPeek');
     over = true;
     clearTimeout(peekTimer);
     peek = true;

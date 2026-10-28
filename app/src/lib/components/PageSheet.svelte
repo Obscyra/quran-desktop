@@ -22,8 +22,23 @@
     no = 0,
     last = false,
     side = 'single',
-    live = true
-  }: { page: MushafPage | null; no?: number; last?: boolean; side?: 'single' | 'left' | 'right'; live?: boolean } = $props();
+    live = true,
+    stagger = false
+  }: { page: MushafPage | null; no?: number; last?: boolean; side?: 'single' | 'left' | 'right'; live?: boolean; stagger?: boolean } = $props();
+
+  // A page built while scrolling is drawn a few lines per frame, so no single frame has the whole page to do.
+  const STEP = 4;
+  let shown = $state(untrack(() => (stagger ? STEP : 99)));
+  const full = $derived(shown >= (page?.lines.length ?? 0));
+  $effect(() => {
+    if (full) return;
+    shown; // each step schedules the next
+    const id = requestAnimationFrame(() => (shown += STEP));
+    return () => cancelAnimationFrame(id);
+  });
+  $effect(() => {
+    if (full) untrack(schedule);
+  });
 
   let lines = $state<HTMLElement>();
   const ROWS_PER_PAGE = 15;
@@ -44,7 +59,7 @@
    */
   function fit() {
     const box = lines;
-    if (!box) return;
+    if (!box || !full) return;
     const rows = [...box.querySelectorAll<HTMLElement>('.line')];
     if (!rows.length) return;
     const rowH = rows[0].clientHeight;
@@ -175,7 +190,7 @@
           <div class="bsm" style:grid-row="2">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
         {/if}
       {/if}
-      {#each page.lines as ln (ln.line)}
+      {#each page.lines.slice(0, shown) as ln (ln.line)}
         <div
           class="line"
           class:now={!!reader.activeKey && ln.cells.some((c) => `${c.verse.n}-${c.word.pos}` === reader.activeKey)}
