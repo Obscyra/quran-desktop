@@ -3,25 +3,53 @@ name: Release
 on:
   push:
     tags: ['v*']
+  # Run by hand to build one platform for a tag (a release is created for the tag if it does not exist):
+  #   gh workflow run release.yml -f tag=v0.0.6-beta -f only=macos
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and publish (for example v0.0.6-beta)'
+        required: true
+      only:
+        description: 'One platform: windows, macos or linux (empty: all three)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        env:
+          ONLY: ${{ inputs.only }}
+        run: |
+          node -e "
+            // ubuntu-22.04 is the oldest runner on offer, so the AppImage runs on as many distributions as possible
+            const all = [
+              { os: 'windows-latest', args: '' },
+              { os: 'macos-latest', args: '--target universal-apple-darwin' },
+              { os: 'ubuntu-22.04', args: '' }
+            ];
+            const only = (process.env.ONLY || '').trim().toLowerCase().replace(/^linux\$/, 'ubuntu');
+            const list = only ? all.filter((r) => r.os.startsWith(only)) : all;
+            if (!list.length) { console.error('Unknown platform: ' + only); process.exit(1); }
+            console.log('matrix=' + JSON.stringify(list));
+          " >> "$GITHUB_OUTPUT"
+
   build:
+    needs: plan
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-latest
-            args: ''
-          - os: macos-latest
-            args: '--target universal-apple-darwin'
-          # the oldest runner on offer, so the AppImage runs on as many distributions as possible
-          - os: ubuntu-22.04
-            args: ''
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -61,10 +89,8 @@ jobs:
           fi
 
       - name: Take the app version from the tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(env.TAG, 'v')
         shell: bash
-        env:
-          TAG: ${{ github.ref_name }}
         run: |
           # the tag name goes in as data (an environment variable), never into the script text
           node -e "
@@ -88,10 +114,10 @@ jobs:
         run: |
           {
             echo 'body<<NOTES_EOF'
-            if [ -f ".github/release-notes/${GITHUB_REF_NAME}.md" ]; then
-              cat ".github/release-notes/${GITHUB_REF_NAME}.md"
+            if [ -f ".github/release-notes/${TAG}.md" ]; then
+              cat ".github/release-notes/${TAG}.md"
             else
-              echo "Release ${GITHUB_REF_NAME}."
+              echo "Release ${TAG}."
             fi
             cat .github/release-notes/footer.md
             echo 'NOTES_EOF'
@@ -104,8 +130,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: app
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Quran ${{ github.ref_name }}'
+          tagName: ${{ env.TAG }}
+          releaseName: 'Quran ${{ env.TAG }}'
           releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           # Installed apps read releases/latest/download/latest.json, and GitHub's "latest" skips
@@ -129,4 +155,4 @@ jobs:
           RELEASE=1
           if [ "$FULL" != "$BASE" ]; then RELEASE="0.${FULL#*-}.1"; fi
           npx tauri build --bundles rpm --config "{\"version\":\"$BASE\",\"bundle\":{\"createUpdaterArtifacts\":false,\"linux\":{\"rpm\":{\"release\":\"$RELEASE\",\"depends\":[\"webkit2gtk4.1\",\"gtk3\",\"libappindicator-gtk3\"]}}}}"
-          gh release upload "$GITHUB_REF_NAME" src-tauri/target/release/bundle/rpm/*.rpm --clobber
+          gh release upload "$TAG" src-tauri/target/release/bundle/rpm/*.rpm --clobber
