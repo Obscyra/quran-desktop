@@ -846,8 +846,8 @@
   nav .chg.on { color: var(--accent); border-style: solid; border-color: transparent; background: var(--btn-on); }
   .results.changed li { display: flex; align-items: center; gap: 8px; }
   .results.changed .go { flex: 1; }
-  .results.changed .again, .reset { flex: none; width: auto; display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 12px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
-  .results.changed .again:hover, .reset:hover { background: var(--accent-soft); }
+  .results.changed .again, .reset { flex: none; width: auto; display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 12px; color: var(--accent); background: var(--btn-on); }
+  .results.changed .again:hover, .reset:hover { background: var(--sel); }
   .label { position: relative; }
   .reset { position: absolute; top: -1px; right: 0; }
   .results li + li { border-top: 1px solid var(--line); }
@@ -940,12 +940,13 @@
   .toggle.on { background: var(--accent); }
   .toggle.on i { transform: translateX(18px); background: var(--accent-ink); }
 
-  .primary, .secondary, .danger { padding: 9px 16px; border-radius: 8px; font-weight: 550; transition: border-color 0.2s, opacity 0.2s; }
+  .primary, .secondary, .danger { padding: 9px 16px; border-radius: 8px; font-weight: 550; transition: background-color 0.15s, opacity 0.2s; }
   .primary { background: var(--accent); color: var(--accent-ink); }
-  .secondary { border: 1px solid var(--ink-faint); color: var(--ink); }
-  .secondary:hover:not(:disabled) { border-color: var(--ink-dim); }
+  .secondary { background: var(--btn); color: var(--ink); }
+  .secondary:hover:not(:disabled) { background: var(--btn-hover); }
   .secondary:disabled { opacity: 0.5; }
-  .danger { border: 1px solid #c0392b; color: color-mix(in srgb, #c0392b 62%, var(--ink)); }
+  .danger { background: color-mix(in srgb, #c0392b 16%, transparent); color: color-mix(in srgb, #c0392b 62%, var(--ink)); }
+  .danger:hover:not(:disabled) { background: color-mix(in srgb, #c0392b 24%, transparent); }
   .prog { width: min(360px, 100%); height: 6px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 14%, transparent); overflow: hidden; }
   .prog i { display: block; height: 100%; background: var(--accent); transition: width 0.3s var(--ease); }
   .dls { list-style: none; padding: 0; border-top: 1px solid var(--line); }
