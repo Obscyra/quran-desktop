@@ -646,7 +646,7 @@
   .seg button[aria-checked='true'] { background: var(--sel); color: var(--accent); }
   .icon { min-width: 32px; height: 30px; padding: 0 6px; border-radius: 8px; display: inline-grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid var(--btn-line); font-size: 12.5px; font-weight: 600; transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
   .icon:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
-  .icon.on { color: var(--accent); background: var(--btn-on); border-color: var(--accent); }
+  .icon.on { color: var(--accent); background: var(--btn-on); }
   .icon:disabled { opacity: 0.4; }
   .size { gap: 4px; }
   .size { display: inline-flex; align-items: center; }
@@ -666,7 +666,7 @@
   .book.fill { --sh: calc(((100cqw - 96px) / 0.66) * var(--pz, 1)); }
   .book.fill.spread { --sh: calc(((100cqw - 64px) / 1.32) * var(--pz, 1)); }
   .turn { position: absolute; top: 50%; translate: 0 -50%; width: 44px; height: 88px; border-radius: 14px; display: grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid transparent; backdrop-filter: blur(6px); transition: background-color 0.15s, color 0.15s, opacity 0.15s, border-color 0.15s; z-index: 2; }
-  .turn:hover:not(:disabled) { background: var(--btn-hover); border-color: var(--accent); color: var(--accent); }
+  .turn:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
   .turn:disabled { opacity: 0.25; }
   .turn.next { left: 14px; }
   .turn.prev { right: 14px; }

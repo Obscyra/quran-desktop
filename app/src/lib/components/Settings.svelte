@@ -843,7 +843,7 @@
   nav .chg { flex-direction: row; width: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 4px 0; padding: 8px 12px; border-radius: 10px; font-size: 13px; color: var(--ink-dim); border: 1px dashed var(--line); text-align: left; }
   nav .chg b { min-width: 20px; padding: 1px 7px; border-radius: 99px; text-align: center; font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent); }
   nav .chg:hover { color: var(--ink); }
-  nav .chg.on { color: var(--ink); border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
+  nav .chg.on { color: var(--accent); border-style: solid; border-color: transparent; background: var(--btn-on); }
   .results.changed li { display: flex; align-items: center; gap: 8px; }
   .results.changed .go { flex: 1; }
   .results.changed .again, .reset { flex: none; width: auto; display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 12px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
