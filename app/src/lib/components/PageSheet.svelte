@@ -18,7 +18,7 @@
   import { onMount, tick, untrack } from 'svelte';
   import { pageFonts } from '$lib/fonts.svelte';
   import seedData from '$lib/fit-data.json';
-  import { whenIdle } from '$lib/platform';
+  import { cancelIdle, whenIdle } from '$lib/platform';
   import type { MushafPage } from '$lib/pages';
   import { player } from '$lib/player.svelte';
   import { reader } from '$lib/reader.svelte';
@@ -169,7 +169,7 @@
   // turned to), so a change of room does not make every page on hand work in the same frame.
   const schedule = () => {
     cancelAnimationFrame(raf);
-    cancelIdleCallback?.(later);
+    cancelIdle(later);
     if (live) {
       stale = false;
       raf = requestAnimationFrame(fit);
@@ -206,7 +206,7 @@
       document.fonts.removeEventListener('loadingdone', schedule);
       ro.disconnect();
       cancelAnimationFrame(raf);
-      cancelIdleCallback?.(later);
+      cancelIdle(later);
     };
   });
 </script>

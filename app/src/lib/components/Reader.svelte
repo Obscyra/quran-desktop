@@ -4,7 +4,7 @@
   import { copyVerse, toggleBookmark } from '$lib/actions';
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { hints } from '$lib/hints.svelte';
-  import { whenIdle } from '$lib/platform';
+  import { cancelIdle, whenIdle } from '$lib/platform';
   import { player } from '$lib/player.svelte';
   import { reader } from '$lib/reader.svelte';
   import { settings, type WordMeaning } from '$lib/settings.svelte';
@@ -363,7 +363,7 @@
     const t = setTimeout(() => (idle = whenIdle(() => (waitingReady = true))), 700);
     return () => {
       clearTimeout(t);
-      window.cancelIdleCallback?.(idle);
+      cancelIdle(idle);
     };
   });
   function windowResized() {
