@@ -25,6 +25,39 @@
   import WordMenu from '$lib/components/WordMenu.svelte';
   import TitleBar from '$lib/components/TitleBar.svelte';
 
+  // the buttons under the taskbar preview (Windows) and the system media controls (macOS, Linux): tell the shell what is
+  // playing, and act on its Previous / Play / Next
+  $effect(() => {
+    if (!isTauri()) return;
+    const playing = player.playing;
+    const title = (settings.arabicNames ? player.current?.name_arabic : player.current?.name_simple) ?? 'Quran';
+    const artist = player.reciters.find((r) => r.id === player.reciterId)?.name ?? 'Quran';
+    import('@tauri-apps/api/core').then(({ invoke }) => invoke('media_state', { playing, title, artist }).catch(() => {}));
+  });
+  onMount(() => {
+    if (!isTauri()) return;
+    let off: (() => void) | undefined;
+    let gone = false;
+    import('@tauri-apps/api/event').then(async ({ listen }) => {
+      const un = await listen<string>('media-control', (e) => {
+        const act = e.payload;
+        if (act === 'prev') player.prev();
+        else if (act === 'next') player.next();
+        else if (act === 'play' || act === 'pause' || act === 'toggle') {
+          if (act === 'play' ? player.playing : act === 'pause' ? !player.playing : false) return;
+          ui.listening = true;
+          player.toggle();
+        }
+      });
+      if (gone) un();
+      else off = un;
+    });
+    return () => {
+      gone = true;
+      off?.();
+    };
+  });
+
   let systemDark = $state(matchMedia('(prefers-color-scheme: dark)').matches);
 
   $effect(() => {

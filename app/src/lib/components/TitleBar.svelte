@@ -117,7 +117,7 @@
   .tool { width: 34px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
   .tool:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
   .tool:active:not(:disabled) { background: var(--btn-hover); transform: scale(0.97); }
-  .tool.active { color: var(--accent); background: var(--btn-on); border-color: var(--accent); }
+  .tool.active { color: var(--accent); background: var(--btn-on); }
   .tool.play i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
   .tool.play { color: var(--ink); }
   .tool.play.active { color: var(--ink); }

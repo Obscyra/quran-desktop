@@ -1,4 +1,7 @@
 #[cfg(desktop)]
+mod media;
+
+#[cfg(desktop)]
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -162,8 +165,10 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--hidden"]),
         ))
+        .invoke_handler(tauri::generate_handler![media::media_state])
         .setup(|app| {
             build_tray(app)?;
+            media::init(app);
             // restored onto a screen with other scaling or size than last time: keep the title bar reachable
             if let Some(w) = app.get_webview_window("main") {
                 fit_window(&w);

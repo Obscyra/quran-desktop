@@ -38,6 +38,7 @@ Everything Quran for Desktop can do. For a short overview see the [README](../RE
 - **One window, remembered:** Quran runs as a single instance (opening it again brings the running window back from the tray), and it reopens at the size and place you left it.
 - **Runs in the system tray:** closing the window keeps Quran in the tray (turn it off in Settings), and it can start with your computer, so **reminders** and the **Verse of the Day** from quran.com arrive as system notifications even when the window is closed.
 - **Tips that help, not nag:** a small card offers a matching setting when you keep doing what it is for (two pages side by side, a translation, scroll mode, zoom and Fit/Fill, a floating player). At most one a day, and **Show tips** in Settings turns them off.
+- **Playback from outside the window:** on Windows, Previous, Play/Pause and Next sit under the preview that opens when you hover the taskbar icon; on macOS and Linux the system's media controls and media keys work too.
 - **In-app updates:** new versions download in the background and install when you restart (Settings → Updates).
 
 ## Keyboard shortcuts
