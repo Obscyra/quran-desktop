@@ -78,3 +78,9 @@ export async function onWindowResized(cb: () => void): Promise<() => void> {
 /** Run `fn` when the browser has nothing better to do (Safari has no requestIdleCallback, so it just waits a moment). */
 export const whenIdle = (fn: () => void): number =>
   typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(fn, { timeout: 2500 }) : window.setTimeout(fn, 60);
+
+/** Cancel what `whenIdle` scheduled (on Safari that is a plain timeout; the bare name cancelIdleCallback does not exist there). */
+export const cancelIdle = (id: number) => {
+  if (typeof window.requestIdleCallback === 'function') window.cancelIdleCallback(id);
+  else window.clearTimeout(id);
+};
