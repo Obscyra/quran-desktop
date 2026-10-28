@@ -16,6 +16,7 @@
   import { confirm } from '$lib/confirm.svelte';
   import { notifier } from '$lib/notifications.svelte';
   import { FOCUS_MODE, ui, type SettingsArea } from '$lib/ui.svelte';
+  import { parseNotes } from '$lib/notes';
   import { updater } from '$lib/updater.svelte';
 
   // Each page holds one or more sections (the blocks below); a setting is found by its section, shown on its page.
@@ -777,7 +778,7 @@
             {/if}
           </small>
           {#if updater.version && (updater.state === 'ready' || updater.state === 'downloading')}
-            <div class="notes"><b>Version {updater.version}</b>{#if updater.notes}<p>{updater.notes}</p>{/if}</div>
+            <div class="notes"><b>Version {updater.version}</b>{#if updater.notes}<div class="md">{#each parseNotes(updater.notes) as bl}{#if bl.kind === 'h'}<h4>{#each bl.parts as p}{p.t}{/each}</h4>{:else}<p class:li={bl.kind === 'li'}>{#each bl.parts as p}{#if p.b}<strong>{p.t}</strong>{:else if p.c}<code>{p.t}</code>{:else}{p.t}{/if}{/each}</p>{/if}{/each}</div>{/if}</div>
           {/if}
         </div>
       </div>
@@ -972,7 +973,13 @@
   .stack .inline button { white-space: nowrap; }
   .mgr { margin-top: 18px; border-top: 1px solid var(--line) !important; }
   .notes { max-width: 52ch; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); font-size: 13px; line-height: 1.55; }
-  .notes p { margin-top: 6px; color: var(--ink-dim); white-space: pre-wrap; user-select: text; }
+  .notes .md { margin-top: 6px; color: var(--ink-dim); user-select: text; }
+  .notes h4 { margin: 10px 0 3px; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .notes .md p { margin-top: 3px; }
+  .notes .md p.li { position: relative; padding-left: 14px; }
+  .notes .md p.li::before { content: ''; position: absolute; left: 3px; top: 0.65em; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+  .notes strong { color: var(--ink); font-weight: 600; }
+  .notes code { font-size: 12px; padding: 0 4px; border-radius: 4px; background: var(--btn); }
   .stack { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
   .status { color: var(--ink-dim); }
   .note { color: var(--ink-dim); font-size: 13px; padding: 8px 0; }
