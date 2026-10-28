@@ -626,8 +626,8 @@
 <style>
   .reader { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; font-family: var(--ui); }
   .msg { margin: auto; color: var(--ink-dim); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-  .retry { height: 34px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--ink-faint); color: var(--ink); font-weight: 550; font-size: 13px; transition: border-color 0.15s; }
-  .retry:hover { border-color: var(--accent); }
+  .retry { height: 34px; padding: 0 18px; border-radius: 999px; background: var(--btn); color: var(--ink); font-weight: 550; font-size: 13px; transition: background-color 0.15s; }
+  .retry:hover { background: var(--btn-hover); }
 
   /* ───── sub bar ───── */
   .sub { flex: none; display: flex; align-items: center; gap: 10px; padding: 8px 16px; min-height: 46px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
