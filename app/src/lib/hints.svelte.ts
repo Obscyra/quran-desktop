@@ -8,17 +8,19 @@ import { ui, type SettingsArea } from './ui.svelte';
 export interface Hint {
   id: string;
   /** the behaviour that earns the hint, and how many times of it */
-  event: 'barPeek' | 'backArrow' | 'zoom';
+  event: 'barPeek' | 'backArrow' | 'zoom' | 'pageTurn';
   need: number;
   title: string;
   body: string;
-  /** the switch shown in the card, worded as in Settings */
-  label: string;
+  /** the switch shown in the card, worded as in Settings (a plain tip has none) */
+  label?: string;
   area: SettingsArea;
   /** false once the reader has already chosen: the hint is not needed */
   eligible: () => boolean;
-  on: () => boolean;
-  set: (v: boolean) => void;
+  on?: () => boolean;
+  set?: (v: boolean) => void;
+  /** a button instead of a switch, for a tip that points to somewhere in Settings */
+  link?: string;
 }
 
 export const HINTS: Hint[] = [
@@ -60,13 +62,58 @@ export const HINTS: Hint[] = [
       settings.pageFit = v ? 'fill' : 'fit';
       settings.pageZoom = 1;
     }
+  },
+  // the page-turning tips come one at a time as someone keeps reading (6, 10, 14 and 20 turns), each at least 20 h apart
+  {
+    id: 'dual-page',
+    event: 'pageTurn',
+    need: 6,
+    title: 'Read it like a book?',
+    body: 'Two pages side by side, the way the Mushaf opens. You can turn it on or off any time.',
+    label: 'Two pages side by side',
+    area: 'pages',
+    eligible: () => settings.flow === 'page' && settings.isDefault(['spread']) && window.innerWidth >= 1100,
+    on: () => settings.spread,
+    set: (v) => (settings.spread = v)
+  },
+  {
+    id: 'translation',
+    event: 'pageTurn',
+    need: 10,
+    title: 'Read it in your language',
+    body: 'Verse by Verse shows a translation under every verse. Pick the one you like best, and word meanings too.',
+    area: 'reading',
+    link: 'Choose a translation',
+    eligible: () => settings.isDefault(['translation'])
+  },
+  {
+    id: 'scroll-mode',
+    event: 'pageTurn',
+    need: 14,
+    title: 'Prefer to scroll?',
+    body: 'Instead of turning pages, the whole surah flows on one long page. Your place is kept either way.',
+    label: 'Scroll instead of turning pages',
+    area: 'pages',
+    eligible: () => settings.isDefault(['flow']),
+    on: () => settings.flow === 'scroll',
+    set: (v) => (settings.flow = v ? 'scroll' : 'page')
+  },
+  {
+    id: 'zoom-tip',
+    event: 'pageTurn',
+    need: 20,
+    title: 'Make the text fit you',
+    body: 'The + and − above the page zoom in and out, and Fit or Fill chooses between the whole page and the full width.',
+    area: 'pages',
+    link: 'Page settings',
+    eligible: () => settings.pageZoom === 1 && settings.isDefault(['pageFit'])
   }
 ];
 
 interface Saved {
   counts: Record<string, number>;
   /** per hint: how often it was shown, and whether it must never come back */
-  seen: Record<string, { shown: number; never: boolean }>;
+  seen: Record<string, { shown: number; never: boolean; at?: number }>;
   last: number;
 }
 
@@ -124,7 +171,7 @@ class Hints {
     const d = this.data;
     const seen = d.seen[h.id];
     if (!settings.tips || this.session || seen?.never || (seen?.shown ?? 0) >= 2) return false;
-    if ((d.counts[h.event] ?? 0) < h.need) return false;
+    if ((d.counts[h.event] ?? 0) - (seen?.at ?? 0) < h.need) return false;
     if (Date.now() - d.last < DAY) return false;
     return h.eligible();
   }
@@ -142,7 +189,7 @@ class Hints {
     const d = this.data;
     const seen = (d.seen[h.id] ??= { shown: 0, never: false });
     seen.shown++;
-    d.counts[h.event] = 0; // after "Not now" it takes as many more times to come back
+    seen.at = d.counts[h.event] ?? 0; // after "Not now" it takes as many more times to come back
     d.last = Date.now();
     this.save();
     this.session = true;
@@ -154,9 +201,10 @@ class Hints {
   toggle() {
     const h = this.current;
     if (!h) return;
+    if (!h.set || !h.on) return;
     h.set(!h.on());
     this.changed = true;
-    this.data.seen[h.id] = { shown: this.data.seen[h.id]?.shown ?? 1, never: true };
+    this.data.seen[h.id] = { ...this.data.seen[h.id], shown: this.data.seen[h.id]?.shown ?? 1, never: true };
     this.save();
   }
 
@@ -169,7 +217,7 @@ class Hints {
   never() {
     const h = this.current;
     if (h) {
-      this.data.seen[h.id] = { shown: this.data.seen[h.id]?.shown ?? 1, never: true };
+      this.data.seen[h.id] = { ...this.data.seen[h.id], shown: this.data.seen[h.id]?.shown ?? 1, never: true };
       this.save();
     }
     this.current = null;

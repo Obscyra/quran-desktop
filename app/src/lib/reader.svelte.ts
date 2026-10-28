@@ -1,4 +1,5 @@
 import { groupPages, type MushafPage } from './pages';
+import { hints } from './hints.svelte';
 import { player } from './player.svelte';
 import { settings } from './settings.svelte';
 
@@ -69,12 +70,14 @@ class Reader {
       if (i === undefined) return;
       this.dir = delta > 0 ? 1 : -1;
       this.pageIdx = i;
+      hints.note('pageTurn');
       return;
     }
     const next = Math.min(Math.max(this.pageIdx + delta, 0), this.pages.length - 1);
     if (next === this.pageIdx) return;
     this.dir = delta > 0 ? 1 : -1;
     this.pageIdx = next;
+    hints.note('pageTurn');
   }
 
   show(index: number) {

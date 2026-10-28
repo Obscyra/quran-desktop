@@ -163,7 +163,7 @@
     </button>
     <label class="vol" title="Volume">
       <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9.5v5h3.8l5 4.2V5.3L7.3 9.5z" /><path d="M16 9a4.2 4.2 0 0 1 0 6" />{#if settings.volume > 0.5}<path d="M18.6 6.6a8 8 0 0 1 0 10.8" />{/if}{#if settings.volume === 0}<path d="m16 9.5 4.5 5M20.5 9.5 16 14.5" />{/if}</svg>
-      <input type="range" min="0" max="1" step="0.05" bind:value={settings.volume} oninput={() => player.applyVolume()} aria-label="Volume" />
+      <input type="range" min="0" max="1" step="0.05" style:--vol={settings.volume} bind:value={settings.volume} oninput={() => player.applyVolume()} aria-label="Volume" />
     </label>
     {#if player.isDownloaded}
       <button class="dl done" onclick={() => player.removeDownload()} title="Saved for offline listening. Click to remove" aria-label="Saved offline. Remove the offline copy">
@@ -194,20 +194,22 @@
   footer {
     flex: none; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(300px, 1.5fr) minmax(180px, 1fr); align-items: center; gap: 24px;
     padding: 10px 20px; background: var(--bg-2); border-top: 1px solid var(--line); user-select: none; -webkit-user-select: none; z-index: 30;
-    transition: transform 0.4s var(--ease), opacity 0.3s var(--ease);
+    transition: transform 0.5s var(--ease), opacity 0.35s var(--ease);
+    will-change: transform;
   }
   /* Closed, the bar leaves the layout at once (the page below it reflows one time) and slides out over the
      bottom edge. Animating its height instead made the page refit on every frame, which stuttered. */
-  footer.float { position: absolute; inset: auto 0 0 0; box-shadow: 0 -14px 34px -22px #000c; }
+  footer.float { position: absolute; inset: auto 14px 12px 14px; border: 1px solid var(--line); border-radius: 20px; background: color-mix(in srgb, var(--bg-2) 88%, transparent); backdrop-filter: blur(18px) saturate(1.2); box-shadow: 0 18px 44px -14px #000c, 0 0 0 1px color-mix(in srgb, var(--ink) 4%, transparent); }
   .zone { position: absolute; inset: auto 0 0 0; height: 44px; z-index: 29; display: flex; justify-content: center; align-items: flex-end; }
   .zone i { width: 64px; height: 4px; margin-bottom: 8px; border-radius: 4px; background: var(--ink-dim); opacity: 0.45; pointer-events: none; }
-  footer.closed { position: absolute; inset: auto 0 0 0; transform: translateY(100%); opacity: 0; pointer-events: none; }
+  footer.closed { position: absolute; inset: auto 0 0 0; transform: translateY(calc(100% + 24px)); opacity: 0; pointer-events: none; }
+  footer.float.closed { inset: auto 14px 12px 14px; }
   .now em { font-style: normal; font-weight: 400; color: var(--accent); }
   .chip.x { width: 28px; padding: 0; display: grid; place-items: center; }
-  .dl { position: relative; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); transition: background-color 0.15s, color 0.15s; }
-  .dl:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+  .dl { position: relative; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s; }
+  .dl:hover:not(:disabled) { background: var(--btn-hover); }
   .dl.done { color: var(--accent); }
-  .play .wait { width: 20px; height: 20px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--bg) 30%, transparent); border-top-color: var(--bg); animation: spin 0.8s linear infinite; }
+  .play .wait { width: 20px; height: 20px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--accent-ink) 30%, transparent); border-top-color: var(--accent-ink); animation: spin 0.8s linear infinite; }
   .vs.load { color: var(--accent); }
   .bar .clip { position: absolute; inset: 0; overflow: hidden; border-radius: 4px; pointer-events: none; }
   .bar .shimmer { position: absolute; inset: 0; width: 35%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 70%, transparent), transparent); animation: slide 1.1s ease-in-out infinite; pointer-events: none; }
@@ -228,24 +230,30 @@
 
   .mid { display: flex; flex-direction: column; gap: 6px; align-items: center; }
   .btns { display: flex; align-items: center; gap: 10px; }
-  .ctl { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; color: var(--ink); transition: background-color 0.15s, color 0.15s; }
+  .ctl { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.2s, transform 0.2s var(--ease), border-color 0.2s; }
   .ctl:disabled { opacity: 0.35; pointer-events: auto; cursor: not-allowed; }
-  .ctl:hover { background: color-mix(in srgb, var(--ink) 9%, transparent); color: var(--ink); }
-  .play { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--bg); transition: transform 0.15s var(--ease), opacity 0.15s; }
-  .play:hover:not(:disabled) { transform: scale(1.06); }
-  .play:active:not(:disabled) { transform: scale(0.96); }
+  .ctl:hover:not(:disabled) { background: var(--btn-hover); }
+  .ctl:active:not(:disabled) { transform: scale(0.92); }
+  .play { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--accent) 55%, transparent); transition: transform 0.2s var(--ease), box-shadow 0.2s, opacity 0.15s; }
+  .play:hover:not(:disabled) { transform: scale(1.07); box-shadow: 0 8px 22px -6px color-mix(in srgb, var(--accent) 85%, transparent); }
+  .play:active:not(:disabled) { transform: scale(0.95); }
   .play:disabled { opacity: 0.4; }
   .scrub { display: flex; align-items: center; gap: 10px; width: 100%; font-size: 11px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
-  .bar { flex: 1; height: 4px; background: color-mix(in srgb, var(--ink) 16%, transparent); border-radius: 4px; cursor: pointer; position: relative; transition: height 0.15s; }
+  .bar { flex: 1; height: 5px; background: color-mix(in srgb, var(--ink) 20%, transparent); border-radius: 5px; cursor: pointer; position: relative; transition: height 0.2s var(--ease); }
   .bar::before { content: ''; position: absolute; inset: -8px 0; }
-  .bar:hover { height: 6px; }
-  .bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; pointer-events: none; }
+  .bar:hover, .bar:focus-visible { height: 7px; }
+  .bar i { display: block; position: relative; height: 100%; background: var(--accent); border-radius: 5px; pointer-events: none; transition: width 0.3s linear; }
+  .bar i::after { content: ''; position: absolute; right: -6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); transform: scale(0); transition: transform 0.2s var(--ease); }
+  .bar:hover i::after, .bar:focus-visible i::after { transform: scale(1); }
 
   .tools { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
-  .chip { height: 28px; padding: 0 11px; border-radius: 7px; color: var(--ink-dim); font-size: 12px; font-weight: 500; background: color-mix(in srgb, var(--ink) 8%, transparent); transition: background-color 0.15s, color 0.15s; font-variant-numeric: tabular-nums; }
-  .chip:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 14%, transparent); color: var(--ink); }
+  .chip { height: 28px; padding: 0 11px; border-radius: 8px; color: var(--ink-dim); font-size: 12px; font-weight: 600; background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s; font-variant-numeric: tabular-nums; }
+  .chip:hover:not(:disabled) { background: var(--btn-hover); }
   .chip:disabled { opacity: 0.5; }
   .chip.speed { height: 36px; padding: 0 13px 0 10px; display: inline-flex; align-items: center; gap: 7px; font-size: 14px; border-radius: 9px; }
-  .vol { display: flex; align-items: center; gap: 8px; color: var(--ink-dim); }
-  .vol input { width: 96px; height: 24px; accent-color: var(--accent); }
+  .vol { display: flex; align-items: center; gap: 8px; color: var(--ink); }
+  .vol input { appearance: none; -webkit-appearance: none; width: 96px; height: 24px; background: transparent; --v: calc(var(--vol, 1) * 100%); }
+  .vol input::-webkit-slider-runnable-track { height: 5px; border-radius: 5px; background: linear-gradient(90deg, var(--accent) var(--v), color-mix(in srgb, var(--ink) 22%, transparent) var(--v)); }
+  .vol input::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -4.5px; border-radius: 50%; background: var(--ink); border: 0; box-shadow: 0 1px 4px #0006; transition: transform 0.15s var(--ease); }
+  .vol input:hover::-webkit-slider-thumb { transform: scale(1.2); }
 </style>

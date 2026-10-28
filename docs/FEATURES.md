@@ -37,6 +37,7 @@ Everything Quran for Desktop can do. For a short overview see the [README](../RE
 - **Lock on the playing verse:** in the scrolling views, scrolling away only lasts a moment and the view returns to the verse being recited, kept whole on screen (or the lines being recited, when the verse is taller than the window). With the lock off, an arrow in the corner takes you back to the verse.
 - **One window, remembered:** Quran runs as a single instance (opening it again brings the running window back from the tray), and it reopens at the size and place you left it.
 - **Runs in the system tray:** closing the window keeps Quran in the tray (turn it off in Settings), and it can start with your computer, so **reminders** and the **Verse of the Day** from quran.com arrive as system notifications even when the window is closed.
+- **Tips that help, not nag:** a small card offers a matching setting when you keep doing what it is for (two pages side by side, a translation, scroll mode, zoom and Fit/Fill, a floating player). At most one a day, and **Show tips** in Settings turns them off.
 - **In-app updates:** new versions download in the background and install when you restart (Settings → Updates).
 
 ## Keyboard shortcuts

@@ -105,7 +105,7 @@
   :global(.app.focus) .bar { position: fixed; inset: 0 0 auto 0; }
   .left, .right { display: flex; align-items: center; height: 100%; min-width: 0; }
   .left { gap: 4px; padding-left: 8px; }
-  .right { justify-content: flex-end; gap: 2px; padding-right: 0; }
+  .right { justify-content: flex-end; gap: 6px; padding-right: 0; }
   .right > .tool:last-of-type { margin-right: 6px; }
   .brand { font-size: 13px; font-weight: 600; color: var(--ink-dim); padding: 0 8px; pointer-events: none; }
   .beta { font-style: normal; margin-left: 7px; padding: 1px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -114,10 +114,10 @@
   @container (max-width: 900px) { .brand { display: none; } .seg button { padding: 0 10px; } }
   .center { display: flex; justify-content: center; }
 
-  .tool { width: 34px; height: 30px; border-radius: 7px; display: grid; place-items: center; color: var(--ink-dim); transition: background-color 0.15s, color 0.15s; }
-  .tool:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 9%, transparent); color: var(--ink); }
-  .tool:active:not(:disabled) { background: color-mix(in srgb, var(--ink) 14%, transparent); }
-  .tool.active { color: var(--accent); }
+  .tool { width: 34px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
+  .tool:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
+  .tool:active:not(:disabled) { background: var(--btn-hover); transform: scale(0.97); }
+  .tool.active { color: var(--accent); background: var(--btn-on); border-color: var(--accent); }
   .tool.play i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
   .tool.play { color: var(--ink); }
   .tool.play.active { color: var(--ink); }
@@ -125,11 +125,11 @@
   @container (max-width: 900px) { .tool.labeled { width: 34px; padding: 0; justify-content: center; } .tool.labeled span { display: none; } }
   .tool:disabled { opacity: 0.35; }
 
-  .seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; background: color-mix(in srgb, var(--ink) 8%, transparent); border-radius: 9px; padding: 2px; }
-  .seg i { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 7px; background: var(--bg); box-shadow: 0 1px 2px #0003; transition: transform 0.28s var(--ease); }
+  .seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; background: var(--btn); border: 1px solid var(--btn-line); border-radius: 10px; padding: 2px; }
+  .seg i { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 8px; background: var(--sel); transition: transform 0.28s var(--ease); }
   .seg[data-view='reading'] i { transform: translateX(100%); }
-  .seg button { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; height: 26px; border-radius: 7px; font-size: 12.5px; font-weight: 550; color: var(--ink-dim); transition: color 0.2s; }
-  .seg button[aria-checked='true'] { color: var(--ink); }
+  .seg button { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; height: 26px; border-radius: 7px; font-size: 12.5px; font-weight: 600; color: var(--ink-dim); transition: color 0.2s; }
+  .seg button[aria-checked='true'] { color: var(--accent); }
 
   .win { display: flex; height: 100%; margin-left: 4px; }
   .win button { width: 46px; height: 100%; display: grid; place-items: center; color: var(--ink); transition: background-color 0.12s; }

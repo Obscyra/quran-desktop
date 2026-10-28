@@ -53,6 +53,12 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   --ink-dim: var(--muted);
   --ink-faint: color-mix(in srgb, var(--muted) 60%, var(--bg));
   --accent-soft: color-mix(in srgb, var(--accent) 15%, transparent);
+  /* one button language: a filled, outlined resting state that reads on every theme; the chosen one is the accent */
+  --btn: color-mix(in srgb, var(--ink) 6%, transparent);
+  --btn-hover: color-mix(in srgb, var(--ink) 12%, transparent);
+  --btn-line: color-mix(in srgb, var(--ink) 15%, transparent);
+  --btn-on: color-mix(in srgb, var(--accent) 13%, transparent);
+  --sel: color-mix(in srgb, var(--accent) 24%, transparent); /* the chosen one of a group: a tint of the accent, not a solid block */
 }
 
 button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }

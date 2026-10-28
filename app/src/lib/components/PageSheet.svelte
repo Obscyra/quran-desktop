@@ -4,11 +4,20 @@
   // Zooming only scales the page: its text size stays the same fraction of the page width, so after one measuring
   // a new zoom level is a multiplication, not a measuring of every word again (which made zoom lag).
   const scaled = new Map<string, { r: number; aspect: number; short: boolean[] }>();
+  // The text size of each Mushaf page was measured once, when the app was prepared (scripts/learn-fit.mjs), and ships with it:
+  // a page of the standard layout in the page fonts is then sized by a division, without measuring any word.
+  // r is the text size as a fraction of the page width, a the width over the row height, s the lines that are centred (1).
+  type Seed = { r: number; a: number; s: string };
+  const seed = seedData as Record<string, Seed>;
+  // dev only: what this session measured, for the script to collect
+  const learned: Record<string, Seed> = {};
+  if (import.meta.env.DEV && typeof window !== 'undefined') (window as unknown as { __fitLearned: typeof learned }).__fitLearned = learned;
 </script>
 
 <script lang="ts">
   import { onMount, tick, untrack } from 'svelte';
   import { pageFonts } from '$lib/fonts.svelte';
+  import seedData from '$lib/fit-data.json';
   import { whenIdle } from '$lib/platform';
   import type { MushafPage } from '$lib/pages';
   import { player } from '$lib/player.svelte';
@@ -78,6 +87,31 @@
     }
     const sKey = `${page?.page}|${settings.script}|${settings.layout}|${settings.uiScale}|${settings.fontFamily}|${pageFonts.tick}|${rows.length}`;
     const aspect = avail / rowH;
+    // the standard layout in the page fonts: the size that shipped with the app, if this page (as it is now) is in it
+    const standard = glyph && settings.layout === 'madani' && !!page && pageFonts.has(page.page);
+    const id = standard ? `${player.chapter}:${page!.page}:${rows.length}:${page!.lines.reduce((n, l) => n + l.cells.length, 0)}` : '';
+    const shipped = standard ? seed[id] : undefined;
+    if (shipped && Math.abs(aspect / shipped.a - 1) < 0.05) {
+      const cap = rowH * 0.74;
+      let fs = Math.min(cap, shipped.r * avail);
+      box.style.setProperty('--fs', `${fs.toFixed(2)}px`);
+      // text widths are not exactly in step with the size on every machine (hinting rounds some), so check the widest line once
+      // (one layout of this page) and correct the size by what it shows
+      const gap = parseFloat(getComputedStyle(rows[0]).columnGap || '0');
+      let widest = 0;
+      rows.forEach((ln, i) => {
+        if (shipped.s[i] === '1' || ln.classList.contains('center')) return;
+        let w = 0;
+        for (const c of ln.children) w += (c as HTMLElement).getBoundingClientRect().width / k;
+        widest = Math.max(widest, w + Math.max(0, ln.children.length - 1) * gap);
+      });
+      if (widest) fs = Math.min(cap, (fs * avail) / widest);
+      const short = rows.map((_, i) => shipped.s[i] === '1');
+      box.style.setProperty('--fs', `${fs.toFixed(2)}px`);
+      rows.forEach((ln, i) => ln.classList.toggle('short', short[i]));
+      fitted.set(key, { fs: `${fs.toFixed(2)}px`, short });
+      return;
+    }
     const near = scaled.get(sKey);
     if (near && Math.abs(aspect / near.aspect - 1) < 0.05) {
       // a hair under, so rounding to whole pixels can never push the widest line past the edge
@@ -123,6 +157,7 @@
     rows.forEach((ln, i) => ln.classList.toggle('short', short[i]));
     fitted.set(key, { fs: box.style.getPropertyValue('--fs'), short });
     scaled.set(sKey, { r: fs / avail, aspect, short });
+    if (import.meta.env.DEV && standard) learned[id] = { r: +(fs / avail).toFixed(5), a: +aspect.toFixed(3), s: short.map((x) => (x ? '1' : '0')).join('') };
   }
 
   let raf = 0;
@@ -132,18 +167,17 @@
   // turned to), so a change of room does not make every page on hand work in the same frame.
   const schedule = () => {
     cancelAnimationFrame(raf);
-    clearTimeout(later);
+    cancelIdleCallback?.(later);
     if (live) {
       stale = false;
       raf = requestAnimationFrame(fit);
     } else {
       stale = true;
-      later = window.setTimeout(() => {
-        whenIdle(() => {
-          stale = false;
-          raf = requestAnimationFrame(fit);
-        });
-      }, 500);
+      // fitted as soon as the browser is idle, so the page is finished before it scrolls into view
+      later = whenIdle(() => {
+        stale = false;
+        raf = requestAnimationFrame(fit);
+      });
     }
   };
   $effect(() => {
@@ -170,7 +204,7 @@
       document.fonts.removeEventListener('loadingdone', schedule);
       ro.disconnect();
       cancelAnimationFrame(raf);
-      clearTimeout(later);
+      cancelIdleCallback?.(later);
     };
   });
 </script>

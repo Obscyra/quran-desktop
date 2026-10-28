@@ -22,7 +22,16 @@
   // the language of the chosen translation (0 is the Arabic alone)
   const language = $derived(settings.translation === 0 ? '' : (translations.list.find((t) => t.id === settings.translation)?.language ?? 'English'));
   const inLanguage = $derived(translations.list.filter((t) => t.language === language));
-  const languages = $derived(translations.grouped.map(([l]) => l));
+  const languages = $derived(translations.grouped.map(([l, list]) => ({ name: l, count: list.length })));
+  let find = $state('');
+  const shown = $derived.by(() => {
+    const q = find.trim().toLowerCase();
+    return q ? languages.filter((l) => l.name.toLowerCase().includes(q)) : languages;
+  });
+  /** the chosen language scrolls into view in its list (a language picked by default is not at the top) */
+  function reveal(node: HTMLElement) {
+    node.querySelector('.on')?.scrollIntoView({ block: 'center' });
+  }
 
   function setTranslation(id: number) {
     settings.translation = id;
@@ -122,20 +131,43 @@
       <h2 id="w-t">Which language do you read in?</h2>
       <p class="sub">The translation under each verse, and the meaning shown for each word, follow this language.</p>
       {#if translations.list.length}
-        <div class="fields">
-          <label>Language
-            <select value={language} onchange={(e) => pickLanguage(e.currentTarget.value)}>
-              <option value="">None (Arabic only)</option>
-              {#each languages as l (l)}<option value={l}>{l}</option>{/each}
-            </select>
-          </label>
-          {#if language}
-            <label>Translation
-              <select value={settings.translation} onchange={(e) => setTranslation(Number(e.currentTarget.value))}>
-                {#each inLanguage as t (t.id)}<option value={t.id}>{t.name}</option>{/each}
-              </select>
-            </label>
-          {/if}
+        <div class="duo">
+          <section aria-label="Language">
+            <h3>Language</h3>
+            <div class="find">
+              <svg aria-hidden="true" viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="9" r="5.5" /><path d="m13.5 13.5 3.5 3.5" /></svg>
+              <input bind:value={find} placeholder="Search {languages.length} languages" aria-label="Search languages" />
+            </div>
+            <div class="list" role="radiogroup" aria-label="Language" {@attach reveal}>
+              {#if !find.trim()}
+                <button class="lang" class:on={!language} role="radio" aria-checked={!language} onclick={() => pickLanguage('')}>
+                  <span>Arabic only</span><small>no translation</small>
+                </button>
+              {/if}
+              {#each shown as l (l.name)}
+                <button class="lang" class:on={l.name === language} role="radio" aria-checked={l.name === language} onclick={() => pickLanguage(l.name)}>
+                  <span>{l.name}</span><small>{l.count}</small>
+                </button>
+              {:else}
+                <p class="empty">No language matches “{find}”</p>
+              {/each}
+            </div>
+          </section>
+          <section aria-label="Translation">
+            <h3>Translation{language ? ` · ${language}` : ''}</h3>
+            <div class="list tr" role="radiogroup" aria-label="Translation" {@attach reveal}>
+              {#if language}
+                {#each inLanguage as t (t.id)}
+                  <button class="opt" class:on={t.id === settings.translation} role="radio" aria-checked={t.id === settings.translation} onclick={() => setTranslation(t.id)}>
+                    <span class="who"><b>{t.name}</b>{#if t.author && t.author !== t.name}<small>{t.author}</small>{/if}</span>
+                    <i class="dot" aria-hidden="true"></i>
+                  </button>
+                {/each}
+              {:else}
+                <p class="empty">Only the Arabic text is shown. Pick a language to read a translation under each verse.</p>
+              {/if}
+            </div>
+          </section>
         </div>
       {:else}
         <p class="note">The list of translations needs an internet connection. English (Saheeh International) is set for now; you can choose another in Settings later.</p>
@@ -185,8 +217,8 @@
   li.on span, li.done span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   li.on span { box-shadow: 0 0 0 3px var(--accent-soft); }
   li:not(.on):not(.done) { opacity: 0.7; }
-  .skip { color: var(--ink-dim); font-size: 13px; padding: 6px 10px; border-radius: 8px; }
-  .skip:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  .skip { color: var(--ink); font-size: 13px; padding: 6px 12px; border-radius: 8px; background: var(--btn); border: 1px solid var(--btn-line); }
+  .skip:hover { background: var(--btn-hover); }
   h2 { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
   .sub { margin-top: 6px; color: var(--ink-dim); font-size: 15px; line-height: 1.55; }
   h3 { margin: 20px 0 8px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); font-weight: 600; }
@@ -201,7 +233,8 @@
   .th:hover, .chip:hover, .sc:hover, .mode:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
   .on:not(li) { border-color: var(--accent) !important; background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { padding: 9px 18px; border-radius: 10px; border: 1px solid var(--line); font-size: 13.5px; }
+  .chip { padding: 9px 18px; border-radius: 10px; border: 1px solid var(--btn-line); background: var(--btn); font-size: 13.5px; font-weight: 550; transition: background-color 0.15s, border-color 0.15s; }
+  .chip:hover { background: var(--btn-hover); }
   .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
   .mode { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); }
   .mode b { font-size: 15px; }
@@ -215,17 +248,37 @@
   .sc :global(.tj-ham_wasl), .sc :global(.tj-laam_shamsiyah) { color: var(--ink-faint); }
   .sc :global(.tj-madda_normal) { color: #e0803a; }
   .sc :global(.tj-madda_permissible) { color: #e0a23a; }
-  .fields { display: grid; gap: 12px; margin-top: 16px; }
-  label { display: grid; gap: 6px; font-size: 12px; letter-spacing: 0.04em; color: var(--ink-dim); }
-  select { height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; }
+  .duo { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px; margin-top: 8px; }
+  .duo h3 { margin: 12px 0 8px; }
+  .find { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 10px; background: var(--btn); border: 1px solid var(--btn-line); color: var(--ink-dim); transition: border-color 0.15s, box-shadow 0.15s; }
+  .find:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .find input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: 13.5px; user-select: text; -webkit-user-select: text; }
+  .list { margin-top: 8px; height: 276px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 14px; background: color-mix(in srgb, var(--ink) 4%, transparent); border: 1px solid var(--line); }
+  .duo section:last-child .list { margin-top: 0; height: 322px; }
+  .lang { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 14px; min-height: 40px; border-radius: 10px; text-align: left; font-size: 14px; border: 1px solid transparent; transition: background-color 0.15s, border-color 0.15s; flex: none; }
+  .lang small { color: var(--ink-dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .lang:hover { background: var(--btn); }
+  .lang.on { background: var(--btn-on); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .lang.on small { color: inherit; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 52px; border-radius: 10px; text-align: left; border: 1px solid transparent; transition: background-color 0.15s, border-color 0.15s; flex: none; }
+  .opt:hover { background: var(--btn); }
+  .who { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .who b { font-size: 14px; font-weight: 600; }
+  .who small { font-size: 12.5px; color: var(--ink-dim); }
+  .dot { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--btn-line); display: grid; place-items: center; transition: border-color 0.15s; }
+  .opt.on { background: var(--btn-on); border-color: var(--accent); }
+  .opt.on .dot { border-color: var(--accent); }
+  .opt.on .dot::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: dot 0.25s var(--ease); }
+  @keyframes dot { from { transform: scale(0); } }
+  .empty { padding: 20px 14px; text-align: center; color: var(--ink-dim); font-size: 13px; line-height: 1.5; }
   .note { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; line-height: 1.55; }
   .tips { margin: 16px 0 0; padding-left: 18px; display: grid; gap: 10px; font-size: 14px; line-height: 1.55; }
   kbd { padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); font: inherit; font-size: 12.5px; }
   footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 16px; position: sticky; bottom: -24px; padding-bottom: 24px; margin-bottom: -24px; background: linear-gradient(transparent, var(--panel) 18px); }
-  .ghost { padding: 9px 16px; border-radius: 10px; color: var(--ink-dim); }
-  .ghost:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  .ghost { padding: 9px 18px; border-radius: 10px; color: var(--ink); background: var(--btn); border: 1px solid var(--btn-line); font-weight: 550; }
+  .ghost:hover { background: var(--btn-hover); }
   .pri { padding: 10px 22px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .pri:hover { opacity: 0.92; }
-  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  @media (max-width: 760px) { .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
 </style>
