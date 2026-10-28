@@ -29,7 +29,7 @@ Everything Quran for Desktop can do. For a short overview see the [README](../RE
 - A loading indicator shows when the connection is slow, instead of leaving the app looking frozen.
 
 ## Comfort
-- **Themes:** Night, Black, Madinah, Slate, Paper, Stone and White & Gold, or follow the system.
+- **Themes:** thirteen. Dark: Night, Tahajjud, Tide, Fjord, Graphite, Moss, Sidr, Rosewood, Madinah and Slate. Light: Paper, White & Gold and Stone. Or follow the system.
 - **First-run setup** (every step can be skipped) for theme, size, reading mode, script, language and word meanings, and a **search bar in Settings** that jumps to any option.
 - **Interface size** from 90% to 150%, or any percentage you type (50–200%), independent of the Arabic text size. The interface font (Inter) and the Arabic fonts (Amiri Quran, Noto Naskh Arabic, Scheherazade New) are bundled with the app, so it looks the same on every machine.
 - **Full screen**, with the screen kept awake while you listen. The window opens at the size and place you left it.

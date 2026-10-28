@@ -53,7 +53,7 @@ New versions are offered inside the app (Settings → Updates).
 - **17 reciters** with word-by-word tracking that follows the recitation, plus **90+ more** to listen to surah by surah.
 - **Audio manager** to download any surah, or all 114, for offline listening.
 - **Bookmarks with notes**, jump to any verse by typing `55:13`, and the app reopens where you left off.
-- **Seven themes**, interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode. Settings has a search bar, a Reset on each setting and a list of what you changed. Small tips offer a setting when you keep doing what it is for (and can be switched off).
+- **Thirteen themes** (ten dark, three light), interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode. Settings has a search bar, a Reset on each setting and a list of what you changed. Small tips offer a setting when you keep doing what it is for (and can be switched off).
 - **Runs in the system tray** with optional reminders and the Verse of the Day.
 
 The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/FEATURES.md)**.
@@ -72,6 +72,36 @@ The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/
   <tr>
     <td width="50%"><img src="assets/screenshots/theme-gold.webp" alt="Verse by Verse in the White and Gold theme"/><br/><sub><b>White &amp; Gold</b> theme</sub></td>
     <td width="50%"><img src="assets/screenshots/compact-window.webp" alt="The app in a small window with the player bar"/><br/><sub><b>Small window:</b> everything still fits, player bar included</sub></td>
+  </tr>
+</table>
+
+## Themes
+
+Thirteen themes: ten dark and three light, or follow your system. The dark ones avoid pure black and pure white, which is harsher on the eyes in a dim room, and every colour pair is checked for contrast. Change the theme in Settings → Appearance.
+
+<table>
+  <tr>
+    <td width="33%"><img src="assets/screenshots/themes/night.webp" alt="Verse by Verse in the Night theme"/><br/><sub><b>Night</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/tahajjud.webp" alt="Verse by Verse in the Tahajjud theme"/><br/><sub><b>Tahajjud</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/tide.webp" alt="Verse by Verse in the Tide theme"/><br/><sub><b>Tide</b></sub></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="assets/screenshots/themes/fjord.webp" alt="Verse by Verse in the Fjord theme"/><br/><sub><b>Fjord</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/graphite.webp" alt="Verse by Verse in the Graphite theme"/><br/><sub><b>Graphite</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/moss.webp" alt="Verse by Verse in the Moss theme"/><br/><sub><b>Moss</b></sub></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="assets/screenshots/themes/sidr.webp" alt="Verse by Verse in the Sidr theme"/><br/><sub><b>Sidr</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/rosewood.webp" alt="Verse by Verse in the Rosewood theme"/><br/><sub><b>Rosewood</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/forest.webp" alt="Verse by Verse in the Madinah theme"/><br/><sub><b>Madinah</b></sub></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="assets/screenshots/themes/slate.webp" alt="Verse by Verse in the Slate theme"/><br/><sub><b>Slate</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/paper.webp" alt="Verse by Verse in the Paper theme"/><br/><sub><b>Paper</b></sub></td>
+    <td width="33%"><img src="assets/screenshots/themes/gold.webp" alt="Verse by Verse in the White and Gold theme"/><br/><sub><b>White &amp; Gold</b></sub></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="assets/screenshots/themes/stone.webp" alt="Verse by Verse in the Stone theme"/><br/><sub><b>Stone</b></sub></td>
   </tr>
 </table>
 
