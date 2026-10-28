@@ -5,6 +5,7 @@ Thank you for helping. Bug reports are as valuable as code.
 ## Reporting problems
 
 - **Arabic text looks wrong?** Use the [Arabic text report](https://github.com/Obscyra/quran-desktop/issues/new?template=arabic-text.yml). Give the surah and verse (for example `2:255`), the script style and a screenshot. This is the most important kind of report.
+- **Have an idea?** Use the [feature request](https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml).
 - **Anything else:** use the [bug report](https://github.com/Obscyra/quran-desktop/issues/new?template=bug.yml).
 
 ## Code changes

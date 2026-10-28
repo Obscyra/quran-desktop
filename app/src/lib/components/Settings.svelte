@@ -813,8 +813,9 @@
             <a href="https://github.com/quran/quran_android" target="_blank" rel="noreferrer">Quran for Android</a>.
             Text, timings and audio come from the Quran.com public API.</p>
           <p><a href="https://qurandesktop.netlify.app" target="_blank" rel="noreferrer">Website</a> ·
-            <a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">Source code</a> ·
-            <a href="https://github.com/Obscyra/quran-desktop/issues" target="_blank" rel="noreferrer">Report a problem</a></p>
+            <a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">GitHub</a> ·
+            <a href="https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml" target="_blank" rel="noreferrer">Suggest a feature</a> ·
+            <a href="https://github.com/Obscyra/quran-desktop/issues/new?template=bug.yml" target="_blank" rel="noreferrer">Report a problem</a></p>
         </div>
       </div>
       <div class="row about">
