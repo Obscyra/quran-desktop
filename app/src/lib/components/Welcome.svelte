@@ -222,10 +222,10 @@
   h2 { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
   .sub { margin-top: 6px; color: var(--ink-dim); font-size: 15px; line-height: 1.55; }
   h3 { margin: 20px 0 8px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); font-weight: 600; }
-  .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+  .themes { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin-top: 18px; }
   .th { display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 14px; text-align: left; background: var(--btn); }
   .th b { font-size: 13.5px; font-weight: 500; padding: 0 2px; }
-  .sw { display: flex; align-items: center; justify-content: space-between; height: 76px; padding: 0 14px; border-radius: 9px; overflow: hidden; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); }
+  .sw { display: flex; align-items: center; justify-content: space-between; height: 76px; padding: 0 11px; border-radius: 9px; overflow: hidden; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); }
   .sw .ink { font-family: 'Amiri Quran', serif; font-size: 26px; }
   .sw i { width: 16px; height: 16px; border-radius: 50%; }
   .sw.auto { padding: 0; }
@@ -281,5 +281,6 @@
   .pri { padding: 10px 22px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .pri:hover { opacity: 0.92; }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 1000px) { .themes { grid-template-columns: repeat(4, 1fr); } }
   @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
 </style>

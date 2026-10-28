@@ -206,8 +206,8 @@
   footer.float.closed { inset: auto 14px 12px 14px; }
   .now em { font-style: normal; font-weight: 400; color: var(--accent); }
   .chip.x { width: 28px; padding: 0; display: grid; place-items: center; }
-  .dl { position: relative; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s; }
-  .dl:hover:not(:disabled) { background: var(--btn-hover); }
+  .dl { position: relative; flex: none; box-sizing: border-box; padding: 0; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); background: none; border: 0; transition: color 0.15s, opacity 0.15s; }
+  .dl:hover:not(:disabled) { opacity: 0.8; }
   .dl.done { color: var(--accent); }
   .play .wait { width: 20px; height: 20px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--accent-ink) 30%, transparent); border-top-color: var(--accent-ink); animation: spin 0.8s linear infinite; }
   .vs.load { color: var(--accent); }
