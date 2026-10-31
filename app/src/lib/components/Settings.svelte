@@ -370,15 +370,12 @@
       <h3 class="grp">Colour</h3>
       <div class="row wide">
         <div class="label"><h3>Theme</h3>{@render rst('Theme')}<p>{THEMES.length} palettes, each tuned for comfortable contrast. Auto follows your system.</p></div>
+        <div class="autoRow"><button class="chipauto" class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>Match system (light or dark)</button></div>
         <div class="themes">
-          <button class="theme auto" class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>
-            <span class="sw"><i style:background="#0e0c09"></i><i style:background="#ede8de"></i></span>
-            <b>Auto</b>
-          </button>
           {#each THEMES as t (t.id)}
             <button class="theme" class:on={settings.theme === t.id} onclick={() => (settings.theme = t.id)} aria-label="{t.name} theme">
               <span class="sw" style:background={t.bg}>
-                <span class="ink" style:color={t.ink}>بسم</span>
+                <span class="ink" style:color={t.ink}>بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</span>
                 <i style:background={t.accent}></i>
               </span>
               <b>{t.name}</b>
@@ -822,6 +819,7 @@
             <a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">GitHub</a> ·
             <a href="https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml" target="_blank" rel="noreferrer">Suggest a feature</a> ·
             <a href="https://github.com/Obscyra/quran-desktop/issues/new?template=bug.yml" target="_blank" rel="noreferrer">Report a problem</a></p>
+          <p>Source code: <a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">github.com/Obscyra/quran-desktop</a></p>
         </div>
       </div>
       <div class="row about">
@@ -910,15 +908,17 @@
   .preview p { font-family: var(--ar-font); font-size: var(--ar-size); line-height: var(--ar-lh); color: var(--ink); }
   .preview small { color: var(--ink-dim); }
 
-  .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; }
+  .themes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .autoRow { margin-bottom: 12px; }
+  .chipauto { padding: 7px 14px; border-radius: 9px; font-size: 13px; background: var(--btn); }
+  .chipauto:hover { background: var(--btn-hover); }
+  .chipauto.on { background: var(--btn-on); color: var(--accent); }
   .theme { display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 14px; text-align: left; transition: background 0.2s; outline: 2px solid transparent; }
   .theme:hover { background: var(--accent-soft); }
   .theme.on { outline-color: var(--accent); }
-  .theme .sw { height: 62px; border-radius: 9px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); display: flex; align-items: center; justify-content: space-between; padding: 0 12px; overflow: hidden; }
-  .theme .sw .ink { font-family: 'Amiri Quran', serif; font-size: 22px; }
-  .theme .sw i { width: 14px; height: 14px; border-radius: 50%; }
-  .theme.auto .sw { padding: 0; border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent); }
-  .theme.auto .sw i { flex: 1; height: 100%; border-radius: 0; width: auto; }
+  .theme .sw { height: 84px; border-radius: 9px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 0 8px; overflow: hidden; }
+  .theme .sw .ink { font-family: 'Amiri Quran', serif; font-size: 18px; line-height: 1.5; white-space: nowrap; direction: rtl; }
+  .theme .sw i { width: 32px; height: 5px; border-radius: 3px; }
   .theme b { font-size: 13px; font-weight: 500; padding: 0 2px; }
 
   .fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }

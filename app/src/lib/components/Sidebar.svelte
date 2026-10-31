@@ -1,4 +1,34 @@
 <script lang="ts">
+  const SIDE_MIN = 260, SIDE_MAX = 480, SIDE_DEFAULT = 324;
+  /** Width while the edge is being dragged: the sidebar follows the mouse, one change per frame, and the setting is saved on release. */
+  let dragW = $state<number | null>(null);
+  function startDrag(e: PointerEvent) {
+    e.preventDefault();
+    const el = e.currentTarget as HTMLElement;
+    el.setPointerCapture(e.pointerId);
+    const zoom = settings.uiScale || 1;
+    const x0 = e.clientX, w0 = settings.sidebarWidth;
+    const at = (ev: PointerEvent) => Math.round(Math.min(SIDE_MAX, Math.max(SIDE_MIN, w0 + (ev.clientX - x0) / zoom)));
+    let last = w0, frame = 0;
+    const move = (ev: PointerEvent) => {
+      last = at(ev);
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; dragW = last; });
+    };
+    const up = (ev: PointerEvent) => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      settings.sidebarWidth = at(ev);
+      dragW = null;
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+    };
+    dragW = w0;
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+  }
+
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { confirm } from '$lib/confirm.svelte';
   import { player } from '$lib/player.svelte';
@@ -134,7 +164,7 @@
   </li>
 {/snippet}
 
-<aside class:closed inert={closed}>
+<aside class:closed inert={closed} style:width="{dragW ?? settings.sidebarWidth}px">
   <div class="inner">
     <div class="tabs" role="tablist">
       <button role="tab" aria-selected={ui.tab === 'surahs'} onclick={() => (ui.tab = 'surahs')}>Surahs</button>
@@ -184,6 +214,7 @@
     </ul>
     {/if}
   </div>
+  <div class="grip" role="separator" aria-orientation="vertical" aria-label="Resize the sidebar" title="Drag to resize, double-click to reset" onpointerdown={startDrag} ondblclick={() => (settings.sidebarWidth = SIDE_DEFAULT)}></div>
 </aside>
 
 <svelte:window onpointerdown={(e) => menu && !(e.target as HTMLElement).closest('.cm') && closeMenu()} onresize={closeMenu} onblur={closeMenu} />
@@ -220,11 +251,13 @@
 {/if}
 
 <style>
-  aside { flex: none; width: 324px; overflow: hidden; background: var(--bg-2); z-index: 6; transition: transform 0.38s var(--ease), opacity 0.28s var(--ease); }
+  aside { position: relative; flex: none; width: 324px; overflow: hidden; background: var(--bg-2); z-index: 6; transition: transform 0.38s var(--ease), opacity 0.28s var(--ease); }
   /* Closed, it leaves the layout at once (the page reflows one time) and slides away; resizing it frame by
      frame made the page refit on every frame. */
   aside.closed { position: absolute; left: 0; top: 0; bottom: 0; transform: translateX(-100%); opacity: 0; pointer-events: none; }
-  .inner { width: 324px; height: 100%; display: flex; flex-direction: column; min-height: 0; padding: 10px 12px 12px; }
+  .inner { width: 100%; height: 100%; display: flex; flex-direction: column; min-height: 0; padding: 10px 12px 12px; }
+  .grip { position: absolute; top: 0; right: 0; bottom: 0; width: 7px; cursor: col-resize; z-index: 2; touch-action: none; }
+  .grip:hover, .grip:active { background: var(--accent-soft); }
   .search { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 0 12px; height: 38px; border-radius: 10px; background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink-dim); }
   .search:focus-within { background: color-mix(in srgb, var(--ink) 10%, transparent); box-shadow: 0 0 0 2px var(--accent-soft); }
   input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: 14px; user-select: text; }
