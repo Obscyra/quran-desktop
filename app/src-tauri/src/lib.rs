@@ -129,6 +129,25 @@ fn open_inspector(window: tauri::WebviewWindow) {
     window.open_devtools();
 }
 
+/// The country or region set in the system (Windows: Settings → Time & language → Country or region), as a two-letter
+/// code such as "BD". The web view only reports the display language, so a Bangladeshi PC with English Windows looks like "en-US".
+#[tauri::command]
+fn device_region() -> Option<String> {
+    #[cfg(windows)]
+    {
+        let mut buf = [0u16; 16];
+        let n = unsafe { windows::Win32::Globalization::GetUserDefaultGeoName(&mut buf) };
+        if n > 1 {
+            let s = String::from_utf16_lossy(&buf[..(n as usize - 1)]);
+            // a two-letter country code (a three-digit region number is not one)
+            if s.len() == 2 && s.chars().all(|c| c.is_ascii_alphabetic()) {
+                return Some(s.to_uppercase());
+            }
+        }
+    }
+    None
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default();
@@ -146,6 +165,16 @@ pub fn run() {
         .on_window_event(|window, event| {
             remember_window(window, event);
             rescaled(window, event);
+        })
+        // the window is created hidden (tauri.conf.json) so the saved size, place and maximized state are
+        // applied before anyone sees it; it is shown once the page has loaded (not when started with --hidden)
+        .on_page_load(|webview, payload| {
+            if webview.label() == "main"
+                && matches!(payload.event(), tauri::webview::PageLoadEvent::Finished)
+                && !std::env::args().any(|a| a == "--hidden")
+            {
+                let _ = webview.window().show();
+            }
         });
 
     let builder = builder.plugin(tauri_plugin_opener::init());
@@ -171,7 +200,7 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--hidden"]),
         ))
-        .invoke_handler(tauri::generate_handler![media::media_state, open_inspector])
+        .invoke_handler(tauri::generate_handler![media::media_state, open_inspector, device_region])
         .setup(|app| {
             build_tray(app)?;
             media::init(app);

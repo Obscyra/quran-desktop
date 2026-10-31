@@ -6,9 +6,11 @@
   import { SCRIPTS, settings, type Script, type WordMeaning } from '$lib/settings.svelte';
   import { THEMES } from '$lib/themes';
   import { translations } from '$lib/translations.svelte';
+  import { suggestedLanguage } from '$lib/languages';
+  import { isTauri } from '$lib/platform';
   import { ui } from '$lib/ui.svelte';
 
-  const STEPS = ['Look', 'Reading', 'Language', 'Ready'] as const;
+  const STEPS = ['Look', 'Reading', 'Translation', 'Ready'] as const;
   let step = $state(0);
   let card = $state<HTMLElement>();
 
@@ -40,9 +42,30 @@
   function pickLanguage(l: string) {
     if (!l) return setTranslation(0);
     const options = translations.list.filter((t) => t.language === l);
-    // English keeps the translation that comes with the app
-    setTranslation((l === 'English' && options.find((t) => t.id === 20)?.id) || options[0]?.id || settings.translation);
+    // English keeps the translation that comes with the app; Bengali starts with Sheikh Mujibur Rahman's
+    const first = l === 'English' ? 20 : l === 'Bengali' ? 163 : 0;
+    setTranslation(options.find((t) => t.id === first)?.id || options[0]?.id || settings.translation);
   }
+
+  // Start from the language the device points to (Bengali on a Bangladeshi system), once the list is in; the reader can still pick any.
+  let suggested = false;
+  $effect(() => {
+    if (suggested || !translations.grouped.length) return;
+    suggested = true;
+    (async () => {
+      let region: string | null = null;
+      if (isTauri()) {
+        try {
+          region = await (await import('@tauri-apps/api/core')).invoke<string | null>('device_region');
+        } catch {
+          /* the browser's language list is enough */
+        }
+      }
+      const want = suggestedLanguage(undefined, region);
+      const name = want && translations.grouped.find(([l]) => l.toLowerCase() === want)?.[0];
+      if (name && settings.translation === 20) pickLanguage(name);
+    })();
+  });
 
   function setScript(id: Script) {
     settings.script = id;
@@ -89,13 +112,13 @@
     {#if step === 0}
       <h2 id="w-t">Welcome. Choose how it looks.</h2>
       <p class="sub">Everything here can be changed later in Settings, the gear at the top right.</p>
+      <div class="row auto" role="radiogroup" aria-label="Match system theme">
+        <button class="chip" role="radio" aria-checked={settings.theme === 'auto'} class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>Match system (light or dark)</button>
+      </div>
       <div class="themes" role="radiogroup" aria-label="Theme">
-        <button class="th" role="radio" aria-checked={settings.theme === 'auto'} class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>
-          <span class="sw auto"><i style:background="#0e0c09"></i><i style:background="#ede8de"></i></span><b>Match system</b>
-        </button>
         {#each THEMES as t (t.id)}
           <button class="th" role="radio" aria-checked={settings.theme === t.id} class:on={settings.theme === t.id} onclick={() => (settings.theme = t.id)}>
-            <span class="sw" style:background={t.bg}><span class="ink" style:color={t.ink}>بسم</span><i style:background={t.accent}></i></span><b>{t.name}</b>
+            <span class="sw" style:background={t.bg}><span class="ink" style:color={t.ink}>بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</span><i style:background={t.accent}></i></span><b>{t.name}</b>
           </button>
         {/each}
       </div>
@@ -128,17 +151,17 @@
         {/each}
       </div>
     {:else if step === 2}
-      <h2 id="w-t">Which language do you read in?</h2>
-      <p class="sub">The translation under each verse, and the meaning shown for each word, follow this language.</p>
+      <h2 id="w-t">Choose your translation language</h2>
+      <p class="sub">This is the language of the <b>translation</b> shown under each verse and of the word-by-word meanings. It does not change the app itself, which stays in English.</p>
       {#if translations.list.length}
         <div class="duo">
-          <section aria-label="Language">
-            <h3>Language</h3>
+          <section aria-label="Translation language">
+            <h3>Translation language</h3>
             <div class="find">
               <svg aria-hidden="true" viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="9" r="5.5" /><path d="m13.5 13.5 3.5 3.5" /></svg>
-              <input bind:value={find} placeholder="Search {languages.length} languages" aria-label="Search languages" />
+              <input bind:value={find} placeholder="Search {languages.length} translation languages" aria-label="Search translation languages" />
             </div>
-            <div class="list" role="radiogroup" aria-label="Language" {@attach reveal}>
+            <div class="list" role="radiogroup" aria-label="Translation language" {@attach reveal}>
               {#if !find.trim()}
                 <button class="lang" class:on={!language} role="radio" aria-checked={!language} onclick={() => pickLanguage('')}>
                   <span>Arabic only</span><small>no translation</small>
@@ -154,7 +177,7 @@
             </div>
           </section>
           <section aria-label="Translation">
-            <h3>Translation{language ? ` · ${language}` : ''}</h3>
+            <h3>Choose a translation{language ? ` · ${language}` : ''}</h3>
             <div class="list tr" role="radiogroup" aria-label="Translation" {@attach reveal}>
               {#if language}
                 {#each inLanguage as t (t.id)}
@@ -164,7 +187,7 @@
                   </button>
                 {/each}
               {:else}
-                <p class="empty">Only the Arabic text is shown. Pick a language to read a translation under each verse.</p>
+                <p class="empty">Only the Arabic text is shown. Pick a translation language on the left to read a translation under each verse.</p>
               {/if}
             </div>
           </section>
@@ -179,12 +202,18 @@
         {/each}
       </div>
     {:else}
-      <h2 id="w-t">You are ready.</h2>
-      <p class="sub">The whole Quran is inside the app, so you can read without a connection. Here is where things are.</p>
+      <div class="ready">
+        <i class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg></i>
+        <div>
+          <h2 id="w-t">You are ready.</h2>
+          <p class="sub">The whole Quran is inside the app, so you can read without a connection. Here is where things are.</p>
+        </div>
+      </div>
       <ul class="guide">
         <li>
           <i aria-hidden="true"><svg viewBox="0 0 20 20" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5" /><path d="M7.5 3.5v13" /></svg></i>
-          <div><b>Find a surah</b><span>Open the list with <kbd>B</kbd> or the button at the top left. Type a place like <kbd>55:13</kbd> to jump to a verse. Star the ones you read often to keep them at the top.</span></div>
+          <div><b>Find a surah</b><span>Open the list at the top left. Type a place like <kbd>55:13</kbd> to jump to a verse, and star the surahs you read often.</span></div>
+          <p class="keys"><kbd>B</kbd></p>
         </li>
         <li>
           <i aria-hidden="true"><svg viewBox="0 0 20 20" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12M4 8.5h12M4 12h12M4 15.5h8" /></svg></i>
@@ -192,7 +221,8 @@
         </li>
         <li>
           <i aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M7.5 4.6v14.8a.8.8 0 0 0 1.22.68l12-7.4a.8.8 0 0 0 0-1.36l-12-7.4a.8.8 0 0 0-1.22.68z" fill="currentColor" /></svg></i>
-          <div><b>Listen</b><span>Press <b class="in">Play</b> at the top right, or <kbd>Space</kbd>. The player opens at the bottom with speed, volume and repeat for the whole surah.</span></div>
+          <div><b>Listen</b><span>Press <b class="in">Play</b> at the top right. The player opens at the bottom with speed, volume and repeat.</span></div>
+          <p class="keys"><kbd>Space</kbd></p>
         </li>
         <li>
           <i aria-hidden="true"><svg viewBox="0 0 20 20" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5v8.5m0-8.5a1.2 1.2 0 0 1 2.4 0V10m0-5.5a1.2 1.2 0 0 1 2.4 0V10m0-3.5a1.2 1.2 0 0 1 2.4 0v5.2c0 3-2 4.8-4.4 4.8-2 0-3-1-4.2-2.7L3.8 11.2a1.2 1.2 0 0 1 2-1.3L7 11" /></svg></i>
@@ -200,11 +230,12 @@
         </li>
         <li>
           <i aria-hidden="true"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" /></svg></i>
-          <div><b>Keep audio for later</b><span>Download a surah from the player, or use the <b class="in">Audio manager</b> in Settings to save a whole reciter for listening without a connection.</span></div>
+          <div><b>Keep audio for later</b><span>Download a surah from the player, or save a whole reciter in the <b class="in">Audio manager</b> in Settings.</span></div>
         </li>
         <li>
           <i aria-hidden="true"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /></svg></i>
-          <div><b>Change anything later</b><span>Settings is the gear at the top right, or <kbd>,</kbd>. Everything you chose here is there, and you can search it.</span></div>
+          <div><b>Change anything later</b><span>Settings is the gear at the top right. Everything you chose here is in it, and you can search it.</span></div>
+          <p class="keys"><kbd>,</kbd></p>
         </li>
       </ul>
     {/if}
@@ -224,7 +255,7 @@
   .scrim { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; background: #0009; animation: fade 0.25s; }
   @keyframes fade { from { opacity: 0; } }
   .card {
-    width: min(940px, calc((100vw - 32px) / var(--zoom, 1))); max-height: calc((100vh - 32px) / var(--zoom, 1)); overflow: auto;
+    width: min(1080px, calc((100vw - 32px) / var(--zoom, 1))); max-height: calc((100vh - 32px) / var(--zoom, 1)); overflow: auto;
     min-height: min(720px, calc((100vh - 32px) / var(--zoom, 1))); display: flex; flex-direction: column;
     padding: 24px 32px 24px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line);
     box-shadow: 0 28px 70px -18px #000d; animation: pop 0.3s var(--ease);
@@ -243,14 +274,13 @@
   h2 { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
   .sub { margin-top: 6px; color: var(--ink-dim); font-size: 15px; line-height: 1.55; }
   h3 { margin: 20px 0 8px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); font-weight: 600; }
-  .themes { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin-top: 18px; }
-  .th { display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 14px; text-align: left; background: var(--btn); }
+  .themes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 12px; }
+  .row.auto { margin-top: 16px; }
+  .th { display: flex; flex-direction: column; gap: 8px; padding: 9px; border-radius: 14px; text-align: left; background: var(--btn); }
   .th b { font-size: 13.5px; font-weight: 500; padding: 0 2px; }
-  .sw { display: flex; align-items: center; justify-content: space-between; height: 76px; padding: 0 11px; border-radius: 9px; overflow: hidden; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); }
-  .sw .ink { font-family: 'Amiri Quran', serif; font-size: 26px; }
-  .sw i { width: 16px; height: 16px; border-radius: 50%; }
-  .sw.auto { padding: 0; }
-  .sw.auto i { flex: 1; height: 100%; border-radius: 0; width: auto; }
+  .sw { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 88px; padding: 0 8px; border-radius: 9px; overflow: hidden; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); }
+  .sw .ink { font-family: 'Amiri Quran', serif; font-size: 20px; line-height: 1.5; white-space: nowrap; direction: rtl; }
+  .sw i { width: 34px; height: 5px; border-radius: 3px; }
   .th:hover, .chip:hover, .sc:hover, .mode:hover { background: var(--btn-hover); }
   .on:not(li) { background: var(--btn-on) !important; }
   .on:not(li) b { color: var(--accent); }
@@ -294,20 +324,24 @@
   @keyframes dot { from { transform: scale(0); } }
   .empty { padding: 20px 14px; text-align: center; color: var(--ink-dim); font-size: 13px; line-height: 1.5; }
   .note { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; line-height: 1.55; }
-  .guide { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .guide li { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; border-radius: 14px; background: var(--btn); }
-  .guide i { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
-  .guide div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-  .guide div > b { font-size: 14.5px; font-weight: 600; }
-  .guide span { color: var(--ink-dim); font-size: 13px; line-height: 1.5; }
+  .ready { display: flex; align-items: center; gap: 18px; }
+  .tick { flex: none; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 7px var(--accent-soft); animation: dot 0.4s var(--ease); }
+  .guide { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .guide li { position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; border-radius: 16px; background: var(--btn); border: 1px solid var(--line); transition: background-color 0.15s, border-color 0.15s; }
+  .guide li:hover { background: var(--btn-hover); border-color: var(--btn-line); }
+  .guide i { flex: none; width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+  .guide div { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+  .guide div > b { font-size: 15px; font-weight: 600; }
+  .guide span { color: var(--ink-dim); font-size: 13px; line-height: 1.55; }
   .guide span .in { color: var(--ink); font-size: inherit; font-weight: 600; }
-  kbd { padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 12.5px; }
+  .keys { flex: none; margin: 0; display: flex; gap: 4px; }
+  kbd { display: inline-block; min-width: 22px; padding: 1px 7px 2px; border-radius: 6px; border: 1px solid var(--btn-line); border-bottom-width: 2px; background: var(--bg); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.5; }
   footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 16px; position: sticky; bottom: -24px; padding-bottom: 24px; margin-bottom: -24px; background: linear-gradient(transparent, var(--panel) 18px); }
   .ghost { padding: 9px 18px; border-radius: 10px; color: var(--ink); background: var(--btn); border: 1px solid var(--btn-line); font-weight: 550; }
   .ghost:hover { background: var(--btn-hover); }
   .pri { padding: 10px 22px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .pri:hover { opacity: 0.92; }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  @media (max-width: 1000px) { .themes { grid-template-columns: repeat(4, 1fr); } }
-  @media (max-width: 760px) { .guide { grid-template-columns: 1fr; } .duo { grid-template-columns: 1fr; } .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
+  @media (max-width: 1000px) { .themes { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 760px) { .guide { grid-template-columns: 1fr; } .ready { flex-direction: column; align-items: flex-start; } .duo { grid-template-columns: 1fr; } .themes { grid-template-columns: repeat(2, 1fr); } .scripts { grid-template-columns: repeat(2, 1fr); } .modes { grid-template-columns: 1fr; } }
 </style>

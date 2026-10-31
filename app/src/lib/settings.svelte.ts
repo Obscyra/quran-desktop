@@ -36,6 +36,8 @@ const defaults = {
   playerHover: true,
   wordAudio: true,
   sidebar: true,
+  /** width of the surah list in px; dragged on its right edge, kept between 260 and 480 */
+  sidebarWidth: 324,
   volume: 1,
   size: 56,
   spacing: 1.9,
@@ -94,6 +96,7 @@ class Settings {
   playerHover = $state(defaults.playerHover);
   wordAudio = $state(defaults.wordAudio);
   sidebar = $state(defaults.sidebar);
+  sidebarWidth = $state(defaults.sidebarWidth);
   volume = $state(defaults.volume);
   size = $state(defaults.size);
   spacing = $state(defaults.spacing);
