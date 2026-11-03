@@ -6,6 +6,7 @@
   import { player } from '$lib/player.svelte';
   import { goBack, goForward } from '$lib/actions';
   import { isTauri, winHide } from '$lib/platform';
+  import { deviceRegion } from '$lib/region.svelte';
   import { reader } from '$lib/reader.svelte';
   import { settings } from '$lib/settings.svelte';
   import { applyTheme, resolveTheme } from '$lib/themes';
@@ -168,6 +169,7 @@
   }
 
   onMount(() => {
+    deviceRegion.ensure();
     fit();
     window.addEventListener('resize', refit);
     window.addEventListener('focus', refit);
