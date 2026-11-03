@@ -129,8 +129,68 @@ fn open_inspector(window: tauri::WebviewWindow) {
     window.open_devtools();
 }
 
-/// The country or region set in the system (Windows: Settings → Time & language → Country or region), as a two-letter
-/// code such as "BD". The web view only reports the display language, so a Bangladeshi PC with English Windows looks like "en-US".
+/// Read the country out of a POSIX locale such as `en_BD.UTF-8`, `en-BD` or `sr_RS@latin`.
+#[cfg(unix)]
+fn region_from_locale(raw: &str) -> Option<String> {
+    let base = raw.trim().split(|c| c == '.' || c == '@').next()?;
+    let mut parts = base.split(|c| c == '_' || c == '-');
+    let _language = parts.next()?;
+    let region = parts.next()?;
+    if region.len() == 2 && region.chars().all(|c| c.is_ascii_alphabetic()) {
+        Some(region.to_ascii_uppercase())
+    } else {
+        None
+    }
+}
+
+/// Linux and the other Unix systems keep the country in the locale (`LANG=bn_BD.UTF-8`). Desktop environments that
+/// separate language from region put the region in the format categories (`LC_TIME`, `LC_NUMERIC`), so those are
+/// checked first; `LC_ALL` wins over everything.
+#[cfg(unix)]
+fn locale_region() -> Option<String> {
+    for key in [
+        "LC_ALL",
+        "LC_TIME",
+        "LC_NUMERIC",
+        "LC_MONETARY",
+        "LC_MEASUREMENT",
+        "LC_PAPER",
+        "LANG",
+        "LC_MESSAGES",
+    ] {
+        if let Ok(value) = std::env::var(key) {
+            if let Some(region) = region_from_locale(&value) {
+                return Some(region);
+            }
+        }
+    }
+    None
+}
+
+/// macOS keeps the region in `AppleLocale` (`en_BD`), or overrides it with `@rg=bdzzzz`.
+#[cfg(target_os = "macos")]
+fn apple_region() -> Option<String> {
+    let out = std::process::Command::new("/usr/bin/defaults")
+        .args(["read", "-g", "AppleLocale"])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let raw = String::from_utf8_lossy(&out.stdout);
+    let raw = raw.trim().trim_matches('"');
+    if let Some(at) = raw.find("@rg=") {
+        let code: String = raw[at + 4..].chars().take(2).collect();
+        if code.len() == 2 && code.chars().all(|c| c.is_ascii_alphabetic()) {
+            return Some(code.to_ascii_uppercase());
+        }
+    }
+    region_from_locale(raw)
+}
+
+/// The country or region set in the system, as a two-letter code such as "BD". Windows reads Country or region;
+/// macOS reads `AppleLocale`; Linux and the other Unix systems read the locale territory. The web view only reports
+/// the display language, so an English system in Bangladesh looks like "en-US".
 #[tauri::command]
 fn device_region() -> Option<String> {
     #[cfg(windows)]
@@ -138,11 +198,24 @@ fn device_region() -> Option<String> {
         let mut buf = [0u16; 16];
         let n = unsafe { windows::Win32::Globalization::GetUserDefaultGeoName(&mut buf) };
         if n > 1 {
-            let s = String::from_utf16_lossy(&buf[..(n as usize - 1)]);
+            let end = (n as usize - 1).min(buf.len());
+            let s = String::from_utf16_lossy(&buf[..end]);
             // a two-letter country code (a three-digit region number is not one)
             if s.len() == 2 && s.chars().all(|c| c.is_ascii_alphabetic()) {
                 return Some(s.to_uppercase());
             }
+        }
+    }
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(region) = apple_region() {
+            return Some(region);
+        }
+    }
+    #[cfg(unix)]
+    {
+        if let Some(region) = locale_region() {
+            return Some(region);
         }
     }
     None
@@ -150,6 +223,10 @@ fn device_region() -> Option<String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // the window is created hidden (tauri.conf.json); show it only for the first loaded page, so a reload while it
+    // sits in the tray (dev HMR, a crash recovery) does not pop it open
+    #[cfg(desktop)]
+    static SHOWN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     let builder = tauri::Builder::default();
 
     // the single-instance plugin has to come first
@@ -172,6 +249,7 @@ pub fn run() {
             if webview.label() == "main"
                 && matches!(payload.event(), tauri::webview::PageLoadEvent::Finished)
                 && !std::env::args().any(|a| a == "--hidden")
+                && !SHOWN.swap(true, std::sync::atomic::Ordering::Relaxed)
             {
                 let _ = webview.window().show();
             }

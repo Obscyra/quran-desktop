@@ -7,7 +7,7 @@
   import { THEMES } from '$lib/themes';
   import { translations } from '$lib/translations.svelte';
   import { suggestedLanguage } from '$lib/languages';
-  import { isTauri } from '$lib/platform';
+  import { deviceRegion } from '$lib/region.svelte';
   import { ui } from '$lib/ui.svelte';
 
   const STEPS = ['Look', 'Reading', 'Translation', 'Ready'] as const;
@@ -47,24 +47,15 @@
     setTranslation(options.find((t) => t.id === first)?.id || options[0]?.id || settings.translation);
   }
 
-  // Start from the language the device points to (Bengali on a Bangladeshi system), once the list is in; the reader can still pick any.
+  // Start from the language the device points to (Bengali on a Bangladeshi system), once the list is in. The region
+  // is looked up at startup (region.svelte) so this does not wait for it and never delays the translation step.
   let suggested = false;
   $effect(() => {
-    if (suggested || !translations.grouped.length) return;
+    if (suggested || !translations.grouped.length || !deviceRegion.ready) return;
     suggested = true;
-    (async () => {
-      let region: string | null = null;
-      if (isTauri()) {
-        try {
-          region = await (await import('@tauri-apps/api/core')).invoke<string | null>('device_region');
-        } catch {
-          /* the browser's language list is enough */
-        }
-      }
-      const want = suggestedLanguage(undefined, region);
-      const name = want && translations.grouped.find(([l]) => l.toLowerCase() === want)?.[0];
-      if (name && settings.translation === 20) pickLanguage(name);
-    })();
+    const want = suggestedLanguage(undefined, deviceRegion.region);
+    const name = want && translations.grouped.find(([l]) => l.toLowerCase() === want)?.[0];
+    if (name && settings.translation === 20) pickLanguage(name);
   });
 
   function setScript(id: Script) {
