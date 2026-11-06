@@ -1,8 +1,10 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import { confirm } from '$lib/confirm.svelte';
+  import { ui } from '$lib/ui.svelte';
 
   const ask = $derived(confirm.current);
+  const networkFailure = $derived(ui.networkFailure);
   const step = $derived(ask ? ask.steps[confirm.step] : null);
   let cancelBtn = $state<HTMLButtonElement>();
 
@@ -31,6 +33,19 @@
       <div class="acts">
         <button bind:this={cancelBtn} class="cancel" onclick={() => confirm.cancel()}>Cancel</button>
         <button class="ok" class:danger={ask.danger} onclick={() => confirm.accept()}>{step.ok}</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if networkFailure}
+  <div class="scrim" role="presentation">
+    <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="net-title" aria-describedby="net-body">
+      <h3 id="net-title">Could not load {networkFailure.resource}</h3>
+      <p id="net-body">The request failed or timed out. Check your connection and retry.</p>
+      <div class="acts">
+        <button class="cancel" onclick={() => (ui.networkFailure = null)}>Dismiss</button>
+        <button class="ok" onclick={() => { const retry = networkFailure?.retry; ui.networkFailure = null; retry?.(); }}>Retry</button>
       </div>
     </div>
   </div>

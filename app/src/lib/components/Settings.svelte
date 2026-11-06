@@ -1,6 +1,7 @@
 <script lang="ts">
   import ReciterPicker from './ReciterPicker.svelte';
   import TranslationPicker from './TranslationPicker.svelte';
+  import TafsirPicker from './TafsirPicker.svelte';
   import { onMount, tick } from 'svelte';
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { pageFonts } from '$lib/fonts.svelte';
@@ -18,6 +19,7 @@
   import { FOCUS_MODE, ui, type SettingsArea } from '$lib/ui.svelte';
   import { parseNotes } from '$lib/notes';
   import { updater } from '$lib/updater.svelte';
+  import { tafsirs } from '$lib/tafsir.svelte';
 
   // Each page holds one or more sections (the blocks below); a setting is found by its section, shown on its page.
   type Section = SettingsArea | 'text' | 'manager' | 'shortcuts' | 'updates';
@@ -26,7 +28,7 @@
     { id: 'reading', name: 'Translation & meanings', hint: 'Start view, translation, word meanings', group: 'Read' },
     { id: 'pages', name: 'Mushaf pages', hint: 'Printed page layout (Reading mode)', group: 'Read' },
     { id: 'audio', name: 'Listening', hint: 'Reciter, player, following along', group: 'Listen' },
-    { id: 'downloads', name: 'Audio manager', hint: 'Download, delete, keep offline', group: 'Listen' },
+    { id: 'downloads', name: 'Offline manager', hint: 'Download audio and tafsir for offline use', group: 'Listen' },
     { id: 'reminders', name: 'Reminders', hint: 'Verse of the day, reading reminders', group: 'App' },
     { id: 'focus', name: 'App & window', hint: 'Window, tray, start-up', group: 'App' },
     { id: 'data', name: 'Data & help', hint: 'Bookmarks, storage, shortcuts, reset', group: 'App' },
@@ -67,7 +69,8 @@
     { area: 'audio', title: 'Highlight style', text: 'sweep glow underline recited word' },
     { area: 'audio', title: 'Follow the recitation', text: 'auto scroll follow along' },
     { area: 'audio', title: 'Lock on the playing verse', text: 'scroll return centre center keep verse' },
-    { area: 'manager', title: 'Reciter to manage', text: 'audio manager download delete recitation offline surah storage' },
+    { area: 'manager', title: 'Reciter to manage', text: 'offline manager audio download delete recitation surah storage' },
+    { area: 'manager', title: 'Tafsir edition to manage', text: 'tafsir tafseer language edition download delete offline surah' },
     { area: 'manager', title: 'Keep favourites offline', text: 'auto cache save automatically' },
     { area: 'reminders', title: 'Verse of the day', text: 'daily notification card' },
     { area: 'reminders', title: 'Reading reminders', text: 'notify nudge times alarm' },
@@ -90,7 +93,7 @@
   const ROW_KEYS: Record<string, (keyof SettingsShape)[]> = {
     'Theme': ['theme'], 'Interface size': ['uiScale'], 'Surah names in Arabic': ['arabicNames'],
     'Script style': ['script', 'pageType'], 'Text size': ['size'], 'Line spacing': ['spacing'],
-    'Open in': ['mode'], 'Continue where I left off': ['resume'], 'Translation': ['translation'], 'Translation size': ['translationSize'], 'Word meanings': ['wordMeaning'], 'Transliteration': ['transliteration'],
+    'Open in': ['mode'], 'Continue where I left off': ['resume'], 'Translation': ['translation'], 'Translation size': ['translationSize'], 'Tafsir text size': ['tafsirSize'], 'Word meanings': ['wordMeaning'], 'Transliteration': ['transliteration'],
     'Page type': ['pageType'], 'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'],
     'Listening bar': ['listenBar'], 'Show the bar only on hover': ['playerHover'], 'Playback speed': ['speed'], 'Play the next surah': ['autoAdvance'], 'Repeat surah': ['repeatSurah'],
     'Say a word when clicked': ['wordAudio'], 'Highlight style': ['highlight'], 'Follow the recitation': ['autoScroll'], 'Lock on the playing verse': ['lockPlaying'], 'Keep favourites offline': ['autoCache'],
@@ -163,6 +166,17 @@
   let dlReciter = $state(player.reciterId);
   let sizes = $state(new Map<string, number>());
   let onlyDownloaded = $state(false);
+  let tafsirOnlyDownloaded = $state(false);
+  let tafsirDownloads = $state(new Map<string, number>());
+  let tafsirUsedBytes = $state(0);
+  let tafsirBusy = $state('');
+  let tafsirBulk = $state({ running: false, done: 0, total: 0, failed: 0 });
+  let tafsirMessage = $state('');
+  let tafsirController: AbortController | null = null;
+  const tafsirHave = $derived(player.chapters.filter((c) => tafsirDownloads.has(`${settings.tafsirEdition}:${c.id}`)));
+  const tafsirListed = $derived(tafsirOnlyDownloaded ? tafsirHave : player.chapters);
+  const settingsTranslationLanguage = $derived(translations.list.find((t) => t.id === settings.translation)?.language ?? 'English');
+  const tafsirLanguageMismatch = $derived(!!tafsirs.get(settings.tafsirEdition) && tafsirs.get(settings.tafsirEdition)?.language_name.toLowerCase() !== settingsTranslationLanguage.toLowerCase());
   const dlName = $derived(player.reciters.find((r) => r.id === dlReciter)?.name ?? 'this reciter');
   const have = $derived(player.chapters.filter((c) => player.isDownloadedFor(dlReciter, c.id)));
   const haveBytes = $derived(have.reduce((n, c) => n + (sizes.get(`${dlReciter}:${c.id}`) ?? 0), 0));
@@ -176,6 +190,82 @@
       usedBytes = [...m.values()].reduce((a, b) => a + b, 0);
     });
   });
+
+  async function refreshTafsirDownloads() {
+    tafsirDownloads = await offline.listTafsir();
+    tafsirUsedBytes = [...tafsirDownloads.values()].reduce((total, size) => total + size, 0);
+  }
+  async function downloadTafsir(chapter: number) {
+    const edition = settings.tafsirEdition;
+    if (!edition || tafsirBusy || tafsirBulk.running) return;
+    tafsirController = new AbortController();
+    const controller = tafsirController;
+    tafsirBusy = `${edition}:${chapter}`;
+    tafsirMessage = '';
+    try {
+      await tafsirs.download(edition, chapter, controller.signal);
+      await refreshTafsirDownloads();
+    } catch (e) {
+      if (!controller.signal.aborted) tafsirMessage = e instanceof Error ? e.message : 'Could not download this tafsir.';
+    } finally {
+      if (tafsirController === controller) tafsirController = null;
+      tafsirBusy = '';
+    }
+  }
+
+  async function downloadAllTafsir() {
+    const edition = settings.tafsirEdition;
+    if (!edition || tafsirBusy || tafsirBulk.running) return;
+    const pending = player.chapters.filter((chapter) => !tafsirDownloads.has(`${edition}:${chapter.id}`));
+    if (!pending.length) return;
+    tafsirController = new AbortController();
+    const controller = tafsirController;
+    tafsirBulk = { running: true, done: 0, total: pending.length, failed: 0 };
+    for (const chapter of pending) {
+      if (controller.signal.aborted) break;
+      tafsirBusy = `${edition}:${chapter.id}`;
+      try {
+        await tafsirs.download(edition, chapter.id, controller.signal);
+        await refreshTafsirDownloads();
+      } catch (e) {
+        if (controller.signal.aborted) { tafsirBusy = ''; break; }
+        tafsirBulk = { ...tafsirBulk, failed: tafsirBulk.failed + 1 };
+      }
+      tafsirBusy = '';
+      tafsirBulk = { ...tafsirBulk, done: tafsirBulk.done + 1 };
+    }
+    tafsirBusy = '';
+    if (tafsirController === controller) tafsirController = null;
+    tafsirBulk = { ...tafsirBulk, running: false };
+  }
+
+  async function deleteAllTafsir() {
+    const edition = settings.tafsirEdition;
+    if (!edition || tafsirBulk.running || tafsirBusy) return;
+    const editionName = tafsirs.get(edition)?.name ?? 'this edition';
+    const count = tafsirDownloads.size ? [...tafsirDownloads.keys()].filter((key) => key.startsWith(`${edition}:`)).length : 0;
+    if (!count) return;
+    const ok = await confirm.ask({
+      steps: [{ title: `Delete all ${editionName}?`, body: `Removes all ${count} saved surahs for this edition from this device. You can download them again later.`, ok: 'Delete all tafsir' }]
+    });
+    if (!ok) return;
+    for (const key of tafsirDownloads.keys()) {
+      if (!key.startsWith(`${edition}:`)) continue;
+      await tafsirs.remove(edition, Number(key.slice(edition.length + 1)));
+    }
+    await refreshTafsirDownloads();
+  }
+  async function deleteTafsir(chapter: number, name: string) {
+    const edition = settings.tafsirEdition;
+    const editionName = tafsirs.get(edition)?.name ?? 'this edition';
+    const ok = await confirm.ask({
+      danger: true,
+      steps: [{ title: `Delete ${name} tafsir?`, body: `Removes ${editionName} for this surah from this device. You can download it again later.`, ok: 'Delete tafsir' }]
+    });
+    if (!ok) return;
+    await tafsirs.remove(edition, chapter);
+    await refreshTafsirDownloads();
+  }
 
   const downloadAll = () => player.downloadMany(dlReciter, player.chapters.filter((c) => !player.isDownloadedFor(dlReciter, c.id)).map((c) => c.id));
 
@@ -224,10 +314,40 @@
 
   onMount(async () => {
     translations.load();
+    refreshTafsirDownloads();
     getAutostart().then((on) => (autostart = on));
     pageFonts.ensure([1]); // the script previews draw page 1 in its own font
     if (isTauri()) version = await (await import('@tauri-apps/api/app')).getVersion();
     usedBytes = await offline.blobSizes();
+  });
+
+  $effect(() => {
+    if (!ui.settingsOpen || ui.area !== 'downloads') return;
+    const translation = settings.translation;
+    const autoFollow = settings.tafsirAutoFollow;
+    void (async () => {
+      await Promise.all([translations.load(), tafsirs.load()]);
+      const language = translations.list.find((t) => t.id === translation)?.language ?? 'English';
+      const edition = autoFollow ? tafsirs.chooseDefault(language)?.slug ?? '' : settings.tafsirEdition;
+      if (autoFollow && edition && settings.tafsirEdition !== edition) settings.tafsirEdition = edition;
+      await refreshTafsirDownloads();
+    })();
+  });
+
+  $effect(() => {
+    const translation = settings.translation;
+    const autoFollow = settings.tafsirAutoFollow;
+    if (!autoFollow) return;
+    const needsTafsir = player.verses.some((v) => settings.tafsirFor(player.chapter, v.n));
+    if (!needsTafsir && !tafsirs.editions.length) return;
+    void (async () => {
+      await translations.load();
+      if (needsTafsir) await tafsirs.load();
+      if (!settings.tafsirAutoFollow || settings.translation !== translation) return;
+      const language = translations.list.find((t) => t.id === translation)?.language ?? 'English';
+      const edition = tafsirs.chooseDefault(language)?.slug ?? '';
+      if (edition) settings.tafsirEdition = edition;
+    })();
   });
 
   // quiet "Saved" stamp whenever a setting changes
@@ -265,6 +385,16 @@
   function setTranslation(id: number) {
     settings.translation = id;
     player.refreshText();
+  }
+  function setTafsirEdition(slug: string) {
+    settings.tafsirEdition = slug;
+    settings.tafsirAutoFollow = false;
+  }
+  function followTranslationTafsir() {
+    settings.tafsirAutoFollow = true;
+    const language = translations.list.find((t) => t.id === settings.translation)?.language ?? 'English';
+    const edition = tafsirs.chooseDefault(language)?.slug ?? '';
+    if (edition) settings.tafsirEdition = edition;
   }
   function setScript(id: Script) {
     settings.script = id;
@@ -453,6 +583,16 @@
         <div class="label"><h3>Translation</h3>{@render rst('Translation')}<p>Shown under each verse and in Reading → Translation. Saved with the surah for offline use.</p></div>
         <TranslationPicker onpick={setTranslation} />
       </div>
+      <div class="row">
+        <div class="label"><h3>Tafsir edition</h3><p>Follows the translation language by default. Choose another edition anytime.</p></div>
+        <div class="stack"><TafsirPicker onpick={setTafsirEdition} onauto={followTranslationTafsir} />
+          {#if tafsirLanguageMismatch}<small class="status">{settings.tafsirAutoFollow ? 'No matching edition; using ' : 'Selected '}{tafsirs.get(settings.tafsirEdition)?.language_name} tafsir.</small>{/if}
+        </div>
+      </div>
+      <div class="row">
+        <div class="label"><h3>Tafsir text size</h3>{@render rst('Tafsir text size')}<p>{settings.tafsirSize}px</p></div>
+        <input type="range" min="13" max="30" step="1" bind:value={settings.tafsirSize} aria-label="Tafsir text size" />
+      </div>
       {#if settings.translation}
         <div class="row">
           <div class="label"><h3>Translation size</h3>{@render rst('Translation size')}<p>{settings.translationSize}px</p></div>
@@ -561,8 +701,8 @@
         {@render toggle(settings.wordAudio, (v) => (settings.wordAudio = v), 'Word audio')}
       </div>
       <div class="row">
-        <div class="label"><h3>Saved recitations</h3><p>{mb(usedBytes)} MB stored on this device. Download whole reciters, delete surahs and choose what stays offline in the Audio manager.</p></div>
-        <button class="secondary" onclick={() => (ui.area = 'downloads')}>Open the audio manager…</button>
+        <div class="label"><h3>Saved offline content</h3><p>{mb(usedBytes + tafsirUsedBytes)} MB stored on this device. Manage saved audio and tafsir in the Offline manager.</p></div>
+        <button class="secondary" onclick={() => (ui.area = 'downloads')}>Open the Offline manager…</button>
       </div>
       <h3 class="grp">Following along</h3>
       <div class="row">
@@ -584,7 +724,8 @@
     {/if}
 
     {#if browse && onPage('manager')}
-      <h3 class="grp">Downloads</h3>
+      <div class="offline-columns"><section class="offline-col">
+      <h3 class="grp">Audio</h3>
       <div class="row mgr">
         <div class="label"><h3>Reciter to manage</h3><p>First choose a reciter, then download or delete the surahs you want. Each reciter's recitations are stored separately.</p></div>
         <div class="rp-wrap"><ReciterPicker value={dlReciter} onpick={(id) => (dlReciter = id)} /></div>
@@ -641,6 +782,56 @@
           <li class="none">Nothing downloaded for {dlName} yet.</li>
         {/each}
       </ul>
+
+      </section><section class="offline-col">
+      <h3 class="grp">Tafsir</h3>
+      <div class="row mgr"><div class="label"><h3>Tafsir edition</h3><p>Download and remove surah tafsir for the selected edition. Saved items are available offline.</p></div><div class="stack"><TafsirPicker disabled={tafsirBulk.running || Boolean(tafsirBusy)} onpick={setTafsirEdition} onauto={followTranslationTafsir} />{#if tafsirLanguageMismatch}<small class="status">{settings.tafsirAutoFollow ? 'No matching edition; using ' : 'Selected '}{tafsirs.get(settings.tafsirEdition)?.language_name} tafsir.</small>{/if}</div></div>
+      <div class="row dlhead">
+        <div class="label"><h3>{tafsirHave.length} of {player.chapters.length || 114} surahs</h3><p>{mb(tafsirHave.reduce((sum, c) => sum + (tafsirDownloads.get(`${settings.tafsirEdition}:${c.id}`) ?? 0), 0))} MB stored for this edition · {mb(tafsirUsedBytes)} MB total tafsir.</p></div>
+        <div class="stack">
+          <div class="inline">
+            {#if tafsirBulk.running}
+              <button class="secondary" onclick={() => tafsirController?.abort()}>Stop</button>
+            {:else}
+              <button class="primary" onclick={downloadAllTafsir} disabled={!settings.tafsirEdition || tafsirHave.length === player.chapters.length || Boolean(tafsirBusy)}>Download all</button>
+            {/if}
+            <button class="danger" onclick={deleteAllTafsir} disabled={!tafsirHave.length || tafsirBulk.running || Boolean(tafsirBusy)}>Delete all…</button>
+          </div>
+          {#if tafsirBulk.running || tafsirBulk.total}
+            <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={tafsirBulk.total ? Math.round(tafsirBulk.done / tafsirBulk.total * 100) : 0} aria-label="Tafsir download progress"><i style:width="{tafsirBulk.total ? tafsirBulk.done / tafsirBulk.total * 100 : 0}%"></i></div>
+            <small class="status" role="status">{#if tafsirBulk.running}Downloading {tafsirBulk.done} of {tafsirBulk.total}{:else if tafsirBulk.failed}Finished, but {tafsirBulk.failed} surahs could not be downloaded. Run Download all again to retry.{:else}All done.{/if}</small>
+          {/if}
+          <div class="seg">
+            <button class:on={!tafsirOnlyDownloaded} onclick={() => (tafsirOnlyDownloaded = false)}>All</button>
+            <button class:on={tafsirOnlyDownloaded} onclick={() => (tafsirOnlyDownloaded = true)}>Downloaded</button>
+          </div>
+        </div>
+      </div>
+      {#if tafsirMessage}<p class="status" role="alert">{tafsirMessage}</p>{/if}
+      <ul class="dls">
+        {#each tafsirListed as c (c.id)}
+          {@const key = `${settings.tafsirEdition}:${c.id}`}
+          {@const got = tafsirDownloads.has(key)}
+          {@const busy = tafsirBusy === key}
+          <li>
+            <span class="num">{c.id}</span>
+            <span class="nm"><b>{c.name_simple}</b><small>{c.translated_name.name} · {c.verses_count} verses</small></span>
+            <span class="sz">{got ? `${mb(tafsirDownloads.get(key) ?? 0)} MB` : ''}</span>
+            {#if got}
+              <button class="secondary sm" onclick={() => deleteTafsir(c.id, c.name_simple)} disabled={Boolean(tafsirBusy) || tafsirBulk.running} aria-label="Delete {c.name_simple} tafsir">Delete</button>
+            {:else if busy}
+              <button class="secondary sm" onclick={() => tafsirController?.abort()}>Stop</button>
+            {:else if tafsirBulk.running}
+              <span class="sm wait" role="status">Queued…</span>
+            {:else}
+              <button class="secondary sm" onclick={() => downloadTafsir(c.id)} disabled={!settings.tafsirEdition || Boolean(tafsirBusy) || tafsirBulk.running} aria-label="Download {c.name_simple} tafsir">Download</button>
+            {/if}
+          </li>
+        {:else}
+          <li class="none">No tafsir surahs downloaded for this edition.</li>
+        {/each}
+      </ul>
+      </section></div>
     {/if}
 
     {#if browse && onPage('reminders')}
@@ -788,8 +979,8 @@
     {#if browse && onPage('data')}
       <h3 class="grp">Your data</h3>
       <div class="row">
-        <div class="label"><h3>Offline downloads</h3><p>{mb(usedBytes)} MB of audio stored on this device. Download or delete recitations in the Audio manager.</p></div>
-        <button class="secondary" onclick={() => (ui.area = 'downloads')}>Open the audio manager…</button>
+        <div class="label"><h3>Offline downloads</h3><p>{mb(usedBytes)} MB of audio and {mb(tafsirUsedBytes)} MB of tafsir stored on this device.</p></div>
+        <button class="secondary" onclick={() => (ui.area = 'downloads')}>Open the Offline manager…</button>
       </div>
       <div class="row">
         <div class="label"><h3>Bookmarks</h3><p>{bookmarks.list.length} saved. Export a copy, or merge one back in.</p></div>
@@ -811,24 +1002,37 @@
       <h3 class="grp">The app</h3>
       <div class="row about">
         <div class="label"><h3>About</h3></div>
-        <div>
-          <p>Free and open source, with no ads and nothing locked. This is a beta: please report anything that looks wrong. Built on the ideas of
-            <a href="https://github.com/quran/quran_android" target="_blank" rel="noreferrer">Quran for Android</a>.
-            Text, timings and audio come from the Quran.com public API.</p>
-          <p><a href="https://qurandesktop.netlify.app" target="_blank" rel="noreferrer">Website</a> ·
-            <a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">GitHub</a> ·
-            <a href="https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml" target="_blank" rel="noreferrer">Suggest a feature</a> ·
-            <a href="https://github.com/Obscyra/quran-desktop/issues/new?template=bug.yml" target="_blank" rel="noreferrer">Report a problem</a></p>
-          <p>Source code: <a href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">github.com/Obscyra/quran-desktop</a></p>
+        <div class="about-content">
+          <div class="about-intro">
+            <span class="about-kicker">Quran Desktop</span>
+            <h2>A quieter space for reading and listening.</h2>
+            <p>Free and open source, with no ads or locked features. This beta is built on the ideas of <a href="https://github.com/quran/quran_android" target="_blank" rel="noreferrer">Quran for Android</a>. Quran text, timings and audio are provided by the Quran.com public API.</p>
+          </div>
+          <div class="about-links" aria-label="App links">
+            <a class="about-link" href="https://qurandesktop.pages.dev" target="_blank" rel="noreferrer">
+              <span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3a11 11 0 0 1 0 14M10 3a11 11 0 0 0 0 14"/></svg></span><span><b>App website</b><small>qurandesktop.pages.dev</small></span><span class="about-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a class="about-link" href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">
+              <span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.28-1.23-1.62-1.23-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.62 1.21 3.26.92.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.12-1.44 3.05-1.15 3.05-1.15.61 1.54.23 2.68.12 2.96.71.78 1.14 1.78 1.14 3 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9z"/></svg></span><span><b>Source code</b><small>Browse the project on GitHub</small></span><span class="about-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a class="about-link" href="https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml" target="_blank" rel="noreferrer">
+              <span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3v14M3 10h14"/></svg></span><span><b>Suggest a feature</b><small>Share an idea for the app</small></span><span class="about-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a class="about-link" href="https://github.com/Obscyra/quran-desktop/issues/new?template=bug.yml" target="_blank" rel="noreferrer">
+              <span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3 18 17H2L10 3Z"/><path d="M10 7v4m0 3h.01"/></svg></span><span><b>Report a problem</b><small>Help improve this beta</small></span><span class="about-arrow" aria-hidden="true">↗</span>
+            </a>
+          </div>
         </div>
       </div>
       <div class="row about">
         <div class="label"><h3>Developer</h3><p>Made and maintained by one person.</p></div>
-        <div class="dev">
-          <b>Fahim Shahriar</b>
-          <p>Email: <a href="mailto:fahimonlinux@gmail.com">fahimonlinux@gmail.com</a></p>
-          <p>GitHub: <a href="https://github.com/Obscyra" target="_blank" rel="noreferrer">github.com/Obscyra</a></p>
-          <p>Website: <a href="https://qurandesktop.netlify.app" target="_blank" rel="noreferrer">qurandesktop.netlify.app</a></p>
+        <div class="dev-card">
+          <div class="dev-heading"><span class="dev-avatar" aria-hidden="true">FS</span><span><b>Fahim Shahriar</b><small>Developer · Maintainer</small></span></div>
+          <div class="about-links dev-links" aria-label="Developer links">
+          <a class="about-link" href="mailto:fahimonlinux@gmail.com"><span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="4" width="15" height="12" rx="2"/><path d="m3.5 5 6.5 5 6.5-5"/></svg></span><span><b>Email</b><small>fahimonlinux@gmail.com</small></span><span class="about-arrow" aria-hidden="true">↗</span></a>
+            <a class="about-link" href="https://github.com/Obscyra" target="_blank" rel="noreferrer"><span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.28-1.23-1.62-1.23-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.62 1.21 3.26.92.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.12-1.44 3.05-1.15 3.05-1.15.61 1.54.23 2.68.12 2.96.71.78 1.14 1.78 1.14 3 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9z"/></svg></span><span><b>GitHub</b><small>github.com/Obscyra</small></span><span class="about-arrow" aria-hidden="true">↗</span></a>
+            <a class="about-link" href="https://fahimshahriar.pages.dev" target="_blank" rel="noreferrer"><span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3a11 11 0 0 1 0 14M10 3a11 11 0 0 0 0 14"/></svg></span><span><b>Website</b><small>fahimshahriar.pages.dev</small></span><span class="about-arrow" aria-hidden="true">↗</span></a>
+          </div>
         </div>
       </div>
     {/if}
@@ -880,6 +1084,7 @@
   .close { padding: 8px 18px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font-weight: 550; }
 
   .row { display: grid; grid-template-columns: minmax(200px, 340px) 1fr; gap: 28px; padding: 22px 0; align-items: start; }
+  .row.about { grid-template-columns: 1fr; gap: 12px; }
   .row + .row { border-top: 1px solid var(--line); }
   /* big pickers (themes, scripts, page types, shortcuts) get the full width under their label */
   .row.wide { grid-template-columns: 1fr; gap: 16px; }
@@ -889,6 +1094,9 @@
   @container (max-width: 760px) {
     .row { grid-template-columns: 1fr; gap: 12px; padding: 18px 0; }
     .label p { max-width: 60ch; }
+    .about-links { grid-template-columns: 1fr; }
+    .about-intro { padding: 17px; }
+    .about-intro h2 { font-size: 19px; }
   }
   .label h3 { font-size: 15px; font-weight: 550; }
   .label p { margin-top: 4px; color: var(--ink-dim); font-size: 13.5px; line-height: 1.5; max-width: 38ch; }
@@ -957,6 +1165,15 @@
   .prog { width: min(360px, 100%); height: 6px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 14%, transparent); overflow: hidden; }
   .prog i { display: block; height: 100%; background: var(--accent); transition: width 0.3s var(--ease); }
   .dls { list-style: none; padding: 0; border-top: 1px solid var(--line); }
+  .offline-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: stretch; }
+  .offline-col { min-width: 0; padding: 0 16px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  .offline-col .grp { margin-top: 18px; }
+  .offline-col .row { grid-template-columns: 1fr; gap: 12px; padding: 16px 0; }
+  .offline-col .row > * { justify-self: start; }
+  .offline-col .dls li { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 7px; }
+  .offline-col .dls .sz { display: none; }
+  .offline-col .dls .nm small { line-height: 1.35; }
+  @media (max-width: 920px) { .offline-columns { grid-template-columns: 1fr; } }
   .dls li { display: grid; grid-template-columns: 34px 1fr auto 104px; gap: 12px; align-items: center; padding: 9px 4px; border-bottom: 1px solid var(--line); }
   .dls .num { color: var(--ink-dim); font-size: 12.5px; text-align: center; font-variant-numeric: tabular-nums; }
   .dls .nm { display: flex; flex-direction: column; min-width: 0; }
@@ -986,8 +1203,31 @@
   .keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; font-size: 13.5px; }
   .keys dt { font-weight: 600; text-align: right; color: var(--accent); }
   .keys dd { color: var(--ink-dim); margin: 0; }
-  .about p { color: var(--ink-dim); line-height: 1.6; max-width: 56ch; margin-bottom: 10px; }
-  .about a { color: var(--accent); }
+  .about-content { min-width: 0; }
+  .about-intro { padding: 20px 22px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(130deg, color-mix(in srgb, var(--accent) 9%, var(--bg-2)), var(--bg-2) 72%); box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 6%, transparent); }
+  .about-kicker { display: inline-flex; padding: 4px 9px; border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line)); border-radius: 999px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+  .about-intro h2 { margin: 12px 0 7px; color: var(--ink); font-size: 21px; line-height: 1.25; font-weight: 650; }
+  .about-intro p { color: var(--ink-dim); line-height: 1.65; max-width: 68ch; margin: 0; }
+  .about a { color: var(--accent); text-decoration: none; }
+  .about-intro a { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 2px; }
+  .about-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+  .about-link { min-width: 0; display: flex; align-items: center; gap: 9px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-2); color: var(--ink) !important; box-shadow: 0 2px 8px color-mix(in srgb, var(--ink) 4%, transparent); transition: border-color 140ms ease, background 140ms ease, transform 140ms ease, box-shadow 140ms ease; }
+  .about-link:hover { border-color: color-mix(in srgb, var(--accent) 48%, var(--line)); background: color-mix(in srgb, var(--accent) 6%, var(--bg-2)); transform: translateY(-1px); box-shadow: 0 7px 18px color-mix(in srgb, var(--ink) 8%, transparent); }
+  .about-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .about-link-icon { width: 27px; height: 27px; display: grid; place-items: center; flex: none; border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line)); border-radius: 8px; background: color-mix(in srgb, var(--accent) 10%, var(--bg)); color: var(--accent); }
+  .about-link-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .about-link-icon svg[fill="currentColor"] { fill: currentColor; stroke: none; }
+  .about-link > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
+  .about-link b { color: var(--ink); font-size: 12.5px; font-weight: 620; }
+  .about-link small { overflow: hidden; color: var(--ink-dim); font-size: 10.5px; text-overflow: ellipsis; white-space: nowrap; }
+  .about-arrow { margin-left: auto; align-self: flex-start; color: var(--ink-faint); font-size: 13px; }
+  .dev-card { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-2); box-shadow: 0 6px 20px color-mix(in srgb, var(--ink) 5%, transparent); }
+  .dev-heading { display: flex; align-items: center; gap: 12px; }
+  .dev-avatar { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: color-mix(in srgb, var(--accent) 13%, var(--bg)); color: var(--accent); font-size: 13px; font-weight: 750; letter-spacing: .04em; }
+  .dev-heading > span:last-child { display: grid; gap: 4px; }
+  .dev-heading b { color: var(--ink); font-size: 16px; }
+  .dev-heading small { color: var(--ink-dim); font-size: 12px; }
+  .dev-links { grid-template-columns: 1fr; }
   .beta { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
   .inline { display: flex; gap: 10px; }
   .file { cursor: default; display: inline-block; }
