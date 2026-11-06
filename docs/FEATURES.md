@@ -22,7 +22,7 @@ Everything Quran for Desktop can do. For a short overview see the [README](../RE
 
 ## Offline
 - **The whole Quran is in the installer:** the Arabic text of all 114 surahs (with Tajweed markup and IndoPak spelling) and all 604 Mushaf page fonts. Reading needs no connection. Only audio and other translations come from the internet. Once a week, while online, the app compares the provider's text and page fonts with its own and keeps any corrections.
-- **Audio manager:** pick a reciter, then download or delete any surah, or all 114 at once, with a live percentage for each.
+- **Offline manager:** pick a reciter to download audio, or a tafsir edition to download commentary by surah. Remove saved content whenever you need space.
 - **Download status at a glance:** an icon in the player shows whether the surah is saved, downloading (with its percentage) or still online.
 - Recently used surahs are cached, and the next surah is prepared while one plays.
 - **Favourites stay offline by themselves:** a surah you listen to on three different days in a month is saved automatically, and removed again after a month without listening. Recitations you download yourself are never removed.

@@ -3,17 +3,17 @@ import type { ChapterAudio, Verse } from './types';
 // Everything needed to read and follow a surah offline lives in IndexedDB:
 // text, word timings and the audio blob. Works in the Tauri webview and in a browser.
 const DB = 'quran-offline';
-const STORES = ['text', 'audio', 'blobs', 'fonts', 'indo'] as const;
+const STORES = ['text', 'audio', 'blobs', 'fonts', 'indo', 'tafsir'] as const;
 type Store = (typeof STORES)[number];
 
 let dbp: Promise<IDBDatabase> | null = null;
 function open(): Promise<IDBDatabase> {
   return (dbp ??= new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB, 3);
-    req.onupgradeneeded = () => {
+    const req = indexedDB.open(DB, 4);
+    req.onupgradeneeded = (event) => {
       const db = req.result;
-      // text cache key changed (now includes the translation), so rebuild that store
-      if (db.objectStoreNames.contains('text')) db.deleteObjectStore('text');
+      // The text cache key changed in version 3; keep it intact on the version 4 tafsir-store upgrade.
+      if ((event as IDBVersionChangeEvent).oldVersion < 3 && db.objectStoreNames.contains('text')) db.deleteObjectStore('text');
       for (const s of STORES) if (!db.objectStoreNames.contains(s)) db.createObjectStore(s);
     };
     req.onsuccess = () => resolve(req.result);
@@ -90,3 +90,27 @@ export const getFont = (page: number) => tx<ArrayBuffer | undefined>('fonts', 'r
 export const putFont = (page: number, b: ArrayBuffer) => tx('fonts', 'readwrite', (s) => s.put(b, page));
 export const getIndo = (ch: number) => tx<Record<string, unknown> | undefined>('indo', 'readonly', (s) => s.get(ch));
 export const putIndo = (ch: number, v: Record<string, unknown>) => tx('indo', 'readwrite', (s) => s.put(v, ch));
+
+const tafsirKey = (edition: string, chapter: number) => `${edition}:${chapter}`;
+export interface TafsirAyah { ayah: number; surah: number; text: string }
+export interface TafsirData { ayahs: TafsirAyah[] }
+export const getTafsir = (edition: string, chapter: number) =>
+  tx<TafsirData | undefined>('tafsir', 'readonly', (s) => s.get(tafsirKey(edition, chapter)));
+export const putTafsir = (edition: string, chapter: number, value: TafsirData) =>
+  tx('tafsir', 'readwrite', (s) => s.put(value, tafsirKey(edition, chapter)));
+export const deleteTafsir = (edition: string, chapter: number) =>
+  tx('tafsir', 'readwrite', (s) => s.delete(tafsirKey(edition, chapter)));
+export const listTafsir = async () => {
+  const db = await open();
+  return new Promise<Map<string, number>>((resolve) => {
+    const out = new Map<string, number>();
+    const req = db.transaction('tafsir').objectStore('tafsir').openCursor();
+    req.onsuccess = () => {
+      const c = req.result;
+      if (!c) return resolve(out);
+      out.set(String(c.key), new Blob([JSON.stringify(c.value)]).size);
+      c.continue();
+    };
+    req.onerror = () => resolve(out);
+  });
+};
