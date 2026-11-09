@@ -41,10 +41,16 @@ class Ui {
   /** the verse reached by a search, bookmark or link, outlined for a few seconds (0: none) */
   target = $state(0);
   notice = $state<Notice | null>(null);
+  tafsirBusy = $state(false);
+  networkFailure = $state<{ resource: 'audio' | 'translation' | 'tafsir'; retry: () => void } | null>(null);
   /** sidebar tab */
   tab = $state<'surahs' | 'bookmarks'>('surahs');
 
   private idle = 0;
+
+  failNetwork(resource: 'audio' | 'translation' | 'tafsir', retry: () => void) {
+    this.networkFailure = { resource, retry };
+  }
 
   openSettings(area?: SettingsArea) {
     if (area) this.area = area;

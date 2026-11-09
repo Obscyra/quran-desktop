@@ -45,7 +45,7 @@ class Player {
   }
   /** anything that makes the reader wait on the network */
   get busy() {
-    return this.loading || this.loadingAudio;
+    return this.loading || this.loadingAudio || ui.tafsirBusy;
   }
   /** verse the reader asked to be taken to (a bookmark, a search); the reader consumes it */
   jump = $state<{ verse: number; n: number; mark?: boolean } | null>(null);
@@ -88,6 +88,10 @@ class Player {
     // a recording of quranicaudio.com that has no file for this surah
     this.el.addEventListener('error', () => {
       if (this.audio?.plain && navigator.onLine && this.el.src) this.error = 'This reciter has no recording of this surah. Choose another reciter.';
+      else if (navigator.onLine && this.el.src.startsWith('http')) {
+        this.error = 'Could not load the recitation. Check your connection and retry.';
+        ui.failNetwork('audio', () => { this.el.load(); void this.toggle(); });
+      }
     });
     this.el.addEventListener('pause', () => {
       this.saveTime(true);
@@ -305,7 +309,10 @@ class Player {
       if (autoplay) ui.listening = true; // whatever starts the audio also shows the player
       if (autoplay && (await this.prepareAudio())) await this.el.play();
     } catch (e) {
-      if (token === this.token) this.error = navigator.onLine ? 'Could not load this surah.' : 'You are offline and this surah is not downloaded.';
+      if (token === this.token) {
+        this.error = navigator.onLine ? 'Could not load this surah.' : 'You are offline and this surah is not downloaded.';
+        if (navigator.onLine && settings.translation !== BUNDLED_TRANSLATION) ui.failNetwork('translation', () => this.load(chapter, autoplay));
+      }
     } finally {
       if (token === this.token) this.loading = false;
     }
@@ -324,6 +331,7 @@ class Player {
       return true;
     } catch {
       this.error = navigator.onLine ? 'Could not load the recitation. The connection may be slow.' : 'You are offline. Download this surah to listen offline.';
+      if (navigator.onLine) ui.failNetwork('audio', () => { void this.prepareAudio().then((ok) => ok && this.toggle()); });
       return false;
     } finally {
       if (token === this.token) this.fetchingAudio = false;
@@ -403,6 +411,7 @@ class Player {
   private async fetchText(ch: number) {
     const tr = settings.translation;
     const v = await fetchVerses(ch, tr, wordLanguage(translations.list.find((x) => x.id === tr)?.language));
+    if (tr !== BUNDLED_TRANSLATION && isPartial(v) && navigator.onLine) ui.failNetwork('translation', () => { void this.refreshText(); });
     // the bundled text is already on disk; a translation that could not be fetched must not be remembered as empty
     if (tr !== BUNDLED_TRANSLATION && !isPartial(v)) offline.putText(ch, tr, v);
     this.lastPartial = isPartial(v);
@@ -450,6 +459,7 @@ class Player {
       this.preloadFonts(v);
     } catch {
       this.error = 'Could not load that translation. It will work once you are online.';
+      if (navigator.onLine && settings.translation !== BUNDLED_TRANSLATION) ui.failNetwork('translation', () => { void this.refreshText(); });
     }
   }
 

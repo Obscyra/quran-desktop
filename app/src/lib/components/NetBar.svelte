@@ -7,7 +7,7 @@
   let shown = $state(false);
   let slow = $state(false);
   $effect(() => {
-    if (!player.busy) {
+    if (!player.busy && !ui.tafsirBusy) {
       shown = false;
       slow = false;
       return;
@@ -19,7 +19,7 @@
       clearTimeout(b);
     };
   });
-  const what = $derived(player.loadingAudio && !player.loading ? 'the recitation' : 'the surah');
+  const what = $derived(ui.tafsirBusy ? 'tafsir' : player.loadingAudio && !player.loading ? 'the recitation' : 'the surah');
 </script>
 
 {#if shown && !ui.settingsOpen}

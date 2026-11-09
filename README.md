@@ -26,7 +26,7 @@ Read the exact printed Mushaf, follow the recitation word by word, and read with
 - **Works offline from the first launch.** The full Arabic text and all 604 page fonts are inside the installer. Only audio and other translations need a connection, and audio can be downloaded for later. Once a week the app checks for corrections to the text and fonts and applies them.
 - **Free for good.** No ads, no accounts, no paid features, no tracking.
 
-Website: **[qurandesktop.netlify.app](https://qurandesktop.netlify.app)**, with a live demo of the reader.
+Website: **[qurandesktop.pages.dev](https://qurandesktop.pages.dev)**, with a live demo of the reader.
 
 Compared with the [quran.com](https://quran.com) website, this is a native desktop app that keeps working without a connection and runs quietly in the tray.
 
@@ -51,7 +51,7 @@ New versions are offered inside the app (Settings → Updates).
 - **Seven script styles**, including colour-coded Tajweed, and the Madani and IndoPak page layouts.
 - **100+ translations**, with word-by-word meanings in the translation's language, and transliteration.
 - **17 reciters** with word-by-word tracking that follows the recitation, plus **90+ more** to listen to surah by surah.
-- **Audio manager** to download any surah, or all 114, for offline listening.
+- **Offline manager** to download audio and multilingual tafsir by surah for offline use.
 - **Bookmarks with notes**, jump to any verse by typing `55:13`, and the app reopens where you left off.
 - **Fifteen themes** (ten dark, five light), interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode. Settings has a search bar, a Reset on each setting and a list of what you changed. Small tips offer a setting when you keep doing what it is for (and can be switched off).
 - **Runs in the system tray** with optional reminders and the Verse of the Day.
@@ -66,7 +66,7 @@ The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/
     <td width="50%"><img src="assets/screenshots/theme-night.webp" alt="Verse by Verse in the dark Night theme"/><br/><sub><b>Night</b> theme, Verse by Verse with the translation</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="assets/screenshots/audio-manager.webp" alt="Audio manager: choose a reciter, download or delete surahs"/><br/><sub><b>Audio manager:</b> choose a reciter, then download or delete surahs</sub></td>
+    <td width="50%"><img src="assets/screenshots/audio-manager.webp" alt="Offline manager: choose a reciter, download or delete surahs"/><br/><sub><b>Offline manager:</b> choose a reciter, then download or delete surahs</sub></td>
     <td width="50%"><img src="assets/screenshots/settings.webp" alt="Settings organised into eight pages, with search and per-setting reset"/><br/><sub><b>Settings</b>, organised into eight pages, with search and a Reset on each setting</sub></td>
   </tr>
   <tr>
@@ -138,6 +138,7 @@ Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Want a featur
 - **Data and audio:** the [Quran.com](https://quran.com) / [Quran.Foundation](https://quran.foundation) public API, and the audio hosts it points to such as [quranicaudio.com](https://quranicaudio.com).
 - **Mushaf fonts, tajweed markup and IndoPak text:** Quran.com and the King Fahd Quran Printing Complex.
 - **Other Arabic fonts** (SIL Open Font License, bundled): [Amiri Quran](https://github.com/aliftype/amiri-quran), [Scheherazade New](https://software.sil.org/scheherazade/) and [Noto Naskh Arabic](https://fonts.google.com/noto/specimen/Noto+Naskh+Arabic).
+- **Bengali text font** (SIL Open Font License, bundled in WOFF2 and TrueType formats): [Noto Sans Bengali](https://fonts.google.com/noto/specimen/Noto+Sans+Bengali).
 - **Inspiration:** this app was built by studying [Quran for Android](https://github.com/quran/quran_android), the open-source app by the Quran.com community. It is an independent project written from scratch in TypeScript and Rust. Looking for the Android app? It is on [Google Play](https://play.google.com/store/apps/details?id=com.quran.labs.androidquran) and [IzzyOnDroid](https://apt.izzysoft.de/packages/com.quran.labs.androidquran).
 - **Open-source projects used:** [Tauri](https://tauri.app), [Svelte](https://svelte.dev) and [SvelteKit](https://svelte.dev/docs/kit), [Vite](https://vite.dev).
 

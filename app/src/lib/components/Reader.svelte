@@ -15,6 +15,9 @@
   import End from './End.svelte';
   import PageSheet from './PageSheet.svelte';
   import TranslationPicker from './TranslationPicker.svelte';
+  import TafsirPicker from './TafsirPicker.svelte';
+  import { tafsirs } from '$lib/tafsir.svelte';
+  import * as offline from '$lib/offline';
   import Word from './Word.svelte';
 
   const reading = $derived(settings.mode === 'reading');
@@ -24,12 +27,77 @@
   const activeVerse = $derived(player.activeTiming?.verse ?? 0);
   const below = $derived(settings.wordMeaning === 'below' && !reading);
   const lastIdx = $derived(reader.pages.length - 1);
+  const selectedTranslationLanguage = $derived(translations.list.find((x) => x.id === settings.translation)?.language ?? 'English');
+  const tafsirFallback = $derived(!!settings.tafsirEdition && tafsirs.get(settings.tafsirEdition)?.language_name.toLowerCase() !== selectedTranslationLanguage.toLowerCase());
 
   let scroller = $state<HTMLElement>();
   let lastUserScroll = 0;
   let smoothNextScroll = false;
   let navigatingScroll = false;
   let navigatingScrollTimer = 0;
+  let tafsirText = $state<Record<string, string>>({});
+  let tafsirLoaded = $state<Record<string, boolean>>({});
+  let tafsirLoading = $state<Record<string, boolean>>({});
+  let tafsirErrors = $state<Record<string, string>>({});
+  const tafsirChapterKey = (chapter: number, edition: string) => `${edition}:${chapter}`;
+  const tafsirVerseKey = (chapter: number, verse: number, edition: string) => `${edition}:${chapter}:${verse}`;
+  const comparableTafsir = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+  function repeatedTafsirFrom(chapter: number, verse: number, edition: string, text: string) {
+    const normalized = comparableTafsir(text);
+    let previous = verse - 1;
+    if (previous < 1 || comparableTafsir(tafsirText[tafsirVerseKey(chapter, previous, edition)] ?? '') !== normalized) return 0;
+    while (previous > 1 && comparableTafsir(tafsirText[tafsirVerseKey(chapter, previous - 1, edition)] ?? '') === normalized) previous--;
+    return previous;
+  }
+
+  async function loadTafsir(chapter: number, edition: string) {
+    if (!edition) return;
+    const chapterKey = tafsirChapterKey(chapter, edition);
+    if (tafsirLoaded[chapterKey] || tafsirLoading[chapterKey]) return;
+    tafsirLoading = { ...tafsirLoading, [chapterKey]: true };
+    tafsirErrors = { ...tafsirErrors, [chapterKey]: '' };
+    const cached = await offline.getTafsir(edition, chapter).catch(() => undefined);
+    ui.tafsirBusy = !cached;
+    try {
+      const data = await tafsirs.chapter(edition, chapter);
+      const next = { ...tafsirText };
+      for (const ayah of data.ayahs) next[tafsirVerseKey(chapter, ayah.ayah, edition)] = ayah.text;
+      // Only the current and recently requested edition/surah pairs need to stay reactive in memory.
+      const pairs = [...new Set(Object.keys(next).map((key) => key.split(':').slice(0, 2).join(':')))];
+      if (pairs.length > 4) {
+        const remove = new Set(pairs.slice(0, pairs.length - 4));
+        for (const key of Object.keys(next)) if (remove.has(key.split(':').slice(0, 2).join(':'))) delete next[key];
+      }
+      tafsirText = next;
+      tafsirLoaded = { ...tafsirLoaded, [chapterKey]: true };
+    } catch (e) {
+      tafsirErrors = { ...tafsirErrors, [chapterKey]: e instanceof Error ? e.message : 'Could not load tafsir. Check your connection and try again.' };
+      if (!cached) ui.failNetwork('tafsir', () => { void loadTafsir(chapter, edition); });
+    } finally {
+      ui.tafsirBusy = false;
+      const next = { ...tafsirLoading };
+      delete next[chapterKey];
+      tafsirLoading = next;
+    }
+  }
+
+  function toggleVerseTafsir(verse: number) {
+    const enabled = settings.tafsirFor(player.chapter, verse);
+    settings.setTafsirFor(player.chapter, verse, !enabled);
+    if (!enabled) void loadTafsir(player.chapter, settings.tafsirEdition);
+  }
+
+  function selectTafsirEdition(slug: string) {
+    settings.tafsirEdition = slug;
+    settings.tafsirAutoFollow = false;
+    if (player.verses.some((v) => settings.tafsirFor(player.chapter, v.n))) void loadTafsir(player.chapter, slug);
+  }
+  function followTranslationTafsir() {
+    settings.tafsirAutoFollow = true;
+    const edition = tafsirs.chooseDefault(selectedTranslationLanguage)?.slug ?? '';
+    if (edition) settings.tafsirEdition = edition;
+  }
 
   // A long surah is put on the page in small batches (a few frames each), so switching to one never freezes the window.
   // (printed pages are not batched: every page is a cheap placeholder until it is near the window, see `near`)
@@ -166,8 +234,31 @@
       lastChapter = chapter;
     });
   });
+  $effect(() => { translations.load(); });
   $effect(() => {
-    translations.load();
+    const chapter = player.chapter;
+    const language = selectedTranslationLanguage;
+    const autoFollow = settings.tafsirAutoFollow;
+    const shouldLoad = !reading && player.verses.some((v) => settings.tafsirFor(chapter, v.n));
+    if (!shouldLoad && !tafsirs.editions.length) return;
+    void (async () => {
+      if (shouldLoad) await tafsirs.load();
+      if (player.chapter !== chapter || settings.tafsirAutoFollow !== autoFollow || selectedTranslationLanguage !== language) return;
+      if (tafsirs.error && !tafsirs.editions.length && shouldLoad) {
+        ui.failNetwork('tafsir', () => {
+          tafsirs.error = '';
+          void tafsirs.load().then(() => {
+            if (player.chapter !== chapter) return;
+            const edition = settings.tafsirAutoFollow ? tafsirs.chooseDefault(selectedTranslationLanguage)?.slug ?? '' : settings.tafsirEdition;
+            if (edition) { if (settings.tafsirAutoFollow) settings.tafsirEdition = edition; void loadTafsir(chapter, edition); }
+          });
+        });
+        return;
+      }
+      const edition = autoFollow ? tafsirs.chooseDefault(language)?.slug ?? '' : settings.tafsirEdition;
+      if (autoFollow && edition && settings.tafsirEdition !== edition) settings.tafsirEdition = edition;
+      if (shouldLoad && edition) await loadTafsir(chapter, edition);
+    })();
   });
 
   $effect(() => {
@@ -585,6 +676,8 @@
       {/if}
     {:else}
       <label class="pick"><span>Translation</span><TranslationPicker compact onpick={setTranslation} /></label>
+      <label class="pick"><span>Tafsir</span><TafsirPicker compact onpick={selectTafsirEdition} onauto={followTranslationTafsir} /></label>
+      {#if tafsirFallback}<small class="tafsir-note">Using {tafsirs.get(settings.tafsirEdition)?.language_name} tafsir</small>{/if}
       <span class="grow"></span>
       <div class="seg" role="radiogroup" aria-label="Word meanings">
         {#each MEANINGS as m (m.id)}
@@ -700,6 +793,9 @@
                 <button class="icon" onclick={() => copyVerse(v.n)} aria-label="Copy verse" title="Copy verse">
                   <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="7" y="7" width="9.5" height="9.5" rx="2" /><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /></svg>
                 </button>
+                <button class="icon verse-tafsir" class:on={settings.tafsirFor(player.chapter, v.n)} aria-pressed={settings.tafsirFor(player.chapter, v.n)} onclick={() => toggleVerseTafsir(v.n)} aria-label="View tafsir" title="View tafsir">
+                  <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 5.2C8.4 4.2 5.6 3.8 2.8 4.4v10.8c2.8-.6 5.6-.2 7.2.8 1.6-1 4.4-1.4 7.2-.8V4.4c-2.8-.6-5.6-.2-7.2.8zM10 5.2V16" /></svg><i aria-hidden="true"></i>
+                </button>
               </div>
               <div class="ar" class:below dir="rtl">
                 {#each v.words as w (w.pos)}
@@ -708,6 +804,25 @@
               </div>
               {#if settings.translation && v.translation && settings.wordMeaning !== 'off'}
                 <p class="tr" dir="auto">{v.translation}</p>
+              {/if}
+              {#if settings.tafsirFor(player.chapter, v.n)}
+                {@const chapterKey = tafsirChapterKey(player.chapter, settings.tafsirEdition)}
+                {@const tafsirKey = tafsirVerseKey(player.chapter, v.n, settings.tafsirEdition)}
+                {@const commentary = tafsirText[tafsirKey]}
+                {#if commentary}
+                  {@const editionName = tafsirs.get(settings.tafsirEdition)?.name ?? 'Tafsir'}
+                  {@const repeatedFrom = repeatedTafsirFrom(player.chapter, v.n, settings.tafsirEdition, commentary)}
+                  <div class="tafsir-text" dir="auto" style:font-size="{settings.tafsirSize}px">
+                    {#if repeatedFrom}<small class="tafsir-repeat">Same tafsir as verse {repeatedFrom}</small>{/if}
+                    <b>{editionName}</b><p>{commentary}</p>
+                  </div>
+                {:else if tafsirLoading[chapterKey]}
+                  <p class="tafsir-status" role="status">Loading tafsir…</p>
+                {:else if tafsirErrors[chapterKey]}
+                  <div class="tafsir-status" role="alert"><span>{tafsirErrors[chapterKey]}</span><button class="secondary sm" onclick={() => loadTafsir(player.chapter, settings.tafsirEdition)}>Retry</button></div>
+                {:else}
+                  <p class="tafsir-status tafsir-unavailable" role="status"><b>Tafsir not available for this verse</b><span>Try another edition from the Tafsir menu.</span></p>
+                {/if}
               {/if}
             </section>
           {/each}
@@ -744,6 +859,7 @@
   .seg button { padding: 0 13px; height: 28px; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-dim); white-space: nowrap; transition: background-color 0.2s, color 0.2s; }
   .seg button:hover { color: var(--ink); }
   .seg button[aria-checked='true'] { background: var(--sel); color: var(--accent); }
+  .tafsir-note { color: var(--ink-dim); font-size: 11px; white-space: nowrap; }
   .icon { min-width: 32px; height: 30px; padding: 0 6px; border-radius: 8px; display: inline-grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid var(--btn-line); font-size: 12.5px; font-weight: 600; transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
   .icon:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
   .icon.on { color: var(--accent); background: var(--btn-on); }
@@ -797,13 +913,25 @@
   .verse { content-visibility: auto; contain-intrinsic-size: auto 240px; padding: 18px 14px 22px; border-radius: 14px; transition: background-color 0.3s; border-bottom: 1px solid var(--line); }
   .verse.target, .tflow p.target { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 3px 0 0 var(--accent), 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 10px; }
   .verse.now { background: color-mix(in srgb, var(--accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
-  .tools { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .tools { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .tools .icon { min-width: 40px; height: 38px; border-radius: 9px; }
   .tools .icon svg { width: 22px; height: 22px; }
-  .ref { font-size: 13px; color: var(--ink-dim); font-variant-numeric: tabular-nums; margin-right: 8px; min-width: 42px; }
+  .tools .verse-tafsir { position: relative; width: 40px; min-width: 40px; padding: 0; display: grid; place-items: center; flex: 0 0 40px; }
+  .tools .verse-tafsir i { display: none; }
+  .tools .verse-tafsir.on { color: var(--accent); background: var(--btn-on); }
+  .tools .verse-tafsir.on i { display: block; position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); bottom: 3px; right: 3px; }
+  .ref { font-size: 16px; color: var(--ink-dim); font-variant-numeric: tabular-nums; margin-right: 8px; min-width: 42px; }
   .ar { text-align: right; line-height: var(--ar-lh); }
   .ar.below { display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: flex-start; align-items: flex-start; }
   .tr { margin-top: 12px; font-size: var(--tr-size); line-height: 1.7; color: color-mix(in srgb, var(--ink) 88%, var(--bg)); max-width: 68ch; user-select: text; -webkit-user-select: text; }
+  .tafsir-text { margin-top: 14px; width: 100%; max-width: 100%; box-sizing: border-box; padding: 18px 20px; border-inline-start: 3px solid var(--accent); border-radius: 4px 10px 10px 4px; color: var(--ink); background: color-mix(in srgb, var(--accent) 7%, var(--bg-2)); font-size: 18px; line-height: 1.8; user-select: text; -webkit-user-select: text; }
+  .tafsir-text b { display: block; margin-bottom: 6px; color: var(--accent); font-size: 12px; }
+  .tafsir-text p { margin: 0; white-space: pre-line; unicode-bidi: plaintext; }
+  .tafsir-repeat { display: inline-block; margin: 0 0 10px; padding: 4px 8px; border-radius: 999px; color: var(--accent); background: var(--btn-on); font-size: 12px; font-weight: 650; }
+  .tafsir-status { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: var(--ink-dim); font-size: 12.5px; }
+  .tafsir-unavailable { align-items: flex-start; flex-direction: column; gap: 3px; max-width: 68ch; padding: 11px 13px; border-inline-start: 3px solid var(--accent); border-radius: 4px 9px 9px 4px; color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, var(--bg-2)); }
+  .tafsir-unavailable b { font-size: 13px; color: var(--ink); }
+  .tafsir-unavailable span { color: var(--ink); }
 
   .tflow { max-width: 740px; margin: 0 auto; padding-top: 8px; }
   .tflow p { font-size: var(--tr-size); line-height: 1.85; padding: 8px 12px; border-radius: 10px; color: var(--ink); user-select: text; -webkit-user-select: text; transition: background-color 0.3s; }

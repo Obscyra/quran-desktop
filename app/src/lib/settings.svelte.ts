@@ -45,6 +45,10 @@ const defaults = {
   translation: 20,
   translationSize: 20,
   wordMeaning: 'hover' as WordMeaning,
+  tafsirEdition: '',
+  tafsirAutoFollow: true,
+  tafsirOverrides: {} as Record<string, boolean>,
+  tafsirSize: 18,
   transliteration: false,
   arabicNames: false,
   speed: 1,
@@ -104,6 +108,10 @@ class Settings {
   translation = $state(defaults.translation);
   translationSize = $state(defaults.translationSize);
   wordMeaning = $state(defaults.wordMeaning);
+  tafsirEdition = $state(defaults.tafsirEdition);
+  tafsirAutoFollow = $state(defaults.tafsirAutoFollow);
+  tafsirOverrides = $state<Record<string, boolean>>(defaults.tafsirOverrides);
+  tafsirSize = $state(defaults.tafsirSize);
   transliteration = $state(defaults.transliteration);
   arabicNames = $state(defaults.arabicNames);
   speed = $state(defaults.speed);
@@ -142,6 +150,9 @@ class Settings {
       for (const k of Object.keys(defaults) as (keyof SettingsShape)[]) {
         if (k in saved && typeof saved[k] === typeof defaults[k]) (this as Record<string, unknown>)[k] = saved[k];
       }
+      if (!this.tafsirOverrides || typeof this.tafsirOverrides !== 'object' || Array.isArray(this.tafsirOverrides)) this.tafsirOverrides = {};
+      else this.tafsirOverrides = Object.fromEntries(Object.entries(this.tafsirOverrides).filter(([k, v]) => /^\d{1,3}:\d{1,3}$/.test(k) && typeof v === 'boolean'));
+      if (typeof this.tafsirEdition !== 'string' || !/^[a-z0-9-]*$/.test(this.tafsirEdition)) this.tafsirEdition = '';
       // earlier betas shipped smaller defaults; anyone who never changed them gets the larger ones
       if (saved.size === 40) this.size = defaults.size;
       if (saved.translationSize === 18) this.translationSize = defaults.translationSize;
@@ -159,6 +170,20 @@ class Settings {
   }
   get needsIndo() {
     return this.script === 'indopak' || this.pageType === 'indopak';
+  }
+
+  tafsirFor(chapter: number, verse: number) {
+    return this.tafsirOverrides[`${chapter}:${verse}`] ?? false;
+  }
+
+  setTafsirFor(chapter: number, verse: number, enabled: boolean) {
+    this.tafsirOverrides = { ...this.tafsirOverrides, [`${chapter}:${verse}`]: enabled };
+  }
+
+  resetTafsirFor(chapter: number, verse: number) {
+    const next = { ...this.tafsirOverrides };
+    delete next[`${chapter}:${verse}`];
+    this.tafsirOverrides = next;
   }
 
   snapshot(): SettingsShape {
