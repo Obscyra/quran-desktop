@@ -8,7 +8,7 @@
   import { untrack } from 'svelte';
   import type { Verse, Word } from '$lib/types';
 
-  let { v, w, below = false }: { v: Verse; w: Word; below?: boolean } = $props();
+  let { v, w, below = false, chapterId }: { v: Verse; w: Word; below?: boolean; chapterId?: number } = $props();
 
   const key = $derived(`${v.n}-${w.pos}`);
   let el = $state<HTMLElement>();
@@ -58,6 +58,9 @@
   class:tj={tajweed}
   class:target={ui.target === v.n}
   id="w-{v.n}-{w.pos}"
+  data-chapter={chapterId}
+  data-verse={v.n}
+  data-word={w.pos}
   title={settings.wordMeaning === 'hover' && !ui.pick ? w.translation : undefined}
   role="button"
   tabindex="-1"

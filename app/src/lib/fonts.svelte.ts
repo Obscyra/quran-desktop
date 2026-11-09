@@ -21,6 +21,7 @@ class PageFonts {
   private ready = new Set<number>();
   private pending = new Map<number, Promise<boolean>>();
   private failed = new Set<number>();
+  private all?: Promise<void>;
 
   has(page: number) {
     this.tick; // reading it makes callers re-run when a font arrives
@@ -38,6 +39,20 @@ class PageFonts {
 
   ensure(pages: Iterable<number>): Promise<boolean[]> {
     return Promise.all([...new Set(pages)].filter((p) => p > 0).map((p) => this.one(p)));
+  }
+
+  /** Keep every printed-page font ready for instant page turns during this session. */
+  warmAll() {
+    if (!this.all) {
+      this.all = (async () => {
+        for (let first = 1; first <= 604; first += 12) {
+          const pages = Array.from({ length: Math.min(12, 605 - first) }, (_, i) => first + i);
+          const loaded = await this.ensure(pages);
+          await Promise.all(pages.filter((_, i) => loaded[i]).map((page) => document.fonts.load(`1em ${this.family(page)}`, '\ue000'))).catch(() => {});
+        }
+      })();
+    }
+    return this.all!;
   }
 
   private one(page: number): Promise<boolean> {

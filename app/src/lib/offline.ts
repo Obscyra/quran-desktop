@@ -8,17 +8,31 @@ type Store = (typeof STORES)[number];
 
 let dbp: Promise<IDBDatabase> | null = null;
 function open(): Promise<IDBDatabase> {
-  return (dbp ??= new Promise((resolve, reject) => {
+  if (dbp) return dbp;
+  dbp = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB, 3);
+    let blocked = false;
+    const fail = () => {
+      dbp = null;
+      reject(req.error ?? new Error('Could not open the offline database.'));
+    };
     req.onupgradeneeded = () => {
       const db = req.result;
       // text cache key changed (now includes the translation), so rebuild that store
       if (db.objectStoreNames.contains('text')) db.deleteObjectStore('text');
       for (const s of STORES) if (!db.objectStoreNames.contains(s)) db.createObjectStore(s);
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  }));
+    req.onsuccess = () => {
+      if (blocked) req.result.close();
+      else resolve(req.result);
+    };
+    req.onerror = fail;
+    req.onblocked = () => {
+      blocked = true;
+      fail();
+    };
+  });
+  return dbp;
 }
 
 async function tx<T>(store: Store, mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {

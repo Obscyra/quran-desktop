@@ -1,6 +1,7 @@
 import { wordLanguage } from './languages';
 import { translations } from './translations.svelte';
 import { BUNDLED_TRANSLATION, fetchChapterAudio, fetchChapters, fetchIndo, fetchReciters, fetchVerses, isPartial } from './api';
+import { cacheChapterVerses, setChaptersMeta } from './pages';
 import { autocache } from './autocache.svelte';
 import { pageFonts } from './fonts.svelte';
 import * as offline from './offline';
@@ -127,6 +128,7 @@ class Player {
       this.chapters = JSON.parse(localStorage.getItem('quran.chapters') ?? '[]');
       this.reciters = await fetchReciters(); // never throws: the built-in lists are used offline
     }
+    setChaptersMeta(this.chapters);
     this.trail = [{ chapter: this.chapter, verse: 1 }];
     this.at = 0;
     // read before load(), which forgets the saved verse of the surah it leaves
@@ -282,12 +284,13 @@ class Player {
       const reciter = this.reciterId;
       const verses = await this.textFor(chapter);
       // audio is only fetched when someone listens; a downloaded copy is picked up for free
-      const audio = (await offline.getAudioMeta(reciter, chapter)) ?? null;
+      const audio = (await offline.getAudioMeta(reciter, chapter).catch(() => undefined)) ?? null;
       if (token !== this.token) return;
       // the first pages' glyph fonts are in before the text shows, so a page never draws once with missing glyphs and again when its font arrives
       await this.firstFonts(verses);
       if (token !== this.token) return;
       this.verses = verses;
+      cacheChapterVerses(chapter, verses);
       this.audio = audio;
       if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
       this.objectUrl = '';
@@ -338,7 +341,7 @@ class Player {
       hit = (async () => {
         const tr = settings.translation;
         this.lastPartial = false;
-        const base = (await offline.getText(ch, tr)) ?? (await this.fetchText(ch));
+        const base = (await offline.getText(ch, tr).catch(() => undefined)) ?? (await this.fetchText(ch));
         // without its translation (offline): show the Arabic, but ask again next time
         if (this.lastPartial) queueMicrotask(() => this.memo.delete(key));
         return settings.needsIndo ? this.withIndo(ch, base) : base;
@@ -443,6 +446,7 @@ class Player {
       const v = await this.textFor(this.chapter);
       if (token !== this.token) return;
       this.verses = v;
+      cacheChapterVerses(this.chapter, v);
       this.preloadFonts(v);
     } catch {
       this.error = 'Could not load that translation. It will work once you are online.';

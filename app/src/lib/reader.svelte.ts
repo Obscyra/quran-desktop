@@ -1,97 +1,178 @@
-import { groupPages, type MushafPage } from './pages';
+import { groupPages, getPage, ensurePages, chaptersForPage, chapterStartPage, setPageUpdateListener, CHAPTER_RANGES, TOTAL_PAGES, type MushafPage } from './pages';
 import { hints } from './hints.svelte';
+import { pageFonts } from './fonts.svelte';
 import { player } from './player.svelte';
 import { settings } from './settings.svelte';
 
-/** Shared state of the paged reader, so keyboard shortcuts and the page view agree. */
-class Reader {
-  /** index (into `pages`) of the page being shown; in a spread, any page of the spread */
-  pageIdx = $state(0);
-  /** direction of the last page turn: 1 forward, -1 back (drives the slide animation) */
-  dir = $state(1);
+/** Spread reading order within facing pages. */
+export const SPREAD_ORDER: 'ltr' | 'rtl' = 'rtl';
 
-  /** "verse-pos" of the word being recited, or '' */
+class Reader {
+  /** The global printed page number currently in view (1–604). */
+  pageNo = $state(1);
+  dir = $state(1);
+  activeSurahId = $state(1);
+  visibleSurahIds = $state<number[]>([1]);
+  pageVersion = $state(0);
+  scrollRequest = $state(0);
+  private navigation = 0;
+
+  get pageIdx() {
+    return this.pageNo - 1;
+  }
+  set pageIdx(i: number) {
+    this.pageNo = Math.max(1, Math.min(TOTAL_PAGES, i + 1));
+  }
+
   activeKey = $derived(player.activeTiming ? `${player.activeTiming.verse}-${player.activeTiming.pos}` : '');
 
-  pages = $derived(groupPages(player.verses, settings.layout));
-  /** "verse-pos" key of every word to the index of the page it is printed on */
-  wordPage = $derived.by(() => {
-    const m = new Map<string, number>();
-    this.pages.forEach((p, i) => p.lines.forEach((l) => l.cells.forEach((c) => m.set(`${c.verse.n}-${c.word.pos}`, i))));
-    return m;
+  pages = $derived.by(() => {
+    this.pageVersion;
+    const mushaf = settings.mode === 'reading' && settings.readingStyle === 'arabic';
+    if (!mushaf) return groupPages(player.verses, settings.layout);
+    return Array.from({ length: TOTAL_PAGES }, (_, i) => getPage(i + 1, settings.layout) ?? {
+      page: i + 1, juz: Math.min(30, Math.ceil((i + 1) / 20)), lines: [], hasStart: false
+    });
   });
-  private byNumber = $derived(new Map(this.pages.map((p, i) => [p.page, i])));
+
+  wordPage = $derived.by(() => {
+    const map = new Map<string, number>();
+    this.pages.forEach((page, i) => page.lines.forEach((line) => line.cells.forEach((cell) => {
+      map.set(`${cell.chapterId ?? player.chapter}:${cell.verse.n}-${cell.word.pos}`, i);
+    })));
+    return map;
+  });
 
   get page(): MushafPage | undefined {
-    return this.pages[Math.min(this.pageIdx, Math.max(0, this.pages.length - 1))];
+    return this.pages[this.pageIdx];
   }
 
-  /**
-   * The two facing pages of a book spread, read right to left: an even page on the right and the next
-   * (odd) page on its left, so page 2 faces page 3. A side with no page of this surah is left blank.
-   */
+  get spreadIdx() {
+    return Math.floor((this.pageNo - 1) / 2);
+  }
+
   get spread() {
-    const p = this.page?.page ?? 1;
-    return this.spreadAt(p % 2 ? p - 1 : p);
+    return this.spreadAt((this.spreadIdx + 1) * 2);
   }
 
-  /** The spread whose right-hand (even) page is `rightNo`. */
-  spreadAt(rightNo: number): { right: MushafPage | null; left: MushafPage | null; rightNo: number; leftNo: number } {
-    const at = (n: number) => {
-      const i = this.byNumber.get(n);
-      return i === undefined ? null : this.pages[i];
-    };
-    return { right: at(rightNo), left: at(rightNo + 1), rightNo, leftNo: rightNo + 1 };
+  spreadAt(k: number) {
+    const spreadIdx = k >= 2 ? Math.floor(k / 2) - 1 : 0;
+    const firstNo = spreadIdx * 2 + 1;
+    const secondNo = firstNo + 1;
+    const first = this.pageAt(firstNo);
+    const second = secondNo <= TOTAL_PAGES ? this.pageAt(secondNo) : null;
+    return SPREAD_ORDER === 'rtl'
+      ? { right: first, left: second, rightNo: secondNo, leftNo: firstNo, firstNo, secondNo, spreadIdx }
+      : { left: first, right: second, rightNo: secondNo, leftNo: firstNo, firstNo, secondNo, spreadIdx };
   }
 
-  /** Is there anything of this surah on the spread that starts at `rightNo`? */
-  hasSpread(rightNo: number): boolean {
-    return !!this.pages.length && rightNo <= this.pages[this.pages.length - 1].page && rightNo + 1 >= this.pages[0].page;
+  pageAt(pageNo: number): MushafPage | null {
+    this.pageVersion;
+    return getPage(pageNo, settings.layout);
+  }
+
+  hasSpread(k: number) {
+    return k >= 2 && k <= TOTAL_PAGES && k % 2 === 0;
   }
 
   get canBack() {
-    if (!this.pages.length) return false;
-    return settings.spread ? this.spread.rightNo > this.pages[0].page : this.pageIdx > 0;
+    return settings.spread ? this.spreadIdx > 0 : this.pageNo > 1;
   }
+
   get canForward() {
-    if (!this.pages.length) return false;
-    const last = this.pages[this.pages.length - 1].page;
-    return settings.spread ? this.spread.leftNo < last : this.pageIdx < this.pages.length - 1;
+    return settings.spread ? this.spreadIdx < Math.floor((TOTAL_PAGES - 1) / 2) : this.pageNo < TOTAL_PAGES;
   }
 
   go(delta: number) {
-    if (!this.pages.length) return;
-    if (settings.spread) {
-      const target = this.spread.rightNo + 2 * delta;
-      const first = this.pages[0].page;
-      const last = this.pages[this.pages.length - 1].page;
-      if (target > last || target + 1 < first) return;
-      const i = this.byNumber.get(target) ?? this.byNumber.get(target + 1);
-      if (i === undefined) return;
-      this.dir = delta > 0 ? 1 : -1;
-      this.pageIdx = i;
-      hints.note('pageTurn');
-      return;
-    }
-    const next = Math.min(Math.max(this.pageIdx + delta, 0), this.pages.length - 1);
-    if (next === this.pageIdx) return;
+    this.navigation++;
+    const next = settings.spread ? this.pageNo + Math.trunc(delta) * 2 : this.pageNo + Math.trunc(delta);
+    const target = Math.max(1, Math.min(TOTAL_PAGES, next));
+    if (target === this.pageNo) return;
     this.dir = delta > 0 ? 1 : -1;
-    this.pageIdx = next;
+    this.pageNo = target;
+    this.syncSidebar();
+    this.preload();
     hints.note('pageTurn');
   }
 
   show(index: number) {
-    if (index === this.pageIdx || index < 0 || index >= this.pages.length) return;
-    if (settings.spread && this.spreadContains(index)) return;
-    this.dir = index > this.pageIdx ? 1 : -1;
-    this.pageIdx = index;
+    const pageNo = this.pages[index]?.page;
+    if (pageNo) this.showPage(pageNo);
   }
 
-  private spreadContains(index: number) {
-    const n = this.pages[index].page;
-    const { rightNo } = this.spread;
-    return n === rightNo || n === rightNo + 1;
+  showPage(pageNo: number) {
+    this.navigation++;
+    const target = Math.max(1, Math.min(TOTAL_PAGES, pageNo));
+    if (target === this.pageNo) return;
+    this.dir = target > this.pageNo ? 1 : -1;
+    this.pageNo = target;
+    this.syncSidebar();
+    this.preload();
+  }
+
+  async goToSurah(chapterId: number) {
+    const [fallbackPage] = CHAPTER_RANGES[chapterId - 1] ?? [1];
+    const navigation = ++this.navigation;
+    await ensurePages([fallbackPage], settings.layout).catch(() => []);
+    const pageNo = chapterStartPage(chapterId, settings.layout) ?? fallbackPage;
+    const [loaded] = await Promise.all([
+      ensurePages([pageNo], settings.layout).catch(() => []),
+      pageFonts.ensure([pageNo])
+    ]);
+    if (loaded[0]) await document.fonts.load(`1em ${pageFonts.family(pageNo)}`, '\ue000').catch(() => []);
+    if (navigation !== this.navigation) return;
+    // Keep the current page visible until the destination's page data and font are ready.
+    this.activeSurahId = chapterId;
+    if (pageNo !== this.pageNo) this.dir = pageNo > this.pageNo ? 1 : -1;
+    this.pageNo = pageNo;
+    this.syncSidebar(chapterId);
+    this.preload();
+    if (settings.flow === 'scroll') this.scrollRequest++;
+  }
+
+  syncSidebar(preferred?: number, visible?: number[]) {
+    const firstPage = settings.flow === 'page' && settings.spread ? this.spread.firstNo : this.pageNo;
+    const pageNos = settings.flow === 'page' && settings.spread ? [firstPage, firstPage + 1] : [firstPage];
+    const chapters = visible?.length
+      ? [...new Set(visible)]
+      : [...new Set(pageNos.flatMap((pageNo) => {
+          const page = this.pageAt(pageNo);
+          return page?.lines.flatMap((line) => line.cells.map((cell) => cell.chapterId ?? player.chapter)) ?? chaptersForPage(pageNo);
+        }))];
+    this.visibleSurahIds = chapters;
+    if (preferred && chapters.includes(preferred)) this.activeSurahId = preferred;
+    else if (!chapters.includes(this.activeSurahId) && chapters[0]) this.activeSurahId = chapters[0];
+  }
+
+  scrollToPage(pageNo: number) {
+    const target = Math.max(1, Math.min(TOTAL_PAGES, pageNo));
+    if (target === this.pageNo) return;
+    this.navigation++;
+    this.pageNo = target;
+    this.syncSidebar();
+    this.preload();
+  }
+
+  preload() {
+    const radius = settings.spread ? 4 : 2;
+    const pages = Array.from({ length: radius * 2 + 1 }, (_, i) => this.pageNo + i - radius)
+      .filter((page) => page >= 1 && page <= TOTAL_PAGES);
+    this.preloadPages(pages);
+  }
+
+  preloadSurah(chapterId: number) {
+    const [first, last] = CHAPTER_RANGES[chapterId - 1] ?? [];
+    if (!first || !last) return;
+    this.preloadPages(Array.from({ length: Math.min(3, last - first + 1) }, (_, i) => first + i));
+  }
+
+  private preloadPages(pages: number[]) {
+    void pageFonts.ensure(pages).then((loaded) =>
+      Promise.all(pages.filter((_, i) => loaded[i]).map((page) => document.fonts.load(`1em ${pageFonts.family(page)}`, '\ue000')))
+    ).catch(() => {});
+    void ensurePages(pages, settings.layout).catch(() => {});
   }
 }
 
 export const reader = new Reader();
+setPageUpdateListener(() => reader.pageVersion++);

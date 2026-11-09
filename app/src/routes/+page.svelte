@@ -263,8 +263,8 @@
 </div>
 
 <style>
-  /* `zoom` scales the interface; the height is divided back so the app still fills the window exactly */
-  .app { position: relative; display: flex; flex-direction: column; height: calc(var(--vh, 100vh) / var(--zoom, 1)); zoom: var(--zoom, 1); }
+  /* `zoom` scales the interface; divide both dimensions back so the app still fills the window exactly */
+  .app { position: relative; display: flex; flex-direction: column; width: calc(100vw / var(--zoom, 1)); height: calc(var(--vh, 100vh) / var(--zoom, 1)); zoom: var(--zoom, 1); }
   .app.idle { cursor: none; }
   .body { flex: 1; min-height: 0; display: flex; position: relative; }
   .main { flex: 1; min-width: 0; display: flex; position: relative; }

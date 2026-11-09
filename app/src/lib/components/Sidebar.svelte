@@ -32,6 +32,7 @@
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { confirm } from '$lib/confirm.svelte';
   import { player } from '$lib/player.svelte';
+  import { reader } from '$lib/reader.svelte';
   import { settings } from '$lib/settings.svelte';
   import { stars } from '$lib/stars.svelte';
   import { ui } from '$lib/ui.svelte';
@@ -107,6 +108,9 @@
   }
   const closed = $derived(!settings.sidebar || ui.focus || ui.settingsOpen);
   const go = (ch: number, v: number) => player.goTo(ch, v);
+  const prefetchSurah = (chapter: number) => {
+    if (settings.mode === 'reading' && settings.readingStyle === 'arabic') reader.preloadSurah(chapter);
+  };
 
   // "55:13" jumps straight to a verse
   const ref = $derived.by(() => {
@@ -141,15 +145,24 @@
   });
   // bring the playing surah into view when the list opens or the surah changes
   $effect(() => {
+    reader.activeSurahId;
     player.chapter;
     if (closed) return;
-    queueMicrotask(() => list?.querySelector('.on')?.scrollIntoView({ block: 'nearest' }));
+    queueMicrotask(() => {
+      if (!list) return;
+      const selected = list.querySelector<HTMLElement>('.on');
+      if (!selected) return;
+      const top = selected.getBoundingClientRect().top - list.getBoundingClientRect().top;
+      const bottom = top + selected.offsetHeight;
+      if (top < 0) list.scrollTop += top;
+      else if (bottom > list.clientHeight) list.scrollTop += bottom - list.clientHeight;
+    });
   });
 </script>
 
 {#snippet row(c: (typeof player.chapters)[number])}
   <li class="surah">
-    <button class="pick" class:on={c.id === player.chapter} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
+    <button class="pick" data-surah={c.id} class:page={reader.visibleSurahIds.includes(c.id)} class:on={c.id === (reader.activeSurahId ?? player.chapter)} class:ctx={menu?.id === c.id} onmouseenter={() => prefetchSurah(c.id)} onclick={() => { ui.closeSettings(); if (settings.mode === 'reading' && settings.readingStyle === 'arabic') reader.goToSurah(c.id); else player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
       <span class="num">{c.id}</span>
       <span class="names">
         <b>{settings.arabicNames ? c.name_arabic : c.name_simple}</b>
@@ -266,7 +279,8 @@
   li .pick { flex: 1; min-width: 0; }
   li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 11px 12px; border-radius: 10px; text-align: left; transition: background-color 0.12s; }
   li button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
-  li button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  li .pick.page { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+  li button.on { background: color-mix(in srgb, var(--accent) 30%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
   .num { width: 28px; flex: none; text-align: center; font-size: 13px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
   .on .num { color: var(--accent); font-weight: 600; }
   .names { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }

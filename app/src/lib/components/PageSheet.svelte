@@ -38,6 +38,9 @@
   // A page built while scrolling is drawn a few lines per frame, so no single frame has the whole page to do.
   const STEP = 4;
   let shown = $state(untrack(() => (stagger ? STEP : 99)));
+  $effect(() => {
+    if (!stagger) shown = 99;
+  });
   const full = $derived(shown >= (page?.lines.length ?? 0));
   $effect(() => {
     if (full) return;
@@ -50,8 +53,9 @@
   });
 
   let lines = $state<HTMLElement>();
+  const fontReady = $derived(settings.script !== 'mushaf' || !page || pageFonts.has(page.page) || pageFonts.missing(page.page));
   // A page that has just been built is hidden until its text size is set, so it never shows once at the default size
-  let sized = $state(untrack(() => stagger));
+  let sized = $state(false);
   // The same component can be handed another page (a new surah opening at the same place), still carrying the last
   // page's text size: hide it from that moment until it is fitted, before the browser paints
   let sizedFor = untrack(() => page?.page);
@@ -71,7 +75,7 @@
     if (!page?.lines.length) return null;
     const first = page.lines[0].line;
     const end = page.lines[page.lines.length - 1].line;
-    const top = page.hasStart ? first - (player.current?.bismillah_pre ? 2 : 1) : first;
+    const top = page.top ?? first;
     return { first, end, top, rows: end - top + 1 };
   });
 
@@ -81,7 +85,7 @@
    */
   function fit() {
     const box = lines;
-    if (!box || !full) return;
+    if (!box || !full || !fontReady) return;
     sized = true;
     const rows = [...box.querySelectorAll<HTMLElement>('.line')];
     if (!rows.length) return;
@@ -105,7 +109,7 @@
     const aspect = avail / rowH;
     // the standard layout in the page fonts: the size that shipped with the app, if this page (as it is now) is in it
     const standard = glyph && settings.layout === 'madani' && !!page && pageFonts.has(page.page);
-    const id = standard ? `${player.chapter}:${page!.page}:${rows.length}:${page!.lines.reduce((n, l) => n + l.cells.length, 0)}` : '';
+    const id = standard ? `${page!.headerChapter?.id ?? 0}:${page!.page}:${rows.length}:${page!.lines.reduce((n, l) => n + l.cells.length, 0)}` : '';
     const shipped = standard ? seed[id] : undefined;
     if (shipped && Math.abs(aspect / shipped.a - 1) < 0.05) {
       const cap = rowH * 0.74;
@@ -207,6 +211,7 @@
   $effect(() => {
     page;
     pageFonts.tick;
+    fontReady;
     settings.script;
     settings.layout;
     settings.uiScale;
@@ -233,17 +238,17 @@
   {#if page && geo}
     {#if settings.showPageInfo}
       <header>
-        <span class="ar">{player.current?.name_arabic}</span>
+        <span class="ar">{page.headerChapter?.name_arabic}</span>
         <span>Juz {page.juz}</span>
       </header>
     {/if}
     <div class="lines" class:unsized={!sized} bind:this={lines} style:grid-template-rows="repeat({geo.rows}, var(--row))">
-      {#if page.hasStart && player.current}
-        <div class="banner" style:grid-row="1"><b>{player.current.name_arabic}</b></div>
-        {#if player.current.bismillah_pre}
-          <div class="bsm" style:grid-row="2">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
+      {#each (page.banners ?? []) as banner (banner.chapter.id)}
+        <div class="banner" style:grid-row={banner.bannerRow - geo.top + 1}><b>{banner.chapter.name_arabic}</b></div>
+        {#if banner.bsmRow}
+          <div class="bsm" style:grid-row={banner.bsmRow - geo.top + 1}>بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
         {/if}
-      {/if}
+      {/each}
       {#each page.lines.slice(0, shown) as ln (ln.line)}
         <div
           class="line"
@@ -253,7 +258,7 @@
           dir="rtl"
         >
           {#each ln.cells as c (c.word.pos + '-' + c.verse.n)}
-            <Word v={c.verse} w={c.word} />{#if c.last}<End v={c.verse} />{/if}
+            <Word v={c.verse} w={c.word} chapterId={c.chapterId} />{#if c.last}<End v={c.verse} />{/if}
           {/each}
         </div>
       {/each}
@@ -269,6 +274,7 @@
     --row: calc(100cqh * 0.86 / 15);
     container-type: size;
     position: relative;
+    box-sizing: border-box;
     height: var(--sh);
     aspect-ratio: 0.66;
     flex: none;

@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { copyVerse, toggleBookmark } from '$lib/actions';
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { hints } from '$lib/hints.svelte';
   import { cancelIdle, whenIdle } from '$lib/platform';
   import { player } from '$lib/player.svelte';
+  import { pageFonts } from '$lib/fonts.svelte';
   import { reader } from '$lib/reader.svelte';
+  import { ensurePages } from '$lib/pages';
   import { settings, type WordMeaning } from '$lib/settings.svelte';
   import { translations } from '$lib/translations.svelte';
   import { ui } from '$lib/ui.svelte';
@@ -25,6 +27,9 @@
 
   let scroller = $state<HTMLElement>();
   let lastUserScroll = 0;
+  let smoothNextScroll = false;
+  let navigatingScroll = false;
+  let navigatingScrollTimer = 0;
 
   // A long surah is put on the page in small batches (a few frames each), so switching to one never freezes the window.
   // (printed pages are not batched: every page is a cheap placeholder until it is near the window, see `near`)
@@ -33,6 +38,8 @@
   const kind = $derived(mushafMode ? 'pages' : reading ? 'flow' : 'verses');
   const total = $derived(mushafMode ? reader.pages.length : player.verses.length);
   let upto = $state(0);
+  let startedMushaf = false;
+  let lastChapter = 0;
   $effect(() => {
     const k = kind;
     const t = total;
@@ -63,7 +70,7 @@
   // the pages on screen right now; the others on hand are only measured when the browser is idle
   let inView = $state.raw(new Set<number>());
   let jumpPage = $state(-1);
-  const playPage = $derived(mushafMode && reader.activeKey ? (reader.wordPage.get(reader.activeKey) ?? -1) : -1);
+  const playPage = $derived(mushafMode && reader.activeKey ? (reader.wordPage.get(`${player.chapter}:${reader.activeKey}`) ?? -1) : -1);
   const built = (i: number) => near.has(i) || i === jumpPage || (playPage >= 0 && Math.abs(i - playPage) <= 1);
   // Building a page (about 150 words and the measuring of its lines) is the heavy part of scrolling, so it is spread out:
   // a page in view is built at once; pages on the way are built ahead of time, one per frame; and a page is only dropped
@@ -128,23 +135,97 @@
   const reveal = (i: number) => {
     if (i >= upto) upto = Math.min(total, i + 8);
   };
-  const indexOfVerse = (n: number) => (mushafMode ? (reader.wordPage.get(`${n}-1`) ?? -1) : player.verses.findIndex((v) => v.n === n));
+  const indexOfVerse = (n: number) => (mushafMode ? (reader.wordPage.get(`${player.chapter}:${n}-1`) ?? -1) : player.verses.findIndex((v) => v.n === n));
+  function centerScrollPage(pageNo: number, behavior: ScrollBehavior = 'instant') {
+    if (!scroller) return;
+    const pageEl = scroller.querySelector<HTMLElement>(`.pg[data-i="${pageNo - 1}"]`);
+    if (!pageEl) return;
+    const scale = settings.uiScale;
+    const pageTop = (pageEl.getBoundingClientRect().top - scroller.getBoundingClientRect().top) / scale;
+    const pageHeight = pageEl.getBoundingClientRect().height / scale;
+    navigatingScroll = true;
+    clearTimeout(navigatingScrollTimer);
+    navigatingScrollTimer = window.setTimeout(() => (navigatingScroll = false), 180);
+    scroller.scrollTo({
+      top: scroller.scrollTop + pageTop - (scroller.clientHeight - pageHeight) / 2,
+      behavior
+    });
+  }
 
-  // each surah opens on its first page
+  // Surah selection is a navigation request; ordinary page turns only update the active highlight.
   $effect(() => {
-    player.chapter;
-    reader.pageIdx = 0;
-    near = new Set();
-    scroller?.scrollTo({ top: 0, behavior: 'instant' });
+    const chapter = player.chapter;
+    const mushaf = mushafMode;
+    untrack(() => {
+      if (mushaf && (!startedMushaf || chapter !== lastChapter)) reader.goToSurah(chapter);
+      if (!mushaf) {
+        reader.pageIdx = 0;
+        scroller?.scrollTo({ top: 0, behavior: 'instant' });
+      }
+      if (mushaf) startedMushaf = true;
+      lastChapter = chapter;
+    });
   });
   $effect(() => {
     translations.load();
   });
 
+  $effect(() => {
+    if (paged) reader.preload();
+  });
+
+  // Every printed-page font stays in memory while reading Arabic, so a page never changes shape after it appears.
+  $effect(() => {
+    if (mushafMode && settings.script === 'mushaf') void pageFonts.warmAll().catch(() => {});
+  });
+
+  $effect(() => {
+    if (!mushafMode || paged) return;
+    const indices = new Set([...near, ...inView]);
+    const pages = [...indices].flatMap((i) => [i - 1, i, i + 1]).map((i) => i + 1).filter((p) => p >= 1 && p <= reader.pages.length);
+    if (pages.length) {
+      pageFonts.ensure(pages);
+      void ensurePages(pages, settings.layout).catch(() => {});
+    }
+  });
+
+  $effect(() => {
+    const request = reader.scrollRequest;
+    const page = untrack(() => reader.pageNo);
+    if (!mushafMode || paged || !scroller) return;
+    jumpPage = page - 1;
+    const scrollToDestination = async () => {
+      if (request !== reader.scrollRequest || !scroller) return;
+      await tick();
+      if (request !== reader.scrollRequest || !scroller) return;
+      const behavior = smoothNextScroll ? 'smooth' : 'instant';
+      smoothNextScroll = false;
+      centerScrollPage(page, behavior);
+    };
+    requestAnimationFrame(() => void scrollToDestination());
+  });
+
+  let lastUiScale = settings.uiScale;
+  $effect(() => {
+    const scale = settings.uiScale;
+    if (scale === lastUiScale) return;
+    lastUiScale = scale;
+    const surah = untrack(() => reader.activeSurahId);
+    if (!mushafMode) return;
+    const refresh = window.setTimeout(() => {
+      if (settings.uiScale !== scale || reader.activeSurahId !== surah) return;
+      smoothNextScroll = settings.flow === 'scroll';
+      const button = document.querySelector<HTMLElement>(`.pick[data-surah="${surah}"]`);
+      if (button) button.click();
+      else void reader.goToSurah(surah);
+    }, 500);
+    return () => clearTimeout(refresh);
+  });
+
   // the page turns when the recitation does
   $effect(() => {
     if (!paged || !reader.activeKey) return;
-    const i = reader.wordPage.get(reader.activeKey);
+    const i = reader.wordPage.get(`${player.chapter}:${reader.activeKey}`);
     // untracked: browsing to another page yourself must not re-trigger this and snap you back
     if (i !== undefined) untrack(() => reader.show(i));
   });
@@ -162,7 +243,7 @@
     if (!j || !player.verses.length) return;
     untrack(() => {
       if (paged) {
-        const i = reader.wordPage.get(`${j.verse}-1`);
+        const i = reader.wordPage.get(`${player.chapter}:${j.verse}-1`);
         if (i !== undefined) reader.show(i);
       } else {
         const id = mushafMode ? `w-${j.verse}-1` : reading ? `t-${j.verse}` : `v-${j.verse}`;
@@ -305,11 +386,30 @@
     }
   }
   const onscroll = () => {
+    const programmatic = navigatingScroll;
+    if (programmatic) {
+      clearTimeout(navigatingScrollTimer);
+      navigatingScrollTimer = window.setTimeout(() => (navigatingScroll = false), 180);
+    }
     lastScroll = Date.now();
     checkAway();
     if (Date.now() > busyUntil) moved();
     clearTimeout(savePos);
     savePos = window.setTimeout(saveScrollPlace, 500);
+    if (mushafMode && scroller) {
+      const edge = scroller.getBoundingClientRect().top + 8;
+      for (const el of scroller.querySelectorAll<HTMLElement>('.pg[data-i]')) {
+        if (el.getBoundingClientRect().bottom <= edge) continue;
+        const page = reader.pages[Number(el.dataset.i)]?.page;
+        if (page) {
+          if (!programmatic) reader.scrollToPage(page);
+          const chapters = [...new Set([...el.querySelectorAll<HTMLElement>('.w[data-chapter]')]
+            .map((word) => Number(word.dataset.chapter)).filter(Boolean))];
+          reader.syncSidebar(undefined, chapters);
+        }
+        break;
+      }
+    }
   };
   $effect(() => {
     if (settings.lockPlaying && !paged && activeVerse) untrack(() => centerPlaying(true));
@@ -546,7 +646,7 @@
     </div>
   {:else}
     <main class="scroll" class:fill={settings.pageFit === 'fill'} style:--pz={settings.pageZoom} bind:this={scroller} onwheel={moved} ontouchmove={moved} onscroll={onscroll} onpointerdown={() => (pressing = true)}>
-      {#if player.current}
+      {#if player.current && !mushafMode}
         <div class="head">
           <p class="kicker">{player.current.revelation_place} · {player.current.verses_count} verses</p>
           <h2>{player.current.name_arabic}</h2>
@@ -559,7 +659,7 @@
         </div>
       {/if}
 
-      {#if player.current?.bismillah_pre}
+      {#if !mushafMode && player.current?.bismillah_pre}
         <p class="bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</p>
       {/if}
 
@@ -567,7 +667,7 @@
         <!-- scroll: the printed pages one after another -->
         <div class="pages hl-{settings.highlight}">
           {#each reader.pages.slice(0, upto) as pg, i (pg.page)}
-            <div class="pg" data-i={i} use:watchPage>{#if built(i)}<PageSheet page={pg} last={i === lastIdx} stagger live={inView.has(i)} />{/if}</div>
+            <div class="pg" data-i={i} use:watchPage>{#if built(i)}<PageSheet page={pg} last={i === lastIdx} stagger={i !== jumpPage} live={inView.has(i)} />{/if}</div>
           {/each}
         </div>
       {:else if reading}
@@ -687,7 +787,7 @@
   .tail { height: 120px; }
 
   .pages { display: flex; flex-direction: column; align-items: safe center; gap: 28px; padding-top: 8px; }
-  .pg { content-visibility: auto; contain-intrinsic-size: auto var(--sh); contain: layout paint style; --sh: calc(min(760px, 100cqw) * var(--pz, 1) / 0.66); height: var(--sh); aspect-ratio: 0.66; flex: none; }
+  .pg { content-visibility: auto; contain-intrinsic-size: auto var(--sh); contain: layout paint style; --sh: min(calc(min(760px, 100cqw) * var(--pz, 1) / 0.66), calc(100vh / var(--zoom, 1) - 120px)); height: var(--sh); aspect-ratio: 0.66; flex: none; }
 
   .scroll.fill { padding: 0 12px; }
   .scroll.fill .pg { --sh: calc(100cqw * var(--pz, 1) / 0.66); }
