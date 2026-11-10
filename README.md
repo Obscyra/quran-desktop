@@ -1,17 +1,24 @@
 <div align="center">
 
-<img src="assets/icon.png" alt="Quran for Desktop" width="120"/>
+<img src="assets/icon.png" alt="Quran for Desktop" width="112"/>
 
 # Quran for Desktop
 
-**A free, open-source Quran app for Windows, macOS and Linux.**<br/>
-Read the exact printed Mushaf, follow the recitation word by word, and read with no internet at all.
+### A thoughtful Quran reading experience for your desktop
 
-[![Latest release](https://img.shields.io/github/v/release/Obscyra/quran-desktop?style=for-the-badge&color=2ea44f&label=Download)](https://github.com/Obscyra/quran-desktop/releases/latest)
+Read the Madani Mushaf, follow recitation word by word, and keep reading offline. Free, open source, and available for Windows, macOS, and Linux.
 
-[![Downloads](https://img.shields.io/github/downloads/Obscyra/quran-desktop/total)](https://github.com/Obscyra/quran-desktop/releases)
-[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-555)](#download)
-[![License: GPL v3](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
+<p>
+  <a href="https://github.com/Obscyra/quran-desktop/releases/download/v0.0.9-beta/Quran_0.0.9-beta_x64-setup.exe"><img src="assets/download-windows.svg" width="228" height="72" alt="Download for Windows"/></a>&nbsp;
+  <a href="https://github.com/Obscyra/quran-desktop/releases/download/v0.0.9-beta/Quran_0.0.9-beta_universal.dmg"><img src="assets/download-macos.svg" width="228" height="72" alt="Download for macOS"/></a>&nbsp;
+  <a href="https://github.com/Obscyra/quran-desktop/releases/download/v0.0.9-beta/Quran_0.0.9-beta_amd64.AppImage"><img src="assets/download-linux.svg" width="228" height="72" alt="Download for Linux"/></a>
+</p>
+
+[![Latest release](https://img.shields.io/github/v/release/Obscyra/quran-desktop?style=flat-square&color=16856b&label=Latest%20version)](https://github.com/Obscyra/quran-desktop/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Obscyra/quran-desktop/total?style=flat-square&color=64748b)](https://github.com/Obscyra/quran-desktop/releases)
+[![License: GPL v3](https://img.shields.io/badge/license-GPL--3.0-64748b?style=flat-square)](LICENSE)
+
+These links start the current installers directly. The version badge above automatically reflects the latest published release.
 
 <img src="assets/screenshots/verse-by-verse-playing.webp" alt="Verse by Verse view with word-by-word meanings and the recited word highlighted" width="900"/>
 
@@ -19,31 +26,29 @@ Read the exact printed Mushaf, follow the recitation word by word, and read with
 
 <br/>
 
-## Why this app
+## A calmer way to read
 
-- **Reading comes first.** It opens as a Quran to read. Listening is one click away and never in the way.
-- **The real Mushaf.** Every page is drawn in its own per-page font, so each line matches the printed Madani Mushaf glyph for glyph.
-- **Works offline from the first launch.** The full Arabic text and all 604 page fonts are inside the installer. Only audio and other translations need a connection, and audio can be downloaded for later. Once a week the app checks for corrections to the text and fonts and applies them.
-- **Free for good.** No ads, no accounts, no paid features, no tracking.
+- **Read your way.** Choose verse-by-verse reading or a continuous Mushaf that flows across surah boundaries, in a scroll or page layout.
+- **True-to-page Arabic.** The 604 page-specific fonts preserve the printed Madani Mushaf layout, line by line.
+- **Ready offline.** Arabic text and Mushaf fonts ship with the app. Download audio and tafsir to keep them available offline too.
+- **Private and free.** No ads, accounts, analytics, tracking, or paid features.
 
-Website: **[qurandesktop.pages.dev](https://qurandesktop.pages.dev)**, with a live demo of the reader.
-
-Compared with the [quran.com](https://quran.com) website, this is a native desktop app that keeps working without a connection and runs quietly in the tray.
+Explore the [website and live reader demo](https://qurandesktop.pages.dev).
 
 ## Download
 
-Get the installer for your system from the **[latest release](https://github.com/Obscyra/quran-desktop/releases/latest)**.
+The buttons above download the installers directly. Other Linux packages are available from the [latest release](https://github.com/Obscyra/quran-desktop/releases/latest):
 
 | System | File | Notes |
 | --- | --- | --- |
-| Windows 10 / 11 | `Quran_<version>_x64-setup.exe` (about 100 MB) | Installs for your user only, no administrator rights needed. Windows SmartScreen may warn because the app is not code-signed yet: choose **More info → Run anyway**. |
-| macOS | `Quran_<version>_universal.dmg` | Built automatically for Apple silicon and Intel. Not yet tested on a Mac by the maintainer. |
-| Linux (x86_64) | `Quran_<version>_amd64.AppImage`, `.deb` or `.rpm` | The AppImage runs on most distributions (`chmod +x`, then run) and updates itself; the `.deb` is for Debian and Ubuntu and the `.rpm` for Fedora and openSUSE (these two do not update themselves). Not yet tested on a Linux desktop by the maintainer. On GNOME the tray icon needs the AppIndicator extension. |
+| Windows 10 / 11 (x64) | `Quran_0.0.9-beta_x64-setup.exe` | Per-user install; no administrator rights needed. If SmartScreen appears, choose **More info → Run anyway**. |
+| macOS (Apple silicon and Intel) | `Quran_0.0.9-beta_universal.dmg` | One universal installer for both Mac processor types. |
+| Linux (x86_64) | `.AppImage`, `.deb`, or `.rpm` | AppImage works on most distributions; `.deb` is for Debian/Ubuntu, `.rpm` for Fedora/openSUSE. GNOME tray support needs the AppIndicator extension. |
 
 > **This is a beta.** Please report anything that looks wrong, especially in the Arabic text, with the
 > [Arabic text report form](https://github.com/Obscyra/quran-desktop/issues/new?template=arabic-text.yml).
 
-New versions are offered inside the app (Settings → Updates).
+Installed already? New versions are offered in **Settings → Updates**.
 
 ## Highlights
 
@@ -137,6 +142,7 @@ Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Want a featur
 
 - **Data and audio:** the [Quran.com](https://quran.com) / [Quran.Foundation](https://quran.foundation) public API, and the audio hosts it points to such as [quranicaudio.com](https://quranicaudio.com).
 - **Mushaf fonts, tajweed markup and IndoPak text:** Quran.com and the King Fahd Quran Printing Complex.
+- **Platform icons:** Windows, Apple and Linux marks from [Font Awesome Free](https://github.com/FortAwesome/Font-Awesome/tree/6.x/svgs/brands), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - **Other Arabic fonts** (SIL Open Font License, bundled): [Amiri Quran](https://github.com/aliftype/amiri-quran), [Scheherazade New](https://software.sil.org/scheherazade/) and [Noto Naskh Arabic](https://fonts.google.com/noto/specimen/Noto+Naskh+Arabic).
 - **Bengali text font** (SIL Open Font License, bundled in WOFF2 and TrueType formats): [Noto Sans Bengali](https://fonts.google.com/noto/specimen/Noto+Sans+Bengali).
 - **Inspiration:** this app was built by studying [Quran for Android](https://github.com/quran/quran_android), the open-source app by the Quran.com community. It is an independent project written from scratch in TypeScript and Rust. Looking for the Android app? It is on [Google Play](https://play.google.com/store/apps/details?id=com.quran.labs.androidquran) and [IzzyOnDroid](https://apt.izzysoft.de/packages/com.quran.labs.androidquran).

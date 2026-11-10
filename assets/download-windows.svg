@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="228" height="72" viewBox="0 0 228 72" role="img" aria-labelledby="title">
+  <title id="title">Download for Windows</title>
+  <rect x="1" y="1" width="226" height="70" rx="15" fill="#17171b" stroke="#34363f" stroke-width="1.5"/>
+  <!-- Windows mark from Font Awesome Free brands/windows.svg, CC BY 4.0. -->
+  <path fill="#f8fafc" d="M0 93.7l183.6-25.3v177.4H0V93.7zm0 324.6l183.6 25.3V268.4H0v149.9zm203.8 28L448 480V268.4H203.8v177.9zm0-380.6v180.1H448V32L203.8 65.7z" transform="translate(22 15) scale(.09)"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#f8fafc">
+    <text x="76" y="31" font-size="9" font-weight="600" letter-spacing="1.15">DOWNLOAD FOR</text>
+    <text x="76" y="53" font-size="18" font-weight="700">Windows</text>
+  </g>
+</svg>
