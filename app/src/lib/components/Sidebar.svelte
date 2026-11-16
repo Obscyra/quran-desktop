@@ -32,6 +32,7 @@
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { confirm } from '$lib/confirm.svelte';
   import { player } from '$lib/player.svelte';
+  import { reader } from '$lib/reader.svelte';
   import { settings } from '$lib/settings.svelte';
   import { stars } from '$lib/stars.svelte';
   import { ui } from '$lib/ui.svelte';
@@ -147,9 +148,11 @@
   });
 </script>
 
+<!-- on: the surahs whose pages are on screen (the playing one when the recitation is among them); also: visible but not the one marked -->
 {#snippet row(c: (typeof player.chapters)[number])}
+  {@const tone = !reader.visible.length ? (c.id === player.chapter ? 'on' : '') : !reader.visible.includes(c.id) ? '' : !player.playing || !reader.visible.includes(player.chapter) || c.id === player.chapter ? 'on' : 'also'}
   <li class="surah">
-    <button class="pick" class:on={c.id === player.chapter} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
+    <button class="pick" class:on={tone === 'on'} class:also={tone === 'also'} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
       <span class="num">{c.id}</span>
       <span class="names">
         <b>{settings.arabicNames ? c.name_arabic : c.name_simple}</b>
@@ -267,6 +270,7 @@
   li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 11px 12px; border-radius: 10px; text-align: left; transition: background-color 0.12s; }
   li button:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
   li button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  li button.also { background: color-mix(in srgb, var(--accent) 8%, transparent); }
   .num { width: 28px; flex: none; text-align: center; font-size: 13px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
   .on .num { color: var(--accent); font-weight: 600; }
   .names { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
