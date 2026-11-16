@@ -8,6 +8,7 @@
   import { sample } from '$lib/script-sample';
   import * as offline from '$lib/offline';
   import { player } from '$lib/player.svelte';
+  import { reader } from '$lib/reader.svelte';
   import { getAutostart, isTauri, setAutostart } from '$lib/platform';
   import { hints } from '$lib/hints.svelte';
   import { SCRIPTS, settings, type SettingsShape, type Highlight, type PageLook, type PageType, type Script, type WordMeaning } from '$lib/settings.svelte';
@@ -57,6 +58,7 @@
     { area: 'pages', title: 'Page look', text: 'paper frame plain border background' },
     { area: 'pages', title: 'Page flow', text: 'scroll turn one page long sheet' },
     { area: 'pages', title: 'Two-page spread', text: 'facing book open wide T' },
+    { area: 'pages', title: 'Continuous book', text: 'continuous across surahs next surah run on book join' },
     { area: 'pages', title: 'Page info', text: 'surah name juz page number header footer' },
     { area: 'pages', title: 'Highlight bookmarks', text: 'ornament marker verse end' },
     { area: 'audio', title: 'Listening bar', text: 'player bar always on demand dock' },
@@ -94,7 +96,7 @@
     'Theme': ['theme'], 'Interface size': ['uiScale'], 'Surah names in Arabic': ['arabicNames'],
     'Script style': ['script', 'pageType'], 'Text size': ['size'], 'Line spacing': ['spacing'],
     'Open in': ['mode'], 'Continue where I left off': ['resume'], 'Translation': ['translation'], 'Translation size': ['translationSize'], 'Tafsir text size': ['tafsirSize'], 'Word meanings': ['wordMeaning'], 'Transliteration': ['transliteration'],
-    'Page type': ['pageType'], 'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'],
+    'Page type': ['pageType'], 'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Continuous book': ['continuous'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'],
     'Listening bar': ['listenBar'], 'Show the bar only on hover': ['playerHover'], 'Playback speed': ['speed'], 'Play the next surah': ['autoAdvance'], 'Repeat surah': ['repeatSurah'],
     'Say a word when clicked': ['wordAudio'], 'Highlight style': ['highlight'], 'Follow the recitation': ['autoScroll'], 'Lock on the playing verse': ['lockPlaying'], 'Keep favourites offline': ['autoCache'],
     'Verse of the day': ['dailyVerse'], 'Show it from': ['dailyVerseTime'], 'Reading reminders': ['remindersOn'], 'Times': ['remindTimes'], 'Message': ['remindMessage'], 'Use system notifications': ['systemNotify'],
@@ -651,6 +653,10 @@
         <div class="label"><h3>Two-page spread</h3>{@render rst('Two-page spread')}<p>Show facing pages like an open book: odd pages on the right, even on the left. Needs a wide window. Press T.</p></div>
         {@render toggle(settings.spread, (v) => (settings.spread = v), 'Two-page spread')}
       </div>
+      <div class="row">
+        <div class="label"><h3>Continuous book</h3>{@render rst('Continuous book')}<p>Pages run on across surahs like a printed Mushaf; scrolling or turning past the end opens the next surah.</p></div>
+        {@render toggle(settings.continuous, (v) => { settings.continuous = v; reader.reset(); }, 'Continuous book')}
+      </div>
       <h3 class="grp">On the page</h3>
       <div class="row">
         <div class="label"><h3>Page info</h3>{@render rst('Page info')}<p>Show the surah name, juz and page number on each page.</p></div>
@@ -1109,7 +1115,6 @@
   .rp-wrap { justify-self: start; max-width: 100%; }
   .row > :global(.toggle), .row > .times, .row > .time, .row > .text, .row > :global(.tp-btn), .row > .seg, .row > button.primary, .row > button.secondary, .row > .note { justify-self: start; }
 
-  .dev b { font-size: 16px; }
   .dev p { margin-top: 4px; }
   .intro { margin: 0 0 4px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; line-height: 1.55; color: var(--ink); }
   .preview { background: var(--surface); border-radius: 16px; padding: 22px 28px; margin-bottom: 8px; text-align: center; }

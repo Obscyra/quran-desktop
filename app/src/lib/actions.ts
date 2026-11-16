@@ -1,28 +1,42 @@
 import { bookmarks } from './bookmarks.svelte';
 import { player } from './player.svelte';
+import { reader } from './reader.svelte';
 import { settings } from './settings.svelte';
 import { ui } from './ui.svelte';
 
+/**
+ * A word or verse of another surah (on a page shared by two surahs) is played from that surah: it is loaded first,
+ * and the reader is told it moved there itself, so it stays on the page that was clicked.
+ */
+async function inChapter(chapter: number) {
+  if (chapter === player.chapter) return;
+  reader.selfNav = chapter;
+  await player.load(chapter, false);
+}
+
 /** Left click on a word: just say it, no menu. */
-export function sayWord(verse: number, pos: number) {
+export async function sayWord(verse: number, pos: number, chapter = player.chapter) {
   ui.pick = null;
-  if (settings.wordAudio) player.playWord(verse, pos);
+  if (!settings.wordAudio) return;
+  await inChapter(chapter);
+  player.playWord(verse, pos);
 }
 
 /** Right click on a word: the menu with its meaning and the play options. */
-export function pickWord(verse: number, pos: number) {
-  ui.pick = { chapter: player.chapter, verse, pos };
+export function pickWord(verse: number, pos: number, chapter = player.chapter) {
+  ui.pick = { chapter, verse, pos };
 }
 
 /** Left click on a verse number: play the whole verse, no menu. */
-export function sayVerse(verse: number) {
+export async function sayVerse(verse: number, chapter = player.chapter) {
   ui.pick = null;
+  await inChapter(chapter);
   player.playVerse(verse);
 }
 
 /** Right click on a verse number: the menu with the verse options. */
-export function pickVerse(verse: number) {
-  ui.pick = { chapter: player.chapter, verse, pos: 0 };
+export function pickVerse(verse: number, chapter = player.chapter) {
+  ui.pick = { chapter, verse, pos: 0 };
 }
 
 export const closePick = () => (ui.pick = null);

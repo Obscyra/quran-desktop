@@ -7,11 +7,11 @@
   import { ui } from '$lib/ui.svelte';
   import type { Verse } from '$lib/types';
 
-  let { v }: { v: Verse } = $props();
+  let { ch, v }: { ch: number; v: Verse } = $props();
 
-  const saved = $derived(settings.highlightBookmarks && bookmarks.has(player.chapter, v.n));
+  const saved = $derived(settings.highlightBookmarks && bookmarks.has(ch, v.n));
   const glyph = $derived(settings.script === 'mushaf' && !!v.endGlyph && pageFonts.has(v.endPage));
-  const picked = $derived(ui.pick?.verse === v.n && ui.pick.pos === 0);
+  const picked = $derived(ui.pick?.chapter === ch && ui.pick.verse === v.n && ui.pick.pos === 0);
   const digits = $derived(v.n.toLocaleString('ar-EG'));
 </script>
 
@@ -19,11 +19,11 @@
   class="end"
   class:saved
   class:picked
-  id="end-{v.n}"
-  onclick={() => sayVerse(v.n)}
+  id="end-{ch}-{v.n}"
+  onclick={() => sayVerse(v.n, ch)}
   oncontextmenu={(e) => {
     e.preventDefault();
-    pickVerse(v.n);
+    pickVerse(v.n, ch);
   }}
   aria-label="Play verse {v.n}"
   title="Verse {v.n}: click to play, right-click for options"

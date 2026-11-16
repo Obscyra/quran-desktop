@@ -6,7 +6,8 @@
   import { ui } from '$lib/ui.svelte';
 
   const pick = $derived(ui.pick);
-  const verse = $derived(pick ? player.verses.find((v) => v.n === pick.verse) : undefined);
+  // the verse data is the one on screen: a pick in another chapter has none here, so no menu for it
+  const verse = $derived(pick && pick.chapter === player.chapter ? player.verses.find((v) => v.n === pick.verse) : undefined);
   const word = $derived(pick && pick.pos > 0 ? verse?.words.find((w) => w.pos === pick.pos) : undefined);
   const saved = $derived(pick ? bookmarks.get(pick.chapter, pick.verse) : undefined);
   const looping = $derived(pick ? player.loopVerse === pick.verse : false);
@@ -18,7 +19,7 @@
 
   function place() {
     if (!pick) return;
-    const el = document.getElementById(pick.pos > 0 ? `w-${pick.verse}-${pick.pos}` : `end-${pick.verse}`);
+    const el = document.getElementById(pick.pos > 0 ? `w-${pick.chapter}-${pick.verse}-${pick.pos}` : `end-${pick.chapter}-${pick.verse}`);
     if (!el) return;
     const r = el.getBoundingClientRect();
     // rects are in screen pixels, but this menu sits inside the (possibly scaled) interface

@@ -67,11 +67,15 @@
 
   // Rows to draw: a surah's first page reserves rows above its text for the name banner (and the
   // Bismillah line for surahs that open with one), exactly where the printed page leaves them.
+  const chapterOf = (id: number) => player.chapters.find((x) => x.id === id);
+  // the printed line of a chapter's name banner: one line above its first verse, two with a Bismillah line
+  const bannerRow = (s: { chapter: number; line: number }) => s.line - (chapterOf(s.chapter)?.bismillah_pre ? 2 : 1);
   const geo = $derived.by(() => {
     if (!page?.lines.length) return null;
     const first = page.lines[0].line;
     const end = page.lines[page.lines.length - 1].line;
-    const top = page.hasStart ? first - (player.current?.bismillah_pre ? 2 : 1) : first;
+    // each chapter that starts on this page leaves its name banner (and Bismillah line) above its first verse
+    const top = Math.min(first, ...page.starts.map((s) => bannerRow(s)));
     return { first, end, top, rows: end - top + 1 };
   });
 
@@ -105,7 +109,7 @@
     const aspect = avail / rowH;
     // the standard layout in the page fonts: the size that shipped with the app, if this page (as it is now) is in it
     const standard = glyph && settings.layout === 'madani' && !!page && pageFonts.has(page.page);
-    const id = standard ? `${player.chapter}:${page!.page}:${rows.length}:${page!.lines.reduce((n, l) => n + l.cells.length, 0)}` : '';
+    const id = standard ? `${page!.chapters[0]}:${page!.page}:${rows.length}:${page!.lines.reduce((n, l) => n + l.cells.length, 0)}` : '';
     const shipped = standard ? seed[id] : undefined;
     if (shipped && Math.abs(aspect / shipped.a - 1) < 0.05) {
       const cap = rowH * 0.74;
@@ -210,7 +214,6 @@
     settings.script;
     settings.layout;
     settings.uiScale;
-    player.verses;
     tick().then(schedule);
   });
 
@@ -233,27 +236,30 @@
   {#if page && geo}
     {#if settings.showPageInfo}
       <header>
-        <span class="ar">{player.current?.name_arabic}</span>
+        <span class="ar">{page.chapters.map((id) => chapterOf(id)?.name_arabic).filter(Boolean).join(' · ')}</span>
         <span>Juz {page.juz}</span>
       </header>
     {/if}
     <div class="lines" class:unsized={!sized} bind:this={lines} style:grid-template-rows="repeat({geo.rows}, var(--row))">
-      {#if page.hasStart && player.current}
-        <div class="banner" style:grid-row="1"><b>{player.current.name_arabic}</b></div>
-        {#if player.current.bismillah_pre}
-          <div class="bsm" style:grid-row="2">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
+      {#each page.starts as s (s.chapter)}
+        {@const info = chapterOf(s.chapter)}
+        {#if info}
+          <div class="banner" style:grid-row={bannerRow(s) - geo.top + 1}><b>{info.name_arabic}</b></div>
+          {#if info.bismillah_pre}
+            <div class="bsm" style:grid-row={s.line - 1 - geo.top + 1}>بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
+          {/if}
         {/if}
-      {/if}
+      {/each}
       {#each page.lines.slice(0, shown) as ln (ln.line)}
         <div
           class="line"
-          class:now={!!reader.activeKey && ln.cells.some((c) => `${c.verse.n}-${c.word.pos}` === reader.activeKey)}
+          class:now={!!reader.activeKey && ln.cells.some((c) => `${c.chapter}-${c.verse.n}-${c.word.pos}` === reader.activeKey)}
           class:center={page.page <= 2 || ln.cells.length < 4 || (last && ln.line === geo.end)}
           style:grid-row={ln.line - geo.top + 1}
           dir="rtl"
         >
-          {#each ln.cells as c (c.word.pos + '-' + c.verse.n)}
-            <Word v={c.verse} w={c.word} />{#if c.last}<End v={c.verse} />{/if}
+          {#each ln.cells as c (c.chapter + '-' + c.verse.n + '-' + c.word.pos)}
+            <Word ch={c.chapter} v={c.verse} w={c.word} />{#if c.last}<End ch={c.chapter} v={c.verse} />{/if}
           {/each}
         </div>
       {/each}

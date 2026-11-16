@@ -339,7 +339,7 @@ class Player {
   private memo = new Map<string, Promise<Verse[]>>();
   private lastPartial = false;
 
-  private textFor(ch: number): Promise<Verse[]> {
+  textFor(ch: number): Promise<Verse[]> {
     const key = `${ch}:${settings.translation}:${settings.needsIndo}`;
     let hit = this.memo.get(key);
     if (!hit) {
@@ -799,7 +799,7 @@ class Player {
     }
     if (idx >= 0) {
       const w = timings[idx];
-      const id = `w-${w.verse}-${w.pos}`;
+      const id = `w-${this.chapter}-${w.verse}-${w.pos}`;
       if (this.pEl.id !== id || !this.pEl.el?.isConnected) {
         dim(this.pEl.el);
         this.pEl = { id, el: document.getElementById(id) };

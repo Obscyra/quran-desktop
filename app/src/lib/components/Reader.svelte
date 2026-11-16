@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { copyVerse, toggleBookmark } from '$lib/actions';
   import { bookmarks } from '$lib/bookmarks.svelte';
@@ -196,14 +196,124 @@
   const reveal = (i: number) => {
     if (i >= upto) upto = Math.min(total, i + 8);
   };
-  const indexOfVerse = (n: number) => (mushafMode ? (reader.wordPage.get(`${n}-1`) ?? -1) : player.verses.findIndex((v) => v.n === n));
+  const indexOfVerse = (ch: number, n: number) => (mushafMode ? (reader.wordPage.get(`${ch}-${n}-1`) ?? -1) : player.verses.findIndex((v) => v.n === n));
 
-  // each surah opens on its first page
+  /** bring a verse to the middle of the window: its page, then its first word (Mushaf), or its block (the other views) */
+  function showVerse(ch: number, verse: number) {
+    const idx = indexOfVerse(ch, verse);
+    reveal(idx);
+    if (mushafMode) {
+      // go to the page's box first so the page gets built, then to the word in it
+      jumpPage = idx;
+      scroller?.querySelector(`.pg[data-i="${idx}"]`)?.scrollIntoView({ block: 'center', behavior: 'instant' });
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          document.getElementById(`w-${ch}-${verse}-1`)?.scrollIntoView({ block: 'center', behavior: 'instant' });
+          jumpPage = -1;
+        })
+      );
+    } else {
+      const id = reading ? `t-${verse}` : `v-${verse}`;
+      requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    }
+  }
+
+  /** take the reader to the start of `ch`: its page (Pages), or its first verse (scrolling) */
+  let pendingStart = 0;
+  function toStart(ch: number) {
+    const known = reader.wordPage.has(`${ch}-1-1`);
+    // the text of a surah opened from outside may still be loading: the start is taken again when it arrives
+    pendingStart = known ? 0 : ch;
+    if (paged) {
+      reader.pageIdx = reader.firstPageOf(ch);
+      void tick().then(() => {
+        if (paged && player.chapter === ch) reader.pageIdx = reader.firstPageOf(ch);
+      });
+      return;
+    }
+    if (known) void tick().then(() => {
+      if (player.chapter === ch) showVerse(ch, 1);
+    });
+  }
+
+  // the reader follows the surah: the book is rebuilt around it when it leaves the loaded window. A move the reader made
+  // itself (scrolling or turning into the next surah) only follows the book; any other change opens the surah at its start.
   $effect(() => {
-    player.chapter;
-    reader.pageIdx = 0;
-    near = new Set();
-    scroller?.scrollTo({ top: 0, behavior: 'instant' });
+    const ch = player.chapter;
+    untrack(() => {
+      const reset = reader.follow(ch);
+      if (ch === reader.selfNav) {
+        reader.selfNav = 0;
+        return;
+      }
+      if (reset) {
+        near = new Set();
+        inView = new Set();
+        jumpPage = -1;
+      }
+      if (!mushafMode) {
+        reader.pageIdx = 0;
+        near = new Set();
+        scroller?.scrollTo({ top: 0, behavior: 'instant' });
+        return;
+      }
+      toStart(ch);
+    });
+  });
+  // the text arrived for a surah that was opened before it was loaded
+  $effect(() => {
+    const ch = player.chapter;
+    if (!pendingStart || player.loading || !player.verses.length) return;
+    untrack(() => {
+      const want = pendingStart;
+      pendingStart = 0;
+      if (want === ch) toStart(ch);
+    });
+  });
+  // a surah the reader scrolls out of stays in the book
+  $effect(() => {
+    const v = player.verses;
+    const ch = player.chapter;
+    if (!player.loading && v.length) untrack(() => reader.keep(ch, v));
+  });
+  // the book is rebuilt when what it is made of changes
+  let bookKey = '';
+  $effect(() => {
+    const key = `${settings.translation}|${settings.layout}|${settings.continuous}`;
+    untrack(() => {
+      if (bookKey && key !== bookKey) reader.reset();
+      bookKey = key;
+    });
+  });
+  // the surahs on screen (the Sidebar marks them): one surah in the verse and translation views
+  $effect(() => {
+    const ch = player.chapter;
+    const m = mushafMode;
+    untrack(() => {
+      if (!m) reader.visible = [ch];
+      else if (!paged) requestAnimationFrame(markVisible);
+    });
+  });
+  let seenTurns = 0;
+  // the pages on screen: their surahs are the visible ones; a page of another surah takes the player there (not while playing)
+  $effect(() => {
+    if (!paged) return;
+    const shownPages = settings.spread ? [reader.spread.right, reader.spread.left] : [reader.page];
+    const first = shownPages.find((p) => !!p);
+    if (!first) return;
+    const chs = [...new Set(shownPages.flatMap((p) => p?.chapters ?? []))].sort((a, b) => a - b);
+    const turned = reader.turns !== seenTurns;
+    untrack(() => {
+      seenTurns = reader.turns;
+      reader.visible = chs;
+      reader.nearEdge(); // a page opened at the edge of the loaded book still needs the surah beyond it
+      // only a page turn by the reader moves the player; a surah opened from outside is still arriving
+      if (turned && settings.continuous && !player.playing && !player.loading && !chs.includes(player.chapter)) {
+        const ch = first.chapters[0];
+        reader.selfNav = ch;
+        void player.load(ch, false);
+      }
+    });
   });
   $effect(() => { translations.load(); });
   $effect(() => {
@@ -243,34 +353,19 @@
   // remember where the reader is, so the app reopens there
   $effect(() => {
     if (!paged) return;
-    const first = reader.page?.lines[0]?.cells[0]?.verse.n;
-    if (first) player.remember(first);
+    const cell = reader.page?.lines[0]?.cells[0];
+    if (cell && cell.chapter === player.chapter && cell.verse.n) player.remember(cell.verse.n);
   });
 
-  // bookmark, search result or reopen: take the reader to a verse
+  // bookmark, search result or reopen: take the reader to a verse of the surah that is open
   $effect(() => {
     const j = player.jump;
     if (!j || !player.verses.length) return;
     untrack(() => {
       if (paged) {
-        const i = reader.wordPage.get(`${j.verse}-1`);
+        const i = reader.wordPage.get(`${player.chapter}-${j.verse}-1`);
         if (i !== undefined) reader.show(i);
-      } else {
-        const id = mushafMode ? `w-${j.verse}-1` : reading ? `t-${j.verse}` : `v-${j.verse}`;
-        const idx = indexOfVerse(j.verse);
-        reveal(idx);
-        if (mushafMode) {
-          // go to the page's box first so the page gets built, then to the word in it
-          jumpPage = idx;
-          scroller?.querySelector(`.pg[data-i="${idx}"]`)?.scrollIntoView({ block: 'center', behavior: 'instant' });
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => {
-              document.getElementById(id)?.scrollIntoView({ block: 'center', behavior: 'instant' });
-              jumpPage = -1;
-            })
-          );
-        } else requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'center', behavior: 'instant' }));
-      }
+      } else showVerse(player.chapter, j.verse);
       if (j.mark) markVerse(j.verse);
       player.jump = null;
     });
@@ -297,7 +392,7 @@
     const k = box.height / scroller.clientHeight || 1;
     let top = Infinity;
     let bottom = -Infinity;
-    const words = mushafMode || !reading ? scroller.querySelectorAll<HTMLElement>(`[id^="w-${activeVerse}-"]`) : [];
+    const words = mushafMode || !reading ? scroller.querySelectorAll<HTMLElement>(`[id^="w-${player.chapter}-${activeVerse}-"]`) : [];
     for (const el of words) {
       const r = el.getBoundingClientRect();
       top = Math.min(top, r.top);
@@ -337,7 +432,7 @@
   let busyUntil = 0;
   function centerPlaying(force: boolean) {
     if (!scroller || !activeVerse) return;
-    untrack(() => reveal(indexOfVerse(activeVerse)));
+    untrack(() => reveal(indexOfVerse(player.chapter, activeVerse)));
     const b = playingBounds();
     if (!b) return;
     const { box, k, top, bottom } = b;
@@ -389,18 +484,106 @@
     const sel = mushafMode ? '[id^="w-"][id$="-1"]' : reading ? '[id^="t-"]' : '[id^="v-"]';
     for (const el of box.querySelectorAll<HTMLElement>(sel)) {
       if (el.getBoundingClientRect().bottom > top) {
-        const n = Number(el.id.split('-')[1]);
-        if (n) player.remember(n);
+        // Mushaf ids are w-<chapter>-<verse>-<pos>; the other views are t-<verse> and v-<verse>
+        const parts = el.id.split('-');
+        const ch = mushafMode ? Number(parts[1]) : player.chapter;
+        const n = Number(mushafMode ? parts[2] : parts[1]);
+        if (n && ch === player.chapter) player.remember(n);
         return;
       }
     }
   }
+
+  // The book grows at its ends while the reader scrolls towards them: the surah before the window is added above the
+  // reader, and the place on screen is kept by moving the scroll by the height that was added.
+  let growingUp = false;
+  let growingDown = false;
+  function edges() {
+    if (!mushafMode || paged || !settings.continuous || !inView.size) return;
+    const seen = [...inView];
+    if (Math.min(...seen) <= 1 && !growingUp) void growUp();
+    if (Math.max(...seen) >= lastIdx - 1 && !growingDown) void growDown();
+  }
+  async function growUp() {
+    const box = scroller;
+    if (!box) return;
+    growingUp = true;
+    try {
+      const before = box.scrollHeight;
+      const added = await reader.extend(-1);
+      if (added <= 0) return;
+      near = new Set([...near].map((i) => i + added));
+      inView = new Set([...inView].map((i) => i + added));
+      if (jumpPage >= 0) jumpPage += added;
+      await tick();
+      box.scrollTop += box.scrollHeight - before;
+    } finally {
+      growingUp = false;
+    }
+  }
+  async function growDown() {
+    growingDown = true;
+    try {
+      await reader.extend(1);
+    } finally {
+      growingDown = false;
+    }
+  }
+
+  /** the page at the middle of the window, and the surah of the first word on its top edge */
+  function here() {
+    if (!scroller || paged || !mushafMode) return null;
+    const box = scroller.getBoundingClientRect();
+    const mid = box.top + box.height / 2;
+    let el: HTMLElement | null = null;
+    for (const b of scroller.querySelectorAll<HTMLElement>('.pg[data-i]')) {
+      if (b.getBoundingClientRect().bottom >= mid) {
+        el = b;
+        break;
+      }
+    }
+    const page = el ? reader.pages[Number(el.dataset.i)] : undefined;
+    if (!el || !page) return null;
+    const top = box.top + 8;
+    let ch = page.chapters[0] ?? 0;
+    for (const w of el.querySelectorAll<HTMLElement>('[id^="w-"]')) {
+      if (w.getBoundingClientRect().bottom > top) {
+        ch = Number(w.id.split('-')[1]);
+        break;
+      }
+    }
+    return { chapters: page.chapters, ch };
+  }
+  function markVisible() {
+    const h = here();
+    if (h) reader.visible = h.chapters;
+  }
+  // once the scrolling stops, the surah on screen is the one the player is on (unless it is playing)
+  function settle() {
+    if (player.loading) return;
+    const h = here();
+    if (!h) return;
+    reader.visible = h.chapters;
+    if (settings.continuous && !player.playing && h.ch && h.ch !== player.chapter) {
+      reader.selfNav = h.ch;
+      void player.load(h.ch, false);
+    }
+  }
+
+  let edgeFrame = 0;
+  let settleTimer = 0;
   const onscroll = () => {
     lastScroll = Date.now();
     checkAway();
     if (Date.now() > busyUntil) moved();
     clearTimeout(savePos);
     savePos = window.setTimeout(saveScrollPlace, 500);
+    if (!edgeFrame) edgeFrame = requestAnimationFrame(() => {
+      edgeFrame = 0;
+      edges();
+    });
+    clearTimeout(settleTimer);
+    settleTimer = window.setTimeout(settle, 250);
   };
   $effect(() => {
     if (settings.lockPlaying && !paged && activeVerse) untrack(() => centerPlaying(true));
@@ -699,8 +882,8 @@
               </div>
               <div class="ar" class:below dir="rtl">
                 {#each v.words as w (w.pos)}
-                  <Word {v} {w} {below} />{' '}
-                {/each}<End {v} />
+                  <Word ch={player.chapter} {v} {w} {below} />{' '}
+                {/each}<End ch={player.chapter} {v} />
               </div>
               {#if settings.translation && v.translation && settings.wordMeaning !== 'off'}
                 <p class="tr" dir="auto">{v.translation}</p>
@@ -790,7 +973,8 @@
   /* ───── scrolling views ───── */
   /* smooth for keys and the Back arrow; jumps to a verse or the top say `instant` themselves */
   @media (prefers-reduced-motion: no-preference) { .scroll { scroll-behavior: smooth; } }
-  .scroll { flex: 1; overflow: auto; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
+  /* the book grows above the reader: the scroll position is kept by hand (see growUp), not by the browser's anchoring */
+  .scroll { flex: 1; overflow: auto; overflow-anchor: none; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
   .head { text-align: center; padding: 36px 0 16px; }
   .kicker { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
   h2 { font-family: 'KFGQPC Uthmanic Hafs', serif; font-weight: 400; font-size: clamp(48px, 6vw, 80px); line-height: 1.6; margin: 4px 0 6px; color: var(--accent); }
