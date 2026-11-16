@@ -1,92 +1,58 @@
-# Quran for Desktop — project memory
+# Quran for Desktop
 
-Free, open-source (GPL-3.0), ad-free desktop Quran app: Windows, macOS, Linux (AppImage, deb, rpm from CI). Owner tested macOS and Linux builds on real machines: they work.
-Tauri 2 + SvelteKit (adapter-static, ssr=false) + Svelte 5 runes + TypeScript. Repo https://github.com/Obscyra/quran-desktop (`main`, public). Inspired by https://github.com/quran/quran_android (credit it, keep its Android links in the README). Data: Quran.com API v4. App code in `app/`; `reference/` (gitignored) is a quran_android clone.
+Free, open-source (GPL-3.0), ad-free Quran app for Windows, macOS and Linux. Tauri 2 + SvelteKit 3 (adapter-static, SPA) + Svelte 5 runes + TypeScript. App code in `app/`. Repo: https://github.com/Obscyra/quran-desktop. Inspired by quran_android (credit it; keep its links in the README). Data: Quran.com API v4.
+
+## How to work (Karpathy rules)
+
+Invoke the `karpathy-guidelines` skill before executing any task.
+
+1. **Think before coding.** State assumptions. If a request has several readings or something is unclear, ask; don't pick silently. Push back when a simpler way exists.
+2. **Simplicity first.** Minimum code that solves the request. No extra features, single-use abstractions, speculative options or error handling for impossible cases.
+3. **Surgical changes.** Touch only what the request needs; match existing style. Don't refactor or "improve" neighbouring code. Remove only the orphans your own change created; mention other dead code instead of deleting it. Every changed line must trace to the request.
+4. **Goal-driven.** Turn the task into a checkable goal and loop until it is verified (`npm run check` = 0 errors, 0 warnings; a browser test for behaviour). Say plainly what was and wasn't verified.
 
 ## Owner's rules (do not break)
-- Focus mode stays off until told (`FOCUS_MODE = false` in `ui.svelte.ts` hides button, shortcut, settings).
-- Build (Windows .exe) only when asked; the owner has said "don't build" repeatedly. After a local build, always copy the installer to `/mnt/d/Downloads/Quran-Beta/` without asking (use `cp`, check the target first; same-version files there may be older builds).
-- Everything free: no ads, no paid features. Betas (`x.y.z-beta.n`) until the owner has tested.
-- No mistakes in Arabic. Use per-page glyph fonts for the Mushaf script.
-- Reading first; listening optional (player bar opens on demand).
-- Be honest about what was verified. Browser tests are not the real Windows window.
-- Don't tag releases or make the repo public without the owner's go-ahead.
-- Commits: author `Obscyra <170297987+Obscyra@users.noreply.github.com>` (repo git config; never another email). Trailer allowed: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 
-## Architecture (app/src/lib)
-- `api.ts`: quran.com calls: `fetchVerses` (words with `code_v2` glyph, `v2_page`, tajweed markup, audio_url), `fetchIndo` (IndoPak text + 15-line layout, `mushaf=3`), `fetchChapterAudio` (per-word segments), reciters, translations.
-- `fonts.svelte.ts`: page fonts `verses.quran.foundation/fonts/quran/hafs/v2/woff2/p{n}.woff2` as `QCF{n}`, cached in IndexedDB (`offline.ts`, DB v3: text, audio, blobs, fonts, indo). `has()` must read `tick` to stay reactive.
-- `player.svelte.ts`: audio engine: lazy `prepareAudio`, `playVerse` (range + loop), `playFrom`, `playWord` (wbw mp3, or segment offline), `goTo`/`jump` (bookmarks, search), back/forward trail.
-- `reader.svelte.ts`: page state, two-page spread (even page right, next odd left: 2 faces 3). `pages.ts` groups words by page/line (normalises by reading order; API mislabels some verses).
-- Also: `settings.svelte.ts` (localStorage `quran.settings.v2`), `bookmarks.svelte.ts`, `ui.svelte.ts`, `actions.ts`, `translations.svelte.ts`, `updater.svelte.ts`, `themes.ts` (15 themes), `platform.ts`, `languages.ts`.
-- Components: `TitleBar` (custom chrome; Verse by Verse | Reading switch; listen/focus/fullscreen/menu), `Reader` (sub-bar + modes), `PageSheet` (one Mushaf page; `fit()` sizes text to widest line), `Word`, `End` (verse-end marker), `WordMenu`, `Sidebar` (Surahs | Bookmarks, type `55:13`, starred surahs), `PlayerBar`, `Settings`, `Welcome`, `NoticeCard`, `HintCard`, `Tooltip`. Audio manager is a page (downloads audio; audio is never bundled).
-- Sidebar width: drag its right edge (`.grip` in `Sidebar.svelte`), 260–480 px, default 324 (double-click resets), `settings.sidebarWidth`; follows the mouse once per frame and saves on release.
-- Left-click word plays it; right-click opens `WordMenu`.
-- Gotchas: `text-rendering: geometricPrecision` on glyph text (hinting draws stray strokes); word padding in `em` so line fitting scales linearly; `$state.snapshot()` before storing proxies in IndexedDB; never `pkill -f "vite dev"` (kills the shell), use `fuser -k 1420/tcp`; tajweed class names contain hyphens (`custom-alef-maksora`).
-- Fonts in `app/static/fonts`: KFGQPC Uthmanic Hafs, IndoPak Nastaleeq, Inter, `arabic/` (Amiri Quran, Noto Naskh Arabic, Scheherazade New; OFL; Windows has none).
-- Reciters: `reciters.ts` = quran.com list with portraits (`static.qurancdn.com/<photo>`); recordings without word timings (`approx`) get estimated timings from verse spans in `player.fetchAudio`. Listen-only: `reciters-qa.ts` (92 whole-surah recitations of quranicaudio.com, ids 10000+, generated by `scripts/update-reciters.mjs`; list API has no CORS so it ships as a file); `ChapterAudio.plain`: no highlight, verse stepping or play-from-verse; picker groups them under "Listen only" below "Follow along".
-- Reminders / verse of the day: `notifications.svelte.ts` + `NoticeCard.svelte`; system toasts via `tauri-plugin-notification`.
-- Buttons share one look (tokens in `app.css`: `--btn`, `--btn-hover`, `--btn-line`, `--btn-on`): soft fill, no outline; chosen item of a group (`.seg`) and on/off icon (`.on`) = accent tint with accent text; only the main action (Play, Next, Listen) is a solid accent block. Use tokens for any new button. Player bar floats as a rounded blurred card in hover mode (`settings.playerHover`: floats over the bottom edge, shows on hover), knob on seek bar, styled volume slider.
-- Welcome (`settings.firstRun`, flag `quran.welcomed`; Skip on every step): theme (15 previews, 5 per row x 3, each showing the full Bismillah; "Match system" is a chip above), size, mode, script, language (searchable list beside the translation list, no native selects; labelled as translation language), word meanings, final shortcuts/tips page. Card is 1080px wide.
-- Feature hints (`hints.svelte.ts`, `HintCard.svelte`): counters (`hints.note('barPeek'|'backArrow'|'zoom'|'pageTurn')`, called from `PlayerBar`, `Reader`, `reader.go()`) earn a card offering the matching setting as a switch. Rules: one hint per session and per 20 h, max twice each, never if the setting was already changed, waits while welcome/Settings/notice shows (retry 4 s). Settings → App & window → "Show tips" (`settings.tips`; `hints.enable()`; switching on resets history). State in localStorage `quran.hints`. Add a hint = entry in `HINTS` + `note()` call; no `label` = no switch; `link` renames the Settings button. Page-turn tips at totals 6 (two pages), 10 (translation), 14 (scroll), 20 (zoom, Fit/Fill); each hint keeps `at`, so they arrive one at a time, 20 h apart.
-
-## Smoothness rules (measured with CPU throttled 4x)
-- Layout changes (sidebar, player bar) = one reflow plus a transform glide, never animated width/height. Paged reader keeps the current spread and neighbours mounted (neighbours hidden, laid out when idle). Long surahs render in batches (`upto` in `Reader.svelte`). Sweep layers made by `sweep.ts`. Settings is an overlay over a mounted reader.
-- Zoom: `.verse` uses `content-visibility: auto`; `PageSheet.fit()` keeps a `scaled` map (text size as fraction of page width) and divides measured widths by the page's transform scale `k` (right even mid-glide); Reader glide skips a hidden (zero-size) page. Verse by Verse zoom buttons show size as % of 56 px.
-- Scroll reading (`Reader.svelte` `watchPage`, `PageSheet` `stagger`/`live`; `.pg` has `content-visibility: auto`, which halved long tasks): page in view built at once; pages within ~14000 px (~12 pages, ~1.2 MB heap each) built ahead one per idle slot, nearest first; dropped only beyond ~30000 px; a page built while scrolling draws 4 lines/frame and is measured only once on screen or idle. Longest task while scrolling fell ~530 → ~200 ms.
-- Shipped page sizes `src/lib/fit-data.json` (~40 KB, committed; made by `scripts/learn-fit.mjs`): text size of every Mushaf page, key `chapter:page:lines:words`; `fit()` uses it plus one check of the widest line. Rerun the script (dev server up, `playwright`, ~20 min) if page fonts, layout or word spacing CSS change; unknown pages are just measured. A wrong file shows as overflowing lines: scroll-test.
-- Scroll views: `settings.lockPlaying` + `centerPlaying`/`playingBounds` in `Reader.svelte` (verse centred whole; taller verses follow the word); unlocked, a `.back` arrow shows when the verse is off screen. Rects divided by `k` (interface zoom).
-
-## Desktop shell (`src-tauri/src/lib.rs`, `media.rs`)
-- Tray (Open / Quit), `tauri-plugin-window-state` (size, position, maximized; not VISIBLE, so a window hidden in the tray never makes the next launch start hidden), `tauri-plugin-autostart` (`--hidden`). Window is created hidden and shown on page load Finished (not with `--hidden`) so the saved size applies before it's seen. Default size 1440x900 (min 960x600), only for installs with no saved state.
-- Closing hides to tray when `settings.background` is on: done in JS `onCloseRequested` in `+page.svelte` (a Rust handler would be undone). A pending update installs on close.
-- `tauri-plugin-single-instance` must be the first plugin (second launch shows the running window). `remember_window` saves size/place 400 ms after the last resize/move. `fit_window` keeps the window inside the work area after scaling/monitor changes.
-- Window fit (`+page.svelte`): `fit()`/`refit()` write the real `window.innerHeight` to `--vh` (used by `.app` height) and reset scroll on resize, focus, scroll, visibilitychange (a tray-hidden window can return with stale 100vh and a scrolled page). Check on real Windows.
-- Frame: Windows draws its own title bar (`decorations: false`); macOS (`tauri.macos.conf.json`) and Linux (`tauri.linux.conf.json`) use the native title bar; `TitleBar.svelte` shows window buttons only on Windows.
-- Media controls: Windows = Previous/Play-Pause/Next in the taskbar thumbnail (ITaskbarList3, icons drawn in code, window subclass on main HWND, re-checked every 3 s; log `%TEMP%\quran-taskbar.log`); macOS/Linux = `souvlaki` (Now Playing / MPRIS) on its own thread (first compiled by CI). Page reports with `media_state` command, handles `media-control` event (prev, next, play, pause, toggle). `open_inspector` command: Ctrl/Cmd+Shift+I.
-- `Cargo.lock` is committed; keep npm and crate versions of Tauri plugins in step (CI once took a newer notification crate and the build refused the mismatch).
-- Continue where I left off (`player.svelte.ts`): verse in `quran.verse`, position in `quran.time` (every 2 s while playing and on pause; cleared when the surah ends or another opens). On launch `restoreTime()` fetches audio, seeks, opens the player bar, stays paused. Skipped offline-not-downloaded or when opened on a `#/surah` link.
-
-## Bundled data (works offline)
-- `app/scripts/bundle-data.mjs` (`npm run bundle`): surah list, Arabic text of 114 surahs (default translation Saheeh) with Tajweed and IndoPak, 604 page fonts → `app/static/data/`, `app/static/fonts/qcf/` (~120 MB, gitignored; every checkout/CI must run it, `release.yml` does). `api.ts` and `fonts.svelte.ts` read them first, going online only for other translations and audio. Run it once before a local build or dev session (a build without still works but uses the network).
-- `datasync.svelte.ts`: weekly background check (25 s after start, online only) compares provider text, IndoPak spelling, font sizes (`data/manifest.json`) with the app's; changes go to IndexedDB (`<surah>:fresh`, `fonts`, `quran.fresh.fonts`), read before bundled copy; must pass `sound()` (no verse/word lost).
-- Word meanings follow the translation language (`languages.ts`, `api.extrasOf`); bundled words are English. Cached text keys end in `:2`.
-- App icon master `app/src-tauri/icon-source.png` (`npx tauri icon src-tauri/icon-source.png`, then delete generated `icons/android` and `icons/ios`): green with gold calligraphy; the golden squircle (commit `67c2209`) was set aside at the owner's request.
-
-## Website
-Own repo https://github.com/Obscyra/quran-desktop-site, Netlify https://qurandesktop.netlify.app (GitHub Pages off). Address is written in `index.html`, `robots.txt`, `sitemap.xml`, `llms.txt`: change all four for a custom domain. `_headers` holds security headers/CSP (keep `connect-src` in step with `app.js` fetches). Lives in `website/` here (excluded via `.git/info/exclude`; commit/push from inside it). Gold Arabic calligraphy as CSS pseudo-elements (`--gold`, per section, never behind screenshots); features alternate sides; "Try the reader" demo works like the app (real audio `audio/fatiha.mp3`, timings `window.FATIHA_T` in `data.js`, Sweep/Fill/Line highlight; sweep = clipped accent copy of the word). Step videos fade in over a poster (`.vid.ready`). Headless Chromium cannot decode the VP9 webm: check video in a real browser. Download buttons ask the GitHub API for the latest `.exe`/`.dmg` (`data-dl`). Unchecked: licence of the page fonts.
+- Don't build the Windows installer unless asked. After a local build, copy it to `/mnt/d/Downloads/Quran-Beta/` without asking (`cp`, check the target first).
+- Don't tag releases, push, or make the repo public without the owner's go-ahead. Betas are `x.y.z-beta.n` until the owner has tested.
+- Focus mode stays off (`FOCUS_MODE = false` in `ui.svelte.ts`).
+- Everything free: no ads, no paid features.
+- No mistakes in Arabic. Use the per-page glyph fonts for the Mushaf script.
+- Reading first; listening is optional (the player bar opens on demand).
+- Be honest about verification: a browser test is not the real Tauri window.
+- Commits: author `Obscyra <170297987+Obscyra@users.noreply.github.com>` (repo git config, never another email). Allowed trailer: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
+- Never `pkill -f "vite dev"` (kills the shell); stop the dev server with `fuser -k 1420/tcp`.
 
 ## Run and test
-- Browser: `cd app && npm install && npx vite dev --port 1420`, open `http://localhost:1420/#/55?os=windows` (`?os=` previews other chrome).
-- Type check `npm run check` (must be 0 errors, 0 warnings).
-- Playwright scripts live in the session scratchpad (`pw/`), written with the `playwright` package. Check line overflow/overlap, glyph fonts, word menu, verse-only playback, offline (download, abort non-localhost requests, reload).
-- Real Windows window (`scripts/win-test.mjs`): the owner's installed app must be closed (single instance). Run `Quran.exe` with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9333` and `WEBVIEW2_USER_DATA_FOLDER` = scratch folder; connect with `playwright-core` `connectOverCDP` from Windows node (`C:\Users\magnum\quran-pw`, `npm i playwright-core`; `node.exe` via powershell). Reports long tasks, heap, memory, CSP violations. Scrolling Al-Baqarah at 17,500 px/s: long tasks 2.7 s (worst 455 ms) before shipped sizes/wider cache, 1.2–1.6 s (worst 150 ms) after; normal wheel 0–1.
 
-## Build the Windows installer (only when asked)
-WSL2 with Windows interop; build in `C:\Users\magnum\quran-build` (copy of `app/`):
-1. `rsync -a --delete --exclude node_modules --exclude .svelte-kit --exclude build --exclude target app/ /mnt/c/Users/magnum/quran-build/`
-2. `echo '{"bundle":{"createUpdaterArtifacts":false}}' > /mnt/c/Users/magnum/quran-build/src-tauri/tauri.local.json`
-3. `powershell.exe -NoProfile -Command 'cd C:\Users\magnum\quran-build; $env:Path += ";C:\Program Files\nodejs;$env:USERPROFILE\.cargo\bin"; $env:CARGO_PROFILE_RELEASE_LTO="false"; $env:CARGO_PROFILE_RELEASE_CODEGEN_UNITS="16"; npm.cmd run tauri build -- --config src-tauri\tauri.local.json'`
-   Run in background (~2.5 min warm, 6+ min cold); PowerShell reports exit 1 from stderr even on success. The two `CARGO_PROFILE_RELEASE_*` vars are local-only (owner's request; `Cargo.toml` has `lto = true`, `codegen-units = 1`, kept for CI); keep them identical every build or the cache is lost.
-4. Installer: `quran-build\src-tauri\target\release\bundle\nsis\Quran_<version>_x64-setup.exe` → copy to `/mnt/d/Downloads/Quran-Beta/` (README.txt lives there). `cargo` is not on WSL's PATH: Rust only compiles in the Windows build.
-- Sign a finished exe: `npx tauri signer sign -f ~/.tauri/quran-desktop.key -p "" <exe>` (builds sign with env `TAURI_SIGNING_PRIVATE_KEY`, content or path).
-- Replacing an installer on an existing release (only when asked): `gh release upload --clobber` the exe and `.sig`, put the new signature in `latest.json`. Copy can fail "Permission denied" if an installer is running; don't kill the owner's process. Don't install on the owner's PC unless asked. Don't use `-ExecutionPolicy Bypass`.
+- Dev: `cd app && npm install && npx vite dev --port 1420`, open `http://localhost:1420/#/55?os=windows` (`?os=` previews other window chrome).
+- `npm run check` must be 0 errors, 0 warnings. `npm run bundle` once downloads the offline data (gitignored, ~120 MB; CI does it); without it the app uses the network.
+- Browser tests: Playwright scripts in the session scratchpad. Check line overflow, glyph fonts, word menu, playback, offline.
+- Real Windows window: `app/scripts/win-test.mjs` (the owner's installed app must be closed; single instance).
+- SvelteKit 3: config lives in `vite.config.js` (no `svelte.config.js`); `$lib` is kept through `alias`.
 
-## Releases and updates
-- `.github/workflows/release.yml`: pushing a `v*` tag builds Windows (.exe), macOS (.dmg), Linux (.AppImage, .deb, .rpm on ubuntu-22.04), signs update artifacts, publishes `latest.json`. Releases are normal (non-pre-release) even for `-beta` tags so the updater sees them; notes from `.github/release-notes/<tag>.md` + `footer.md`. Installed apps only see updates from a public repo's non-prerelease `latest`.
-- Secrets `TAURI_SIGNING_PRIVATE_KEY` (+ `_PASSWORD`, empty). Key `~/.tauri/quran-desktop.key`; public key in `app/src-tauri/tauri.conf.json` (checked: matches `.key.pub` and the live `latest.json` key id FE5C80623DE32C7C). Losing the key breaks updates for installs.
-- Update flow (`updater.svelte.ts`, toast in `+page.svelte`): 4 s after launch and every 2 h `check()` finds a newer signed release and downloads it quietly (failed check retried after 10 min, up to 4 times). Bottom-left toast "Version X is ready" + Restart to update (`install()` then `relaunch()`; on installer failure state = `error`, next check restarts). The update card renders release notes formatted (headings, bullets, bold). Closing with an update waiting installs it. Not covered: tray "Quit" doesn't apply a waiting update; rpm matches the generic `linux-x86_64` entry and can't self-update.
-- Uninstaller (`src-tauri/windows/hooks.nsi`) removes app data unless `$UpdateMode`; also defines `MUI_UNICON` (hooks are included before Tauri's `UNINSTALLERICON` check).
-- Linux AppImage: `bundle.linux.appimage.bundleMediaFramework` on; CI installs GStreamer packages (incl. ugly, libav for MP3) and deletes `libgstwebrtc.so` before bundling (it links libsoup 2; WebKit's libsoup 3 aborts the web process, showing "Could not load this surah"). Found by running the extracted AppImage under WSLg. Unverified on Fedora.
-- rpm: versions can't contain a hyphen, so `rpm` is not in `bundle.targets`; the Linux job's last step builds it (`tauri build --bundles rpm`, e.g. version `0.0.5`, release `0.beta.1`) and uploads with `gh release upload`. Not in `latest.json`; no in-app updates for rpm/deb.
-- Actions pinned to commit hashes (comment shows the tag); new hash: `gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`. Tag passed to the version step as env `TAG`, never pasted into script text. `dtolnay/rust-toolchain` needs `toolchain: stable`.
-- App CSP (`app.security.csp` in `tauri.conf.json`): scripts only from the app (Tauri adds hashes for the SvelteKit bootstrap), no objects/frames/form posts; `connect-src` and `media-src` allow any `https:` (audio hosts come from the API); images only from static.qurancdn.com. Tested in Chromium, not yet seen in a real Tauri window. If audio, fonts, portraits or updates silently stop in the installed app, suspect this first.
-- Faster CI: betas (hyphen in tag) build with `CARGO_PROFILE_RELEASE_LTO=false`, 16 codegen units (stable keeps `lto = true`). Rust cache is saved only by runs on `main`, so start releases with `gh workflow run release.yml --ref main -f tag=vX.Y.Z` (add `-f only=windows|macos|linux`); first run per platform is cold. A tag push works but only restores cache.
-- Moving a release: cancel running build (`gh run cancel`), `gh release delete <tag> --cleanup-tag -y`, ensure tag gone locally and remotely (`git push origin :refs/tags/<tag>`), then tag the new commit and push.
-- Version lives in `app/package.json`, `app/src-tauri/tauri.conf.json`, `app/src-tauri/Cargo.toml` (CI overrides from the tag).
+## Architecture (`app/src/lib`)
 
-## Status
-- Last commit: v0.0.8-beta (themes: 15; starred surahs, repeat button, Audio manager page, formatted update notes, first-run guide). v0.0.6 notes are in `.github/release-notes/`; v0.0.5-beta was deleted and rebuilt several times in CI.
-- v0.0.9-beta in progress, uncommitted and untagged (notes `.github/release-notes/v0.0.9-beta.md`): no small-window flash on start, repo link in About, "translation language" wording and bigger theme previews in setup, redesigned shortcuts page, default window 1440x900. A local 0.0.9-beta installer is built and copied to `Quran-Beta`.
-- Not verified: 0.0.5→0.0.6 in-app update, SmartScreen (no code-signing cert; downloads carry Mark of the Web, local builds don't), theme previews in the real window.
-- Ideas not done: plain-markup words for lighter pages, tafsir, sleep timer, in-text search, true OS Do Not Disturb (no public API), code signing, tray "Quit" applying a waiting update.
+- `api.ts` (Quran.com), `fonts.svelte.ts` (page fonts `QCF{n}`, cached in IndexedDB via `offline.ts`), `pages.ts` (groups words into Mushaf pages/lines), `player.svelte.ts` (audio engine, per surah), `reader.svelte.ts` (page state, spread, continuous book), `settings.svelte.ts` (localStorage `quran.settings.v2`), `actions.ts`, `themes.ts`, `hints.svelte.ts`, `tafsir.svelte.ts`, `datasync.svelte.ts`, `updater.svelte.ts`.
+- Components: `Reader` (modes), `PageSheet` (one Mushaf page; `fit()` sizes text to the widest line), `Word`, `End`, `WordMenu`, `Sidebar`, `PlayerBar`, `Settings`, `Welcome`, `TitleBar`.
+- Continuous book (`settings.continuous`, default on): `reader.pages` is `groupBook` over a window of consecutive surahs (`reader.range`, text in `reader.cache`, current surah via `reader.keep`), merged by page number so a page where two surahs meet shows both (banners per `page.starts`). Word keys are `chapter-verse-pos`; DOM ids `w-<ch>-<v>-<pos>` and `end-<ch>-<v>`; `Word` and `End` need `ch`. The window grows both ways (`reader.extend`; scroll mode fixes `scrollTop` by hand, `overflow-anchor: none`). The reader moves the player itself (`reader.selfNav`), never while playing, and in paged mode only after a real page turn (`reader.turns`). Spread: odd page right, even left when on. Sidebar highlights `reader.visible` surahs, the playing one strongest. Browser-tested only, not yet seen in the real window.
+- Gotchas: `text-rendering: geometricPrecision` on glyph text; word padding in `em`; `$state.snapshot()` before storing proxies in IndexedDB; tajweed class names contain hyphens; `fonts.has()` must read `tick`.
+- Layout changes = one reflow plus a transform glide, never animated width/height. Rerun `scripts/learn-fit.mjs` if page fonts, layout or word-spacing CSS change (updates `src/lib/fit-data.json`).
+
+## Desktop shell (`app/src-tauri`)
+
+- Window state, tray, autostart and single-instance plugins (single-instance must be first). Closing hides to tray when `settings.background` is on (done in JS, `+page.svelte`).
+- Windows draws its own title bar; macOS and Linux use the native one. Media controls: taskbar buttons on Windows, `souvlaki` (MPRIS / Now Playing) elsewhere.
+- Keep npm and crate versions of Tauri plugins in step; `Cargo.lock` is committed.
+
+## Build and release (only when asked)
+
+- Windows build runs from WSL in `C:\Users\magnum\quran-build` (copy of `app/`): rsync, write `tauri.local.json`, run `npm.cmd run tauri build` through `powershell.exe` with `CARGO_PROFILE_RELEASE_LTO=false` and `CODEGEN_UNITS=16` (keep identical every build). Installer: `src-tauri\target\release\bundle\nsis\Quran_<version>_x64-setup.exe`.
+- CI: pushing a `v*` tag runs `.github/workflows/release.yml` (Windows, macOS, Linux; signs updates, publishes `latest.json`; notes from `.github/release-notes/<tag>.md`). Start releases with `gh workflow run release.yml --ref main -f tag=vX.Y.Z`.
+- Update signing key `~/.tauri/quran-desktop.key`; losing it breaks updates for installs.
+- Version lives in `app/package.json`, `app/src-tauri/tauri.conf.json`, `app/src-tauri/Cargo.toml`. Current: 0.0.10-beta.
+- Not verified: in-app update path, SmartScreen (no code-signing cert), CSP in a real Tauri window.
+
+## Website
+
+Separate repo https://github.com/Obscyra/quran-desktop-site, kept in `website/` (excluded from this repo; commit from inside it). Netlify: https://qurandesktop.netlify.app.

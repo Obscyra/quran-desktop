@@ -24,6 +24,8 @@ const defaults = {
   readingStyle: 'arabic' as ReadingStyle,
   flow: 'page' as PageFlow,
   spread: false,
+  /** the paged reader reads the Quran as one book: neighbouring surahs share their Mushaf pages */
+  continuous: true,
   pageFit: 'fit' as 'fit' | 'fill',
   pageZoom: 1,
   pageType: 'madani' as PageType,
@@ -87,6 +89,7 @@ class Settings {
   readingStyle = $state(defaults.readingStyle);
   flow = $state(defaults.flow);
   spread = $state(defaults.spread);
+  continuous = $state(defaults.continuous);
   /** how a Mushaf page sits in the window: whole page in view (fit) or the full width of it (fill) */
   pageFit = $state(defaults.pageFit);
   /** on top of fit or fill: 0.5 to 3 */

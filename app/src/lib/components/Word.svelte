@@ -1,6 +1,7 @@
 <script lang="ts">
   import { pickWord, sayWord } from '$lib/actions';
   import { pageFonts } from '$lib/fonts.svelte';
+  import { player } from '$lib/player.svelte';
   import { reader } from '$lib/reader.svelte';
   import { light, relight } from '$lib/sweep';
   import { settings } from '$lib/settings.svelte';
@@ -8,11 +9,11 @@
   import { untrack } from 'svelte';
   import type { Verse, Word } from '$lib/types';
 
-  let { v, w, below = false }: { v: Verse; w: Word; below?: boolean } = $props();
+  let { ch, v, w, below = false }: { ch: number; v: Verse; w: Word; below?: boolean } = $props();
 
-  const key = $derived(`${v.n}-${w.pos}`);
+  const key = $derived(`${ch}-${v.n}-${w.pos}`);
   let el = $state<HTMLElement>();
-  const selected = $derived(ui.pick?.verse === v.n && ui.pick.pos === w.pos);
+  const selected = $derived(ui.pick?.chapter === ch && ui.pick.verse === v.n && ui.pick.pos === w.pos);
 
   // one glyph per word, in the font of the page it was printed on; plain text until that font is in
   const glyph = $derived(settings.script === 'mushaf' && !!w.glyph && pageFonts.has(w.gp));
@@ -56,17 +57,17 @@
   bind:this={el}
   class:sel={selected}
   class:tj={tajweed}
-  class:target={ui.target === v.n}
-  id="w-{v.n}-{w.pos}"
+  class:target={ch === player.chapter && ui.target === v.n}
+  id="w-{ch}-{v.n}-{w.pos}"
   title={settings.wordMeaning === 'hover' && !ui.pick ? w.translation : undefined}
   role="button"
   tabindex="-1"
-  onclick={() => sayWord(v.n, w.pos)}
+  onclick={() => sayWord(v.n, w.pos, ch)}
   oncontextmenu={(e) => {
     e.preventDefault();
-    pickWord(v.n, w.pos);
+    pickWord(v.n, w.pos, ch);
   }}
-  onkeydown={(e) => e.key === 'Enter' && sayWord(v.n, w.pos)}
+  onkeydown={(e) => e.key === 'Enter' && sayWord(v.n, w.pos, ch)}
 ><span class="t" class:g={glyph} style:font-family={family} data-t={text}>{#if tajweed}{@html tajweedHtml(w.taj)}{:else}{text}{/if}</span>{#if below}<span class="m">{w.translation}{#if settings.transliteration}<em>{w.transliteration}</em>{/if}</span>{/if}</span>
 
 <style>
