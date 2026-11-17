@@ -573,6 +573,49 @@
       </div>
       </div>
 
+      <p class="intro">These options are for <b>Reading</b> mode, the printed Mushaf pages. Verse by Verse ignores them.</p>
+      <h3 class="grp">Page</h3>
+      <div class="card">
+      <div class="row wide">
+        <div class="label"><h3>Page look</h3>{@render rst('Page look')}<p>The paper the Mushaf page is drawn on.</p></div>
+        <div class="looks">
+          {#each LOOKS as l (l.id)}
+            <button class="look" class:on={settings.pageLook === l.id} onclick={() => (settings.pageLook = l.id)} aria-pressed={settings.pageLook === l.id}>
+              <span class="mini {l.id}"><i></i><i></i><i></i><i></i><i></i></span>
+              <b>{l.name}</b><small>{l.hint}</small>
+            </button>
+          {/each}
+        </div>
+      </div>
+      <div class="row">
+        <div class="label"><h3>Page flow</h3>{@render rst('Page flow')}<p>Turn one page at a time, or scroll the pages like a long sheet.</p></div>
+        <div class="seg">
+          <button class:on={settings.flow === 'page'} onclick={() => (settings.flow = 'page')}>Pages</button>
+          <button class:on={settings.flow === 'scroll'} onclick={() => (settings.flow = 'scroll')}>Scroll</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="label"><h3>Two-page spread</h3>{@render rst('Two-page spread')}<p>Show facing pages like an open book: odd pages on the right, even on the left. Needs a wide window. Press T.</p></div>
+        {@render toggle(settings.spread, (v) => (settings.spread = v), 'Two-page spread')}
+      </div>
+      <div class="row">
+        <div class="label"><h3>Continuous book</h3>{@render rst('Continuous book')}<p>Pages run on across surahs like a printed Mushaf; scrolling or turning past the end opens the next surah.</p></div>
+        {@render toggle(settings.continuous, (v) => { settings.continuous = v; reader.reset(); }, 'Continuous book')}
+      </div>
+      </div>
+      <h3 class="grp">On the page</h3>
+      <div class="card">
+      <div class="row">
+        <div class="label"><h3>Page info</h3>{@render rst('Page info')}<p>Show the surah name, juz and page number on each page.</p></div>
+        {@render toggle(settings.showPageInfo, (v) => (settings.showPageInfo = v), 'Page info')}
+      </div>
+      <div class="row">
+        <div class="label"><h3>Highlight bookmarks</h3>{@render rst('Highlight bookmarks')}<p>Mark bookmarked verses with a filled verse-end ornament.</p></div>
+        {@render toggle(settings.highlightBookmarks, (v) => (settings.highlightBookmarks = v), 'Highlight bookmarks')}
+      </div>
+      </div>
+    {/if}
+
     {#if browse && onPage('translation')}
       <h3 class="grp">Start</h3>
       <div class="card">
@@ -623,49 +666,6 @@
           {@render toggle(settings.transliteration, (v) => (settings.transliteration = v), 'Transliteration')}
         </div>
       {/if}
-      </div>
-    {/if}
-
-      <p class="intro">These options are for <b>Reading</b> mode, the printed Mushaf pages. Verse by Verse ignores them.</p>
-      <h3 class="grp">Page</h3>
-      <div class="card">
-      <div class="row wide">
-        <div class="label"><h3>Page look</h3>{@render rst('Page look')}<p>The paper the Mushaf page is drawn on.</p></div>
-        <div class="looks">
-          {#each LOOKS as l (l.id)}
-            <button class="look" class:on={settings.pageLook === l.id} onclick={() => (settings.pageLook = l.id)} aria-pressed={settings.pageLook === l.id}>
-              <span class="mini {l.id}"><i></i><i></i><i></i><i></i><i></i></span>
-              <b>{l.name}</b><small>{l.hint}</small>
-            </button>
-          {/each}
-        </div>
-      </div>
-      <div class="row">
-        <div class="label"><h3>Page flow</h3>{@render rst('Page flow')}<p>Turn one page at a time, or scroll the pages like a long sheet.</p></div>
-        <div class="seg">
-          <button class:on={settings.flow === 'page'} onclick={() => (settings.flow = 'page')}>Pages</button>
-          <button class:on={settings.flow === 'scroll'} onclick={() => (settings.flow = 'scroll')}>Scroll</button>
-        </div>
-      </div>
-      <div class="row">
-        <div class="label"><h3>Two-page spread</h3>{@render rst('Two-page spread')}<p>Show facing pages like an open book: odd pages on the right, even on the left. Needs a wide window. Press T.</p></div>
-        {@render toggle(settings.spread, (v) => (settings.spread = v), 'Two-page spread')}
-      </div>
-      <div class="row">
-        <div class="label"><h3>Continuous book</h3>{@render rst('Continuous book')}<p>Pages run on across surahs like a printed Mushaf; scrolling or turning past the end opens the next surah.</p></div>
-        {@render toggle(settings.continuous, (v) => { settings.continuous = v; reader.reset(); }, 'Continuous book')}
-      </div>
-      </div>
-      <h3 class="grp">On the page</h3>
-      <div class="card">
-      <div class="row">
-        <div class="label"><h3>Page info</h3>{@render rst('Page info')}<p>Show the surah name, juz and page number on each page.</p></div>
-        {@render toggle(settings.showPageInfo, (v) => (settings.showPageInfo = v), 'Page info')}
-      </div>
-      <div class="row">
-        <div class="label"><h3>Highlight bookmarks</h3>{@render rst('Highlight bookmarks')}<p>Mark bookmarked verses with a filled verse-end ornament.</p></div>
-        {@render toggle(settings.highlightBookmarks, (v) => (settings.highlightBookmarks = v), 'Highlight bookmarks')}
-      </div>
       </div>
     {/if}
 
@@ -1103,33 +1103,33 @@
   .preview p { font-family: var(--ar-font); font-size: var(--ar-size); line-height: var(--ar-lh); color: var(--ink); }
   .preview small { color: var(--ink-dim); }
 
-  .themes { display: grid; grid-template-columns: repeat(auto-fill, 96px); justify-content: start; gap: 20px 28px; }
+  .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
   .autoRow { margin-bottom: 12px; }
   .chipauto { height: 32px; padding: 0 14px; border-radius: var(--r-md); font-size: var(--t-body); font-weight: 500; background: var(--ink-6); }
   .chipauto:hover { background: var(--btn-hover); }
   .chipauto.on { background: var(--btn-on); color: var(--accent); }
-  .theme { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 96px; text-align: center; }
+  .theme { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; text-align: center; }
 
   .theme.on .sw { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
   .theme.on b { color: var(--ink); font-weight: 500; }
-  .theme .sw { position: relative; width: 96px; height: 64px; border-radius: var(--r-md); border: 1px solid var(--hair-2); display: grid; place-items: center; overflow: hidden; }
-  .theme .sw .ink { font-family: 'KFGQPC Uthmanic Hafs', serif; font-size: 13px; line-height: 1.2; white-space: nowrap; direction: rtl; }
-  .theme .sw i { position: absolute; left: 8px; bottom: 8px; width: 18px; height: 3px; border-radius: 2px; }
-  .theme b { font-size: 12px; font-weight: 400; color: var(--muted); }
+  .theme .sw { position: relative; width: 100%; aspect-ratio: 168 / 104; border-radius: var(--r-md); border: 1px solid var(--hair-2); display: grid; place-items: center; overflow: hidden; }
+  .theme .sw .ink { font-family: 'KFGQPC Uthmanic Hafs', serif; font-size: 22px; line-height: 1.2; white-space: nowrap; direction: rtl; }
+  .theme .sw i { position: absolute; left: 12px; bottom: 12px; width: 28px; height: 4px; border-radius: 2px; }
+  .theme b { font-size: 12.5px; font-weight: 400; color: var(--muted); }
 
   .fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
   .font { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px; border-radius: var(--r-lg); background: var(--surface); outline: 2px solid transparent; }
   .font.on { outline-color: var(--accent); }
 
 
-  .seg { display: inline-flex; background: var(--ink-6); border-radius: var(--r-md); padding: 3px; gap: 2px; flex-wrap: wrap; }
+  .seg { display: inline-flex; background: color-mix(in oklab, var(--ink) 7%, transparent); border-radius: var(--r-md); padding: 3px; gap: 2px; flex-wrap: wrap; }
   .seg button { height: 30px; padding: 0 12px; border-radius: var(--r-sm); font-size: var(--t-meta); font-weight: 500; color: var(--muted); transition: background-color 0.2s, color 0.2s; }
   .seg button:hover { color: var(--ink); }
   .seg .custom { display: inline-flex; align-items: center; gap: 2px; padding: 0 10px; border-radius: var(--r-sm); font-size: var(--t-meta); color: var(--muted); }
-  .seg .custom.on { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); box-shadow: var(--e1); color: var(--ink); }
+  .seg .custom.on { background: var(--bg); box-shadow: 0 0 0 1px var(--hair-2), var(--e1); color: var(--ink); font-weight: 600; }
   .seg .custom input { width: 74px; background: transparent; border: 0; color: inherit; font: inherit; text-align: right; outline: none; }
   .seg .custom input:focus-visible { box-shadow: 0 1px 0 var(--accent); }
-  .seg button.on { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); box-shadow: var(--e1); color: var(--ink); font-weight: 600; }
+  .seg button.on { background: var(--bg); color: var(--ink); font-weight: 600; box-shadow: 0 0 0 1px var(--hair-2), var(--e1); }
 
   input[type='range'] { -webkit-appearance: none; appearance: none; width: min(100%, 240px); height: 20px; background: transparent; }
   input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: var(--r-pill); background: linear-gradient(var(--accent), var(--accent)) 0 / var(--p, 0%) 100% no-repeat, var(--ink-6); }

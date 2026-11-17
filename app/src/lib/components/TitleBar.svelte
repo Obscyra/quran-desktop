@@ -116,10 +116,10 @@
   .tool:disabled { opacity: 0.35; }
 
   /* the one segmented control: a recessed track and a raised selected segment */
-  .seg { display: inline-flex; background: var(--ink-6); border-radius: var(--r-md); padding: 3px; gap: 2px; }
+  .seg { display: inline-flex; background: color-mix(in oklab, var(--ink) 7%, transparent); border-radius: var(--r-md); padding: 3px; gap: 2px; }
   .seg button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; height: 26px; border-radius: var(--r-sm); font-size: 13.5px; font-weight: 500; color: var(--muted); transition: color 0.2s, background-color 0.2s; }
   .seg button:hover { color: var(--ink); }
-  .seg button[aria-checked='true'] { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); color: var(--ink); box-shadow: var(--e1); }
+  .seg button[aria-checked='true'] { background: var(--bg); color: var(--ink); font-weight: 600; box-shadow: 0 0 0 1px var(--hair-2), var(--e1); }
 
   /* the tools sit left of the window controls with a clear gap, and a little air from the edge when there are none */
   .right > .tool:last-of-type { margin-right: 8px; }
