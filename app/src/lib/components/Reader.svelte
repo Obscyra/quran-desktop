@@ -12,6 +12,7 @@
   import { settings, type WordMeaning } from '$lib/settings.svelte';
   import { translations } from '$lib/translations.svelte';
   import { ui } from '$lib/ui.svelte';
+  import { frameFor } from '$lib/themes';
   import End from './End.svelte';
   import PageSheet from './PageSheet.svelte';
   import TranslationPicker from './TranslationPicker.svelte';
@@ -843,7 +844,7 @@
       {#if player.current}
         <div class="head">
           <p class="kicker">{player.current.revelation_place} · {player.current.verses_count} verses</p>
-          <h2>{player.current.name_arabic}</h2>
+          <h2 class="surah-frame frame-{frameFor(settings.theme, settings.needsIndo)}"><b>{player.current.name_arabic}</b></h2>
           <p class="sub2">{surahName} — {player.current.translated_name.name}</p>
           <div class="head-actions">
             <button class="listen" onclick={() => player.toggle()}>
@@ -991,9 +992,10 @@
   @media (prefers-reduced-motion: no-preference) { .scroll { scroll-behavior: smooth; } }
   /* the book grows above the reader: the scroll position is kept by hand (see growUp), not by the browser's anchoring */
   .scroll { background: transparent; flex: 1; overflow: auto; overflow-anchor: none; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
-  .head { text-align: center; padding: 36px 0 16px; }
+  .head { text-align: center; padding: 40px 0 20px; }
   .kicker { font-size: var(--t-meta); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
-  h2 { font-family: 'KFGQPC Uthmanic Hafs', serif; font-weight: 400; font-size: clamp(48px, 6vw, 80px); line-height: 1.6; margin: 4px 0 6px; color: var(--accent); }
+  h2 { width: 100%; max-width: 760px; aspect-ratio: 8.11; display: flex; align-items: center; justify-content: center; margin: 8px auto; }
+  h2 b { font-family: 'KFGQPC Uthmanic Hafs', serif; font-weight: 400; font-size: clamp(30px, 4.4vw, 48px); line-height: 1; }
   .sub2 { color: var(--ink-dim); }
   .head-actions { margin-top: 16px; display: flex; justify-content: center; gap: 10px; }
   .listen { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 18px; border-radius: var(--r-pill); background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: var(--t-body); transition: transform 0.15s var(--ease), opacity 0.15s; }

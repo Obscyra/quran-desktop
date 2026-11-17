@@ -23,6 +23,7 @@
   import { player } from '$lib/player.svelte';
   import { reader } from '$lib/reader.svelte';
   import { settings } from '$lib/settings.svelte';
+  import { frameFor } from '$lib/themes';
   import End from './End.svelte';
   import Word from './Word.svelte';
 
@@ -254,7 +255,7 @@
       {#each page.starts as s (s.chapter)}
         {@const info = chapterOf(s.chapter)}
         {#if info}
-          <div class="banner" style:grid-row={bannerRow(s) - geo.top + 1}><b>{info.name_arabic}</b></div>
+          <div class="banner surah-frame frame-{frameFor(settings.theme, settings.needsIndo)}" style:grid-row={bannerRow(s) - geo.top + 1}><b>{info.name_arabic}</b></div>
           {#if info.bismillah_pre}
             <div class="bsm" style:grid-row={s.line - 1 - geo.top + 1}>بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
           {/if}
@@ -300,7 +301,7 @@
     box-shadow: 0 1px 1px color-mix(in oklab, var(--shade) 20%, transparent), 0 10px 30px -10px color-mix(in oklab, var(--shade) 45%, transparent), 0 40px 80px -30px color-mix(in oklab, var(--shade) 50%, transparent);
   }
   .look-frame { outline: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: -8px; }
-  .look-frame::after { content: ''; position: absolute; inset: 12px; border: 3px double color-mix(in srgb, var(--accent) 38%, transparent); border-radius: 2px; pointer-events: none; }
+  .look-frame::after { content: ''; position: absolute; inset: 12px; border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent); border-radius: 2px; outline: 1px solid color-mix(in oklab, var(--accent) 35%, transparent); outline-offset: -5px; pointer-events: none; }
   .look-plain { background: transparent; }
   .left.look-paper, .left.look-frame { border-radius: var(--r-sm) 0 0 var(--r-sm); background-image: var(--grain), linear-gradient(to right, transparent 92%, color-mix(in oklab, var(--shade) 10%, transparent)); }
   .right.look-paper, .right.look-frame { border-radius: 0 var(--r-sm) var(--r-sm) 0; background-image: var(--grain), linear-gradient(to left, transparent 92%, color-mix(in oklab, var(--shade) 10%, transparent)); }
@@ -312,7 +313,7 @@
   .line { border-radius: 0.3em; transition: background-color 0.45s ease; }
   .line.now { background: color-mix(in srgb, var(--accent) 6%, transparent); }
   .line.center, .line.short { justify-content: center; column-gap: 0.45em; }
-  .banner { display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--accent-soft); color: var(--accent); margin: 3px 0; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+  .banner { display: flex; align-items: center; justify-content: center; margin: 3px 0; }
   .banner b { font-family: 'KFGQPC Uthmanic Hafs', serif; font-weight: 400; font-size: calc(var(--ar-size) * 0.85); line-height: 1; }
   .bsm { display: flex; align-items: center; justify-content: center; font-family: 'KFGQPC Uthmanic Hafs', serif; font-size: calc(var(--ar-size) * 0.9); color: var(--ink-dim); white-space: nowrap; }
 

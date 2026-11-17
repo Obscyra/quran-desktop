@@ -97,3 +97,11 @@ main, .view, aside ul { overscroll-behavior: contain; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
 }
+
+/* Calligraphic surah frame: recoloured by --accent through a mask; the end caps keep their shape, the middle stretches. */
+.surah-frame { position: relative; container-type: size; color: var(--accent); }
+.surah-frame::before { content: ''; position: absolute; inset: 0; background: var(--accent); pointer-events: none; --fw: calc(100cqh * var(--fr)); -webkit-mask-box-image: var(--frame-img) var(--frame-slice) fill / 0 var(--fw) 0 var(--fw) stretch; mask-border: var(--frame-img) var(--frame-slice) fill / 0 var(--fw) 0 var(--fw) stretch; }
+.surah-frame > b { position: relative; color: var(--ink); }
+.frame-madinah { --frame-img: url('/ornaments/madinah.svg'); --frame-slice: 0 2600 0 2600; --fr: 2.559; }
+.frame-ottoman { --frame-img: url('/ornaments/ottoman.svg'); --frame-slice: 0 310 0 310; --fr: 3.1; }
+.frame-indopak { --frame-img: url('/ornaments/indopak.svg'); --frame-slice: 0 262 0 262; --fr: 2.62; }

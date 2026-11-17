@@ -52,3 +52,14 @@ export function applyTheme(t: Theme) {
   }
   meta.setAttribute('content', t.bg);
 }
+
+export type Frame = 'madinah' | 'ottoman' | 'indopak';
+const FRAMES: Record<string, Frame> = {
+  night: 'madinah', forest: 'madinah', gold: 'madinah', paper: 'madinah',
+  tide: 'ottoman', fjord: 'ottoman', slate: 'ottoman', stone: 'ottoman', rosewater: 'ottoman', rosewood: 'ottoman',
+  moss: 'indopak', sidr: 'indopak', sage: 'indopak', graphite: 'indopak', tahajjud: 'indopak'
+};
+/** The surah frame for a theme; the IndoPak script always uses the IndoPak frame. */
+export function frameFor(theme: string, indopak: boolean): Frame {
+  return indopak ? 'indopak' : (FRAMES[theme] ?? 'madinah');
+}
