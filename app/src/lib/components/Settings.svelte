@@ -1136,7 +1136,7 @@
   input[type='range']::-moz-range-track { height: 4px; border-radius: var(--r-pill); background: var(--ink-6); }
   input[type='range']::-moz-range-progress { height: 4px; border-radius: var(--r-pill); background: var(--accent); }
   input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border-radius: 50%; background: var(--bg); border: 1px solid var(--hair-2); box-shadow: var(--e1); }
-  input[type='range']::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 1px solid var(--hair-2); box-shadow: var(--e1); }
+  input[type='range']::-moz-range-thumb { box-sizing: border-box; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 1px solid var(--hair-2); box-shadow: var(--e1); }
   input[type='range']:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--r-sm); }
 
   .toggle { width: 36px; height: 20px; border-radius: var(--r-pill); background: var(--ink-6); box-shadow: inset 0 0 0 1px var(--hair); position: relative; transition: background 0.25s; flex: none; }
@@ -1155,7 +1155,7 @@
   .prog { width: min(360px, 100%); height: 6px; border-radius: var(--r-sm); background: color-mix(in oklab, var(--ink) 14%, transparent); overflow: hidden; }
   .prog i { display: block; height: 100%; background: var(--accent); transition: width 0.3s var(--ease); }
   .dls { list-style: none; padding: 0; border-top: 1px solid var(--line); }
-  .offline-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; width: min(900px, calc(100vw - 220px - 48px)); margin-left: 50%; transform: translateX(-50%); align-items: stretch; }
+  .offline-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; width: min(900px, calc(100vw / var(--zoom, 1) - 220px - 48px)); margin-left: 50%; transform: translateX(-50%); align-items: stretch; }
   .offline-col { min-width: 0; padding: 0 16px 16px; border: 1px solid var(--hair); border-radius: var(--r-lg); background: var(--ink-4); }
   .offline-col .grp { margin-top: 18px; }
   .offline-col .row { flex-direction: column; align-items: flex-start; flex-wrap: nowrap; padding: 16px 0; }
@@ -1196,7 +1196,7 @@
   .about-content { min-width: 0; }
   .credits { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
   .about-intro { padding: 20px 22px; border: 1px solid var(--line); border-radius: var(--r-lg); background: linear-gradient(130deg, color-mix(in oklab, var(--accent) 9%, var(--bg-2)), var(--bg-2) 72%); box-shadow: 0 8px 24px color-mix(in oklab, var(--ink) 6%, transparent); }
-  .about-kicker { display: inline-flex; padding: 4px 9px; border: 1px solid color-mix(in oklab, var(--accent) 28%, var(--line)); border-radius: var(--r-pill); color: var(--accent); font-size: var(--t-cap); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+  .about-kicker { display: inline-flex; padding: 4px 9px; border: 1px solid color-mix(in oklab, var(--accent) 28%, var(--line)); border-radius: var(--r-pill); color: var(--accent); font-size: var(--t-cap); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
   .about-intro h2 { margin: 12px 0 7px; color: var(--ink); font-size: var(--t-title); line-height: 1.25; font-weight: 600; }
   .about-intro p { color: var(--ink-dim); line-height: 1.65; max-width: 68ch; margin: 0; }
   .about a { color: var(--accent); text-decoration: none; }
@@ -1219,7 +1219,7 @@
   .dev-heading b { color: var(--ink); font-size: var(--t-sub); }
   .dev-heading small { color: var(--ink-dim); font-size: var(--t-meta); }
   .dev-links { grid-template-columns: 1fr; }
-  .beta { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent); font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .beta { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent); font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
   .inline { display: flex; gap: 10px; }
   .file { cursor: default; display: inline-block; }
   .preview .sample { font-size: var(--ar-size); line-height: var(--ar-lh); }

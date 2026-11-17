@@ -95,7 +95,7 @@
   }
   .tip::before {
     content: ''; position: absolute; left: var(--arrow); top: -5px; width: 8px; height: 8px; margin-left: -4px; rotate: 45deg;
-    background: inherit; border: inherit; border-right: 0; border-bottom: 0; border-radius: var(--r-sm) 0 0 0;
+    background: inherit; border: inherit; border-right: 0; border-bottom: 0; border-radius: 2px 0 0 0;
   }
   .tip.above::before { top: auto; bottom: -5px; rotate: 225deg; }
   @keyframes tip { from { opacity: 0; translate: 0 3px; } }

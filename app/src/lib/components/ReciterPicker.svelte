@@ -128,7 +128,7 @@
   .who small { font-size: var(--t-meta); color: var(--muted); }
   .rp-list li.on .who small { color: inherit; opacity: 0.8; }
   .hd { position: sticky; top: 0; z-index: 1; display: flex; flex-direction: column; gap: 1px; padding: 12px 10px 6px; background: var(--chrome); }
-  .hd b { font-size: var(--t-cap); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
+  .hd b { font-size: var(--t-cap); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
   .hd small { font-size: var(--t-meta); color: var(--muted); }
   .none { padding: 18px; text-align: center; color: var(--muted); font-size: var(--t-body); }
 </style>

@@ -780,7 +780,6 @@
       <label class="pick"><span>Translation</span><TranslationPicker compact onpick={setTranslation} /></label>
       <label class="pick"><span>Tafsir</span><TafsirPicker compact onpick={selectTafsirEdition} onauto={followTranslationTafsir} /></label>
       {#if tafsirFallback}<small class="tafsir-note">Using {tafsirs.get(settings.tafsirEdition)?.language_name} tafsir</small>{/if}
-      <span class="grow"></span>
       <div class="seg" role="radiogroup" aria-label="Word meanings">
         {#each MEANINGS as m (m.id)}
           <button role="radio" aria-checked={settings.wordMeaning === m.id} onclick={() => (settings.wordMeaning = m.id)}>{m.name === 'Below' ? 'Word by word' : m.name === 'Hover' ? 'Meanings on hover' : 'No meanings'}</button>
@@ -801,7 +800,6 @@
         <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" />{#if settings.follow === 'lock'}<path d="M7 11V7a5 5 0 0 1 10 0v4" />{:else}<path d="M7 11V7a5 5 0 0 1 9.9-1" />{/if}</svg>
       </button>
     {/if}
-    {#if reading}<span class="grow"></span>{/if}
     {#if paged && reader.page}
       <span class="where">Page {reader.page.page} · Juz {reader.page.juz}</span>
     {/if}
@@ -951,7 +949,6 @@
   .sub { flex: none; align-self: center; width: fit-content; max-width: calc(100% - 24px); margin: 10px auto 0; display: flex; align-items: center; gap: 0; height: 36px; min-height: 36px; padding: 0 4px; border: 1px solid var(--hair); border-radius: var(--r-lg); background: var(--chrome); box-shadow: var(--e2); position: relative; z-index: 4; overflow-x: auto; scrollbar-width: none; }
   .sub::-webkit-scrollbar { display: none; }
   .sub > * + * { margin-left: 4px; padding-left: 4px; border-left: 1px solid var(--hair); }
-  .grow { display: none; }
   .back { position: absolute; right: 22px; bottom: 18px; width: 42px; height: 42px; border-radius: var(--r-pill); display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: var(--e1); z-index: 5; transition: transform 0.15s var(--ease), opacity 0.15s; }
   .back.lift { bottom: 118px; }
   .back:hover { transform: scale(1.06); }
@@ -966,8 +963,7 @@
   .icon:hover:not(:disabled) { background: var(--ink-6); color: var(--ink); }
   .icon.on { color: var(--accent); background: color-mix(in oklab, var(--accent) 16%, transparent); }
   .icon:disabled { opacity: 0.4; }
-  .size { gap: 0; }
-  .size { display: inline-flex; align-items: center; }
+  .size { gap: 0; display: inline-flex; align-items: center; }
   .pick { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); flex: none; }
 
   /* ───── page stage ───── */
@@ -995,7 +991,7 @@
   /* the book grows above the reader: the scroll position is kept by hand (see growUp), not by the browser's anchoring */
   .scroll { background: transparent; flex: 1; overflow: auto; overflow-anchor: none; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
   .head { text-align: center; padding: 40px 0 20px; }
-  .kicker { font-size: var(--t-meta); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
+  .kicker { font-size: var(--t-meta); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); }
   h2 { width: 100%; max-width: 760px; aspect-ratio: 8.11; display: flex; align-items: center; justify-content: center; margin: 8px auto; }
   h2 b { font-family: 'KFGQPC Uthmanic Hafs', serif; font-weight: 400; font-size: clamp(30px, 4.4vw, 48px); line-height: 1; }
   .sub2 { color: var(--ink-dim); }

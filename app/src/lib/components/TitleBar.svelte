@@ -38,8 +38,7 @@
   </div>
 
   <div class="center" data-tauri-drag-region>
-    <div class="seg" role="radiogroup" aria-label="Reading mode" data-view={settings.mode}>
-      <i aria-hidden="true"></i>
+    <div class="seg" role="radiogroup" aria-label="Reading mode">
       <button role="radio" aria-checked={settings.mode === 'verse'} onclick={() => { settings.mode = 'verse'; ui.closeSettings(); }}>
         <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h.01" /><path d="M3 18h.01" /><path d="M3 6h.01" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M8 6h13" /></svg>Verse by Verse
       </button>
@@ -93,7 +92,6 @@
     container-type: inline-size;
     height: 40px; flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
     background: var(--chrome); user-select: none; -webkit-user-select: none; position: relative; z-index: 30;
-    transition: transform 0.4s var(--ease), opacity 0.3s var(--ease);
   }
   .left, .right { display: flex; align-items: center; height: 100%; min-width: 0; }
   .left { gap: 4px; padding-left: 8px; }
@@ -119,7 +117,6 @@
 
   /* the one segmented control: a recessed track and a raised selected segment */
   .seg { display: inline-flex; background: var(--ink-6); border-radius: var(--r-md); padding: 3px; gap: 2px; }
-  .seg i { display: none; }
   .seg button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; height: 26px; border-radius: var(--r-sm); font-size: 13.5px; font-weight: 500; color: var(--muted); transition: color 0.2s, background-color 0.2s; }
   .seg button:hover { color: var(--ink); }
   .seg button[aria-checked='true'] { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); color: var(--ink); box-shadow: var(--e1); }
