@@ -87,7 +87,7 @@ class PageFonts {
     if (this.active >= NETWORK_CAP) {
       await new Promise<void>((resolve) => {
         this.waiting.set(page, resolve);
-        if (priority === 'high') this.queue.high.unshift(page);
+        if (priority === 'high') this.queue.high.push(page);
         else this.queue.low.push(page);
       });
     }

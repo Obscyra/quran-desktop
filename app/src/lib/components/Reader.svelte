@@ -289,7 +289,7 @@
   $effect(() => {
     const v = player.verses;
     const ch = player.versesOf;
-    if (v.length) untrack(() => reader.keep(ch, v));
+    if (mushafMode && v.length) untrack(() => reader.keep(ch, v));
   });
   // the book is rebuilt when what it is made of changes
   let bookKey = '';
