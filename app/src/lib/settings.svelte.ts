@@ -5,7 +5,8 @@ export type PageType = 'madani' | 'indopak';
 export type PageLook = 'paper' | 'frame' | 'plain';
 export type Script = 'mushaf' | 'tajweed' | 'uthmani' | 'indopak' | 'naskh' | 'amiri' | 'scheherazade';
 export type WordMeaning = 'off' | 'hover' | 'below';
-export type ListenBar = 'demand' | 'always';
+export type Follow = 'off' | 'follow' | 'lock';
+export type PlayerBar = 'demand' | 'always' | 'autohide';
 
 export const SCRIPTS: { id: Script; name: string; hint: string; family: string }[] = [
   { id: 'mushaf', name: 'Madani Mushaf', hint: 'The printed Mushaf, glyph for glyph. The most exact.', family: '' },
@@ -32,9 +33,8 @@ const defaults = {
   showPageInfo: true,
   highlightBookmarks: true,
   script: 'mushaf' as Script,
-  listenBar: 'demand' as ListenBar,
-  /** the player bar floats over the page and only shows while the mouse is at the bottom edge */
-  playerHover: true,
+  /** demand: opens when listening, floats and peeks up at the bottom edge; always: docked and always shown; autohide: always available, floats */
+  playerBar: 'demand' as PlayerBar,
   wordAudio: true,
   sidebar: true,
   /** width of the surah list in px; dragged on its right edge, kept between 260 and 480 */
@@ -43,19 +43,19 @@ const defaults = {
   size: 56,
   spacing: 1.9,
   translation: 20,
+  /** translation and tafsir text size */
   translationSize: 20,
   wordMeaning: 'hover' as WordMeaning,
   tafsirEdition: '',
   tafsirAutoFollow: true,
   tafsirOverrides: {} as Record<string, boolean>,
-  tafsirSize: 18,
   transliteration: false,
   arabicNames: false,
   speed: 1,
   autoAdvance: true,
   repeatSurah: false,
-  autoScroll: true,
-  lockPlaying: false,
+  /** off: leave the page alone; follow: keep the recited verse in view unless scrolling; lock: scrolling away returns to it */
+  follow: 'follow' as Follow,
   keepAwake: true,
   /** small cards that offer a setting when you keep doing what it is for (see hints.svelte.ts) */
   tips: true,
@@ -96,8 +96,7 @@ class Settings {
   showPageInfo = $state(defaults.showPageInfo);
   highlightBookmarks = $state(defaults.highlightBookmarks);
   script = $state(defaults.script);
-  listenBar = $state(defaults.listenBar);
-  playerHover = $state(defaults.playerHover);
+  playerBar = $state(defaults.playerBar);
   wordAudio = $state(defaults.wordAudio);
   sidebar = $state(defaults.sidebar);
   sidebarWidth = $state(defaults.sidebarWidth);
@@ -110,14 +109,12 @@ class Settings {
   tafsirEdition = $state(defaults.tafsirEdition);
   tafsirAutoFollow = $state(defaults.tafsirAutoFollow);
   tafsirOverrides = $state<Record<string, boolean>>(defaults.tafsirOverrides);
-  tafsirSize = $state(defaults.tafsirSize);
   transliteration = $state(defaults.transliteration);
   arabicNames = $state(defaults.arabicNames);
   speed = $state(defaults.speed);
   autoAdvance = $state(defaults.autoAdvance);
   repeatSurah = $state(defaults.repeatSurah);
-  autoScroll = $state(defaults.autoScroll);
-  lockPlaying = $state(defaults.lockPlaying);
+  follow = $state(defaults.follow);
   keepAwake = $state(defaults.keepAwake);
   tips = $state(defaults.tips);
   autoCache = $state(defaults.autoCache);
@@ -145,15 +142,21 @@ class Settings {
   constructor() {
     try {
       const saved = JSON.parse(localStorage.getItem(KEY) ?? '{}');
+      // older versions kept these as separate settings; fold them into the merged ones
+      if (saved.follow === undefined) saved.follow = saved.lockPlaying === true ? 'lock' : saved.autoScroll === false ? 'off' : 'follow';
+      if (saved.playerBar === undefined) saved.playerBar = saved.listenBar === 'always' ? (saved.playerHover === false ? 'always' : 'autohide') : 'demand';
+      // earlier betas shipped smaller defaults; anyone who never changed them gets the larger ones
+      if (saved.translationSize === 18) saved.translationSize = defaults.translationSize;
+      if (typeof saved.tafsirSize === 'number') saved.translationSize = Math.max(typeof saved.translationSize === 'number' ? saved.translationSize : defaults.translationSize, saved.tafsirSize);
       for (const k of Object.keys(defaults) as (keyof SettingsShape)[]) {
         if (k in saved && typeof saved[k] === typeof defaults[k]) (this as Record<string, unknown>)[k] = saved[k];
       }
       if (!this.tafsirOverrides || typeof this.tafsirOverrides !== 'object' || Array.isArray(this.tafsirOverrides)) this.tafsirOverrides = {};
       else this.tafsirOverrides = Object.fromEntries(Object.entries(this.tafsirOverrides).filter(([k, v]) => /^\d{1,3}:\d{1,3}$/.test(k) && typeof v === 'boolean'));
       if (typeof this.tafsirEdition !== 'string' || !/^[a-z0-9-]*$/.test(this.tafsirEdition)) this.tafsirEdition = '';
-      // earlier betas shipped smaller defaults; anyone who never changed them gets the larger ones
       if (saved.size === 40) this.size = defaults.size;
-      if (saved.translationSize === 18) this.translationSize = defaults.translationSize;
+      if (!['off', 'follow', 'lock'].includes(this.follow)) this.follow = defaults.follow;
+      if (!['demand', 'always', 'autohide'].includes(this.playerBar)) this.playerBar = defaults.playerBar;
     } catch {
       /* first run or corrupt value: keep defaults */
     }

@@ -475,8 +475,8 @@
   $effect(() => {
     if (paged || !activeVerse || !scroller) return;
     reader.activeKey;
-    if (settings.lockPlaying) untrack(() => centerPlaying(false));
-    else if (settings.autoScroll && Date.now() - lastUserScroll >= 2500) untrack(() => centerPlaying(false));
+    if (settings.follow === 'lock') untrack(() => centerPlaying(false));
+    else if (settings.follow === 'follow' && Date.now() - lastUserScroll >= 2500) untrack(() => centerPlaying(false));
   });
 
   // locked: once the reader lets go, the view returns to the playing verse
@@ -484,7 +484,7 @@
   let pressing = false;
   function moved() {
     lastUserScroll = Date.now();
-    if (!settings.lockPlaying) return;
+    if (settings.follow !== 'lock') return;
     clearTimeout(snapTimer);
     snapTimer = window.setTimeout(function back() {
       if (pressing) return void (snapTimer = window.setTimeout(back, 300));
@@ -605,7 +605,7 @@
     settleTimer = window.setTimeout(settle, 250);
   };
   $effect(() => {
-    if (settings.lockPlaying && !paged && activeVerse) untrack(() => centerPlaying(true));
+    if (settings.follow === 'lock' && !paged && activeVerse) untrack(() => centerPlaying(true));
   });
 
   // wheel / trackpad turns pages, one per gesture
@@ -690,7 +690,7 @@
   let stage = $state<HTMLElement>();
   let view = $state<HTMLElement>();
   let before: DOMRect | null = null;
-  const shape = () => `${settings.sidebar}${ui.settingsOpen}${ui.listening}${settings.listenBar}${settings.playerHover}`;
+  const shape = () => `${settings.sidebar}${ui.settingsOpen}${ui.listening}${settings.playerBar}`;
   const currentBook = () => {
     return stage?.querySelector<HTMLElement>('.book.cur') ?? null;
   };
@@ -796,8 +796,9 @@
       </div>
     {/if}
     {#if !paged}
-      <button class="icon" class:on={settings.lockPlaying} aria-pressed={settings.lockPlaying} aria-label="Lock on the playing verse" title="Lock on the playing verse: scrolling away returns to it" onclick={() => (settings.lockPlaying = !settings.lockPlaying)}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" />{#if settings.lockPlaying}<path d="M7 11V7a5 5 0 0 1 10 0v4" />{:else}<path d="M7 11V7a5 5 0 0 1 9.9-1" />{/if}</svg>
+      {@const fl = settings.follow === 'lock' ? 'Locked' : settings.follow === 'follow' ? 'On' : 'Off'}
+      <button class="icon" class:on={settings.follow !== 'off'} aria-label="Follow: {fl}" title="Follow: {fl} (click to change)" onclick={() => (settings.follow = settings.follow === 'off' ? 'follow' : settings.follow === 'follow' ? 'lock' : 'off')}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" />{#if settings.follow === 'lock'}<path d="M7 11V7a5 5 0 0 1 10 0v4" />{:else}<path d="M7 11V7a5 5 0 0 1 9.9-1" />{/if}</svg>
       </button>
     {/if}
     {#if reading}<span class="grow"></span>{/if}
@@ -914,7 +915,7 @@
                 {#if commentary}
                   {@const editionName = tafsirs.get(settings.tafsirEdition)?.name ?? 'Tafsir'}
                   {@const repeatedFrom = repeatedTafsirFrom(player.chapter, v.n, settings.tafsirEdition, commentary)}
-                  <div class="tafsir-text" dir="auto" style:font-size="{settings.tafsirSize}px">
+                  <div class="tafsir-text" dir="auto" style:font-size="calc(var(--tr-size) * 0.9)">
                     {#if repeatedFrom}<small class="tafsir-repeat">Same tafsir as verse {repeatedFrom}</small>{/if}
                     <b>{editionName}</b><p>{commentary}</p>
                   </div>
@@ -932,7 +933,7 @@
       {/if}
       <div class="tail"></div>
     </main>
-    {#if away && !settings.lockPlaying}
+    {#if away && settings.follow !== 'lock'}
       <button class="back" class:lift={ui.barOver} class:up={away === 'up'} onclick={backToPlaying} aria-label="Back to the verse being recited" title="Back to the verse being recited">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4v12M5 11l5 5 5-5" /></svg>
       </button>

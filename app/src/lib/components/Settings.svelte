@@ -11,7 +11,7 @@
   import { reader } from '$lib/reader.svelte';
   import { getAutostart, isTauri, setAutostart } from '$lib/platform';
   import { hints } from '$lib/hints.svelte';
-  import { SCRIPTS, settings, type SettingsShape, type PageLook, type PageType, type Script, type WordMeaning } from '$lib/settings.svelte';
+  import { SCRIPTS, settings, type SettingsShape, type PageLook, type Script, type WordMeaning } from '$lib/settings.svelte';
   import { THEMES } from '$lib/themes';
   import { translations } from '$lib/translations.svelte';
   import { autocache, KEEP_DAYS } from '$lib/autocache.svelte';
@@ -44,31 +44,28 @@
     { area: 'appearance', title: 'Theme', text: 'colour color dark light night black madinah slate paper stone gold white auto system' },
     { area: 'appearance', title: 'Interface size', text: 'zoom scale bigger smaller menus buttons' },
     { area: 'appearance', title: 'Surah names in Arabic', text: 'arabic names list player' },
-    { area: 'text', title: 'Script style', text: 'font madani mushaf tajweed uthmani indopak naskh amiri scheherazade arabic writing' },
+    { area: 'text', title: 'Mushaf', text: 'font madani indopak pages 15 lines print 604 610 text fonts tajweed uthmani naskh amiri scheherazade arabic writing script' },
     { area: 'text', title: 'Text size', text: 'font arabic bigger larger' },
     { area: 'text', title: 'Line spacing', text: 'height lines gap' },
     { area: 'reading', title: 'Continue where I left off', text: 'resume reopen last place surah verse start remember position' },
     { area: 'reading', title: 'Open in', text: 'start view verse by verse reading mode default' },
     { area: 'reading', title: 'Translation', text: 'language english urdu meaning verse' },
-    { area: 'reading', title: 'Translation size', text: 'font bigger' },
+    { area: 'reading', title: 'Translation and tafsir text size', text: 'font bigger tafsir commentary' },
     { area: 'reading', title: 'Word meanings', text: 'word by word hover below under each word language' },
     { area: 'reading', title: 'Transliteration', text: 'pronounce latin letters' },
-    { area: 'pages', title: 'Page type', text: 'madani indopak 15 lines mushaf print 604 610' },
     { area: 'pages', title: 'Page look', text: 'paper frame plain border background' },
     { area: 'pages', title: 'Page flow', text: 'scroll turn one page long sheet' },
     { area: 'pages', title: 'Two-page spread', text: 'facing book open wide T' },
     { area: 'pages', title: 'Continuous book', text: 'continuous across surahs next surah run on book join' },
     { area: 'pages', title: 'Page info', text: 'surah name juz page number header footer' },
     { area: 'pages', title: 'Highlight bookmarks', text: 'ornament marker verse end' },
-    { area: 'audio', title: 'Listening bar', text: 'player bar always on demand dock' },
-    { area: 'audio', title: 'Show the bar only on hover', text: 'player hide bottom edge' },
+    { area: 'audio', title: 'Player bar', text: 'listening player always on demand dock auto-hide hover bottom edge' },
     { area: 'audio', title: 'Reciter', text: 'qari sheikh voice recitation' },
     { area: 'audio', title: 'Playback speed', text: 'faster slower rate' },
     { area: 'audio', title: 'Play the next surah', text: 'auto advance continue' },
     { area: 'audio', title: 'Repeat surah', text: 'loop memorise memorize' },
     { area: 'audio', title: 'Say a word when clicked', text: 'word audio click play' },
-    { area: 'audio', title: 'Follow the recitation', text: 'auto scroll follow along' },
-    { area: 'audio', title: 'Lock on the playing verse', text: 'scroll return centre center keep verse' },
+    { area: 'audio', title: 'Follow the recitation', text: 'auto scroll follow along lock verse scroll return centre center keep' },
     { area: 'manager', title: 'Reciter to manage', text: 'offline manager audio download delete recitation surah storage' },
     { area: 'manager', title: 'Tafsir edition to manage', text: 'tafsir tafseer language edition download delete offline surah' },
     { area: 'manager', title: 'Keep favourites offline', text: 'auto cache save automatically' },
@@ -92,11 +89,11 @@
   // the settings behind each row, so a row can say it was changed and go back to its default
   const ROW_KEYS: Record<string, (keyof SettingsShape)[]> = {
     'Theme': ['theme'], 'Interface size': ['uiScale'], 'Surah names in Arabic': ['arabicNames'],
-    'Script style': ['script', 'pageType'], 'Text size': ['size'], 'Line spacing': ['spacing'],
-    'Open in': ['mode'], 'Continue where I left off': ['resume'], 'Translation': ['translation'], 'Translation size': ['translationSize'], 'Tafsir text size': ['tafsirSize'], 'Word meanings': ['wordMeaning'], 'Transliteration': ['transliteration'],
-    'Page type': ['pageType'], 'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Continuous book': ['continuous'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'],
-    'Listening bar': ['listenBar'], 'Show the bar only on hover': ['playerHover'], 'Playback speed': ['speed'], 'Play the next surah': ['autoAdvance'], 'Repeat surah': ['repeatSurah'],
-    'Say a word when clicked': ['wordAudio'], 'Follow the recitation': ['autoScroll'], 'Lock on the playing verse': ['lockPlaying'], 'Keep favourites offline': ['autoCache'],
+    'Mushaf': ['script', 'pageType'], 'Text size': ['size'], 'Line spacing': ['spacing'],
+    'Open in': ['mode'], 'Continue where I left off': ['resume'], 'Translation': ['translation'], 'Translation and tafsir text size': ['translationSize'], 'Word meanings': ['wordMeaning'], 'Transliteration': ['transliteration'],
+    'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Continuous book': ['continuous'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'],
+    'Player bar': ['playerBar'], 'Playback speed': ['speed'], 'Play the next surah': ['autoAdvance'], 'Repeat surah': ['repeatSurah'],
+    'Say a word when clicked': ['wordAudio'], 'Follow the recitation': ['follow'], 'Keep favourites offline': ['autoCache'],
     'Verse of the day': ['dailyVerse'], 'Show it from': ['dailyVerseTime'], 'Reading reminders': ['remindersOn'], 'Times': ['remindTimes'], 'Message': ['remindMessage'], 'Use system notifications': ['systemNotify'],
     'Keep the screen on': ['keepAwake'], 'Show tips': ['tips'], 'Keep running in the tray': ['background'], 'Update automatically': ['checkUpdates']
   };
@@ -349,10 +346,6 @@
     return () => clearTimeout(t);
   });
 
-  const PAGE_TYPES: { id: PageType; name: string; hint: string }[] = [
-    { id: 'madani', name: 'Madani', hint: 'Medina Mushaf, 15 lines, 604 pages. The standard print.' },
-    { id: 'indopak', name: 'IndoPak', hint: 'South Asian print, 15 lines, 610 pages, with its own spelling.' }
-  ];
   const LOOKS: { id: PageLook; name: string; hint: string }[] = [
     { id: 'paper', name: 'Paper', hint: 'A page on the desk.' },
     { id: 'frame', name: 'Frame', hint: 'Bordered like a printed page.' },
@@ -381,15 +374,17 @@
     const edition = tafsirs.chooseDefault(language)?.slug ?? '';
     if (edition) settings.tafsirEdition = edition;
   }
-  function setScript(id: Script) {
-    settings.script = id;
-    if (id === 'mushaf') settings.pageType = 'madani';
-    if (id === 'indopak') settings.pageType = 'indopak';
+  // one Mushaf choice: the two printed Mushafs, or a plain text font (which keeps the page type it had)
+  let lastFont = $state<Script>(settings.script !== 'mushaf' && settings.script !== 'indopak' ? settings.script : 'uthmani');
+  const mushafChoice = $derived<'madani' | 'indopak' | 'text'>(settings.script === 'mushaf' ? 'madani' : settings.script === 'indopak' ? 'indopak' : 'text');
+  function setMushaf(c: 'madani' | 'indopak' | 'text') {
+    if (c === 'madani') { settings.script = 'mushaf'; settings.pageType = 'madani'; }
+    else if (c === 'indopak') { settings.script = 'indopak'; settings.pageType = 'indopak'; }
+    else settings.script = lastFont;
   }
-  function setPageType(id: PageType) {
-    settings.pageType = id;
-    if (id === 'indopak' && settings.script === 'mushaf') settings.script = 'indopak';
-    if (id === 'madani' && settings.script === 'indopak') settings.script = 'mushaf';
+  function setFont(id: Script) {
+    lastFont = id;
+    settings.script = id;
   }
 
   function exportBookmarks() {
@@ -525,12 +520,21 @@
     {#if browse && onPage('text')}
       {@render preview()}
       <h3 class="grp">Arabic script</h3>
+      <div class="row">
+        <div class="label"><h3>Mushaf</h3>{@render rst('Mushaf')}<p>How the Arabic is written. The Madani and IndoPak pages are the exact printed Mushaf (Madani: 604 pages; IndoPak: 610, with its own spelling), fetched once per page, then kept for offline use. Text fonts show plain text in the font you pick.</p></div>
+        <div class="seg">
+          <button class:on={mushafChoice === 'madani'} onclick={() => setMushaf('madani')}>Madani pages</button>
+          <button class:on={mushafChoice === 'indopak'} onclick={() => setMushaf('indopak')}>IndoPak pages</button>
+          <button class:on={mushafChoice === 'text'} onclick={() => setMushaf('text')}>Text fonts</button>
+        </div>
+      </div>
+      {#if mushafChoice === 'text'}
       <div class="row wide">
-        <div class="label"><h3>Script style</h3>{@render rst('Script style')}<p>How the Arabic is written. Madani Mushaf is the exact printed page; it is fetched once per page, then kept for offline use. Every card shows the same verse.</p></div>
+        <div class="label"><h3>Font</h3><p>Every card shows the same verse.</p></div>
         <div class="scripts">
-          {#each SCRIPTS as sc (sc.id)}
-            <button class="script" class:on={settings.script === sc.id} onclick={() => setScript(sc.id)} aria-pressed={settings.script === sc.id}>
-              <span class="sample" class:tajweed={sc.id === 'tajweed'} dir="rtl" style:font-family={sc.id === 'mushaf' ? 'QCF1' : sc.family}>
+          {#each SCRIPTS.filter((sc) => sc.id !== 'mushaf' && sc.id !== 'indopak') as sc (sc.id)}
+            <button class="script" class:on={settings.script === sc.id} onclick={() => setFont(sc.id)} aria-pressed={settings.script === sc.id}>
+              <span class="sample" class:tajweed={sc.id === 'tajweed'} dir="rtl" style:font-family={sc.family}>
                 {#if sc.id === 'tajweed'}{@html sample('tajweed')}{:else}{sample(sc.id)}{/if}
               </span>
               <b>{sc.name}</b><small>{sc.hint}</small>
@@ -538,7 +542,7 @@
           {/each}
         </div>
       </div>
-      <p class="intro">Choosing <b>Madani Mushaf</b> or <b>IndoPak</b> also sets the matching page type under Mushaf pages, so the pages and the text agree.</p>
+      {/if}
       <h3 class="grp">Size</h3>
       <div class="row">
         <div class="label"><h3>Text size</h3>{@render rst('Text size')}<p>{settings.size}px, for Verse by Verse. Mushaf pages always fill the page.</p></div>
@@ -574,14 +578,10 @@
           {#if tafsirLanguageMismatch}<small class="status">{settings.tafsirAutoFollow ? 'No matching edition; using ' : 'Selected '}{tafsirs.get(settings.tafsirEdition)?.language_name} tafsir.</small>{/if}
         </div>
       </div>
-      <div class="row">
-        <div class="label"><h3>Tafsir text size</h3>{@render rst('Tafsir text size')}<p>{settings.tafsirSize}px</p></div>
-        <input type="range" min="13" max="30" step="1" bind:value={settings.tafsirSize} aria-label="Tafsir text size" />
-      </div>
       {#if settings.translation}
         <div class="row">
-          <div class="label"><h3>Translation size</h3>{@render rst('Translation size')}<p>{settings.translationSize}px</p></div>
-          <input type="range" min="13" max="30" step="1" bind:value={settings.translationSize} aria-label="Translation text size" />
+          <div class="label"><h3>Translation and tafsir text size</h3>{@render rst('Translation and tafsir text size')}<p>{settings.translationSize}px</p></div>
+          <input type="range" min="13" max="30" step="1" bind:value={settings.translationSize} aria-label="Translation and tafsir text size" />
         </div>
       {/if}
       <h3 class="grp">Word by word</h3>
@@ -604,16 +604,6 @@
     {#if browse && onPage('pages')}
       <p class="intro">These options are for <b>Reading</b> mode, the printed Mushaf pages. Verse by Verse ignores them.</p>
       <h3 class="grp">Page</h3>
-      <div class="row">
-        <div class="label"><h3>Page type</h3>{@render rst('Page type')}<p>Which printed Mushaf the pages follow. Same text, different line breaks and page numbers.</p></div>
-        <div class="layouts">
-          {#each PAGE_TYPES as l (l.id)}
-            <button class="layout" class:on={settings.layout === l.id} onclick={() => setPageType(l.id)} aria-pressed={settings.layout === l.id}>
-              <b>{l.name}</b><small>{l.hint}</small>
-            </button>
-          {/each}
-        </div>
-      </div>
       <div class="row wide">
         <div class="label"><h3>Page look</h3>{@render rst('Page look')}<p>The paper the Mushaf page is drawn on.</p></div>
         <div class="looks">
@@ -654,15 +644,12 @@
     {#if browse && onPage('audio')}
       <h3 class="grp">Player</h3>
       <div class="row">
-        <div class="label"><h3>Listening bar</h3>{@render rst('Listening bar')}<p>Reading comes first. The bar opens when you press Listen or play a verse, and ✕ closes it. Choose "Always" to keep it docked.</p></div>
+        <div class="label"><h3>Player bar</h3>{@render rst('Player bar')}<p>On demand: opens when you press Listen or play a verse, slides up when the mouse is at the bottom edge, and ✕ closes it. Always: docked and always shown. Auto-hide: always available, shown only when the mouse is at the bottom edge.</p></div>
         <div class="seg">
-          <button class:on={settings.listenBar === 'demand'} onclick={() => (settings.listenBar = 'demand')}>On demand</button>
-          <button class:on={settings.listenBar === 'always'} onclick={() => (settings.listenBar = 'always')}>Always</button>
+          <button class:on={settings.playerBar === 'demand'} onclick={() => (settings.playerBar = 'demand')}>On demand</button>
+          <button class:on={settings.playerBar === 'always'} onclick={() => (settings.playerBar = 'always')}>Always</button>
+          <button class:on={settings.playerBar === 'autohide'} onclick={() => (settings.playerBar = 'autohide')}>Auto-hide</button>
         </div>
-      </div>
-      <div class="row">
-        <div class="label"><h3>Show the bar only on hover</h3>{@render rst('Show the bar only on hover')}<p>Hides the bar until you move the mouse to the bottom edge of the window, and the page keeps all its room. It also appears for a moment when you start listening.</p></div>
-        {@render toggle(settings.playerHover, (v) => (settings.playerHover = v), 'Show the player only on hover')}
       </div>
       <h3 class="grp">Recitation</h3>
       <div class="row">
@@ -695,12 +682,12 @@
       </div>
       <h3 class="grp">Following along</h3>
       <div class="row">
-        <div class="label"><h3>Follow the recitation</h3>{@render rst('Follow the recitation')}<p>Scroll automatically so the current verse stays in view. Scrolling yourself pauses it for a moment.</p></div>
-        {@render toggle(settings.autoScroll, (v) => (settings.autoScroll = v), 'Auto-scroll')}
-      </div>
-      <div class="row">
-        <div class="label"><h3>Lock on the playing verse</h3>{@render rst('Lock on the playing verse')}<p>In the scrolling views, scrolling away only lasts a moment: once you let go, the view returns to the verse being recited, with all of it on screen (or the lines being recited, if the verse is taller than the window). Also on the lock button in the bar above the text.</p></div>
-        {@render toggle(settings.lockPlaying, (v) => (settings.lockPlaying = v), 'Lock on the playing verse')}
+        <div class="label"><h3>Follow the recitation</h3>{@render rst('Follow the recitation')}<p>Follow keeps the current verse in view; scrolling yourself pauses it for a moment. Lock to verse returns the view to the verse being recited whenever you let go of the scroll (scrolling views). Also on the lock button in the bar above the text.</p></div>
+        <div class="seg">
+          <button class:on={settings.follow === 'off'} onclick={() => (settings.follow = 'off')}>Off</button>
+          <button class:on={settings.follow === 'follow'} onclick={() => (settings.follow = 'follow')}>Follow</button>
+          <button class:on={settings.follow === 'lock'} onclick={() => (settings.follow = 'lock')}>Lock to verse</button>
+        </div>
       </div>
     {/if}
 
@@ -1094,10 +1081,6 @@
   .font { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px; border-radius: var(--r-lg); background: var(--surface); outline: 2px solid transparent; }
   .font.on { outline-color: var(--accent); }
 
-  .layouts { display: grid; gap: 10px; }
-  .layout { display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 14px 16px; border-radius: var(--r-lg); background: var(--surface); outline: 2px solid transparent; }
-  .layout small { color: var(--ink-dim); font-size: var(--t-body); }
-  .layout.on { outline-color: var(--accent); }
 
   .seg { display: inline-flex; background: var(--surface); border-radius: var(--r-md); padding: 3px; gap: 2px; flex-wrap: wrap; }
   .seg button { padding: 8px 14px; border-radius: var(--r-md); color: var(--ink-dim); transition: background-color 0.2s, color 0.2s; }

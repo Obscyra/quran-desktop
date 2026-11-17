@@ -5,16 +5,16 @@
   import { ui } from '$lib/ui.svelte';
   import ReciterPicker from './ReciterPicker.svelte';
 
-  const shown = $derived(ui.listening || settings.listenBar === 'always');
+  const shown = $derived(ui.listening || settings.playerBar !== 'demand');
 
   // "Show on hover": the bar floats over the bottom edge of the page and slides up while the mouse is
   // there (or a control in it has the keyboard); it also shows for a moment when listening starts.
-  const float = $derived(settings.playerHover && shown);
+  const float = $derived(settings.playerBar !== 'always' && shown);
   let peek = $state(false);
   let over = false;
   let held = false;
   let peekTimer = 0;
-  const open = $derived(shown && (!settings.playerHover || peek));
+  const open = $derived(shown && (!float || peek));
   function enter() {
     if (float && !peek) hints.note('barPeek');
     over = true;
@@ -47,7 +47,7 @@
     if (!over && peek) leave();
   }
   $effect(() => {
-    if (!(ui.listening && settings.playerHover)) return;
+    if (!(ui.listening && float)) return;
     peek = true;
     peekTimer = window.setTimeout(() => !over && !held && (peek = false), 2600);
     return () => clearTimeout(peekTimer);
@@ -183,7 +183,7 @@
         <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
       </button>
     {/if}
-    {#if settings.listenBar === 'demand'}
+    {#if settings.playerBar === 'demand'}
       <button class="chip x" onclick={() => player.stop()} aria-label="Close player" title="Stop and close">
         <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
       </button>

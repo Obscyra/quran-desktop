@@ -32,9 +32,9 @@ export const HINTS: Hint[] = [
     body: 'The player slides up when you move to the bottom edge. Switch this off and it stays where you can see it.',
     label: 'Show the player only on hover',
     area: 'audio',
-    eligible: () => settings.isDefault(['playerHover']),
-    on: () => settings.playerHover,
-    set: (v) => (settings.playerHover = v)
+    eligible: () => settings.isDefault(['playerBar']),
+    on: () => settings.playerBar !== 'always',
+    set: (v) => (settings.playerBar = v ? 'demand' : 'always')
   },
   {
     id: 'lock-verse',
@@ -44,9 +44,9 @@ export const HINTS: Hint[] = [
     body: 'Lock on the playing verse brings the page back to the verse being recited whenever you let go of the scroll.',
     label: 'Lock on the playing verse',
     area: 'reading',
-    eligible: () => settings.isDefault(['lockPlaying']),
-    on: () => settings.lockPlaying,
-    set: (v) => (settings.lockPlaying = v)
+    eligible: () => settings.isDefault(['follow']),
+    on: () => settings.follow === 'lock',
+    set: (v) => (settings.follow = v ? 'lock' : 'follow')
   },
   {
     id: 'page-fill',
