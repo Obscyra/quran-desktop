@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="290" height="64" viewBox="0 0 290 64" role="img" aria-label="Download for Linux">
   <title>Download for Linux</title>
-  <defs><linearGradient id="g-linux-rpm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c974b"/><stop offset="1" stop-color="#1f883d"/></linearGradient></defs>
-  <rect x="0.5" y="0.5" width="289" height="63" rx="16" fill="url(#g-linux-rpm)" stroke="#1f2328" stroke-opacity="0.15" stroke-width="1"/>
-  <g transform="translate(20 16) scale(1.3333)" fill="#ffffff" stroke="none">
-    <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></g>
+  <defs><linearGradient id="g-linux-rpm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#212830"/><stop offset="1" stop-color="#151b23"/></linearGradient></defs>
+  <rect x="0.5" y="0.5" width="289" height="63" rx="16" fill="url(#g-linux-rpm)" stroke="#3d444d" stroke-width="1"/>
+  <g transform="translate(20 16) scale(1.3333)" fill="#f0f6fc" stroke="none">
+    <g fill="none" stroke="#f0f6fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></g>
   </g>
-  <text x="68" y="29" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Download for Linux</text>
-  <text x="68" y="47" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" fill-opacity="0.85">.rpm · Fedora</text>
+  <text x="68" y="29" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#f0f6fc">Download for Linux</text>
+  <text x="68" y="47" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#9198a1">.rpm · Fedora</text>
 </svg>
