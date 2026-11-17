@@ -88,9 +88,9 @@
 <style>
   .tip {
     position: fixed; z-index: 120; pointer-events: none; display: flex; align-items: center; gap: 9px; max-width: 280px;
-    padding: 6px 10px; border-radius: var(--r-md); font-size: var(--t-meta); font-weight: 500; line-height: 1.35; letter-spacing: 0.005em;
-    color: var(--ink); background: color-mix(in oklab, var(--surface) 82%, var(--ink) 6%); border: 1px solid color-mix(in oklab, var(--accent) 24%, var(--line));
-    box-shadow: var(--e2), 0 1px 0 color-mix(in oklab, var(--ink) 8%, transparent) inset;
+    padding: 6px 10px; border-radius: var(--r-sm); font-size: var(--t-meta); font-weight: 500; line-height: 1.35; letter-spacing: 0.005em;
+    color: var(--ink); background: var(--panel); border: 1px solid var(--hair-2);
+    box-shadow: var(--e1);
     backdrop-filter: blur(8px); animation: tip 0.14s var(--ease);
   }
   .tip::before {

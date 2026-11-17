@@ -37,7 +37,7 @@
   .line { position: absolute; top: 0; left: 0; right: 0; height: 2px; overflow: hidden; background: color-mix(in oklab, var(--accent) 18%, transparent); }
   .line::after { content: ''; position: absolute; inset: 0; width: 40%; background: var(--accent); border-radius: var(--r-sm); animation: slide 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
   @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
-  .pill { margin-top: 58px; display: inline-flex; align-items: center; gap: 9px; height: 30px; padding: 0 14px 0 11px; border-radius: var(--r-pill); background: var(--panel); border: 1px solid var(--line); box-shadow: var(--e1); color: var(--ink-dim); font-size: var(--t-meta); font-weight: 500; }
+  .pill { margin-top: 58px; display: inline-flex; align-items: center; gap: 9px; height: 30px; padding: 0 14px 0 11px; border-radius: var(--r-pill); background: var(--panel); border: 1px solid var(--hair); box-shadow: var(--e1); color: var(--muted); font-size: var(--t-meta); font-weight: 500; }
   .ring { width: 13px; height: 13px; border-radius: 50%; border: 2px solid color-mix(in oklab, var(--accent) 28%, transparent); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>

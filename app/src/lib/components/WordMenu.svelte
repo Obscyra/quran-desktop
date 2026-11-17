@@ -72,19 +72,19 @@
     <p class="ref">{player.current?.name_simple} {pick.chapter}:{pick.verse}</p>
     <div class="acts">
       <button onclick={() => { player.playVerse(pick.verse); closePick(); }}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>Play verse
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg>Play verse
       </button>
       <button onclick={() => { player.playFrom(pick.verse, pick.pos || 1); closePick(); }}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14"><path d="M5 5v14l8-7zM13 5v14l8-7z" fill="currentColor" /></svg>Play from {pick.pos ? 'this word' : 'here'}
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4" /><line x1="19" x2="19" y1="5" y2="19" /></svg>Play from {pick.pos ? 'this word' : 'here'}
       </button>
       <button class:on={looping} onclick={() => { if (looping) player.stop(); else player.playVerse(pick.verse, true); closePick(); }}>
-        <svg aria-hidden="true" viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V8a3 3 0 0 1 3-3h8l-2-2M16 11v1a3 3 0 0 1-3 3H5l2 2" /></svg>{looping ? 'Stop repeating' : 'Repeat verse'}
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></svg>{looping ? 'Stop repeating' : 'Repeat verse'}
       </button>
       <button class:on={!!saved} onclick={() => toggleBookmark(pick.verse)}>
-        <svg aria-hidden="true" viewBox="0 0 20 20" width="14" height="14" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5.5 2.8h9v14.4L10 13.6l-4.5 3.6z" /></svg>{saved ? 'Bookmarked' : 'Bookmark'}
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill={saved ? "currentColor" : "none"} stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>{saved ? 'Bookmarked' : 'Bookmark'}
       </button>
       <button onclick={copy}>
-        <svg aria-hidden="true" viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="7" y="7" width="9.5" height="9.5" rx="2" /><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /></svg>{copied ? 'Copied' : 'Copy verse'}
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>{copied ? 'Copied' : 'Copy verse'}
       </button>
     </div>
     {#if saved}
@@ -96,21 +96,21 @@
 <style>
   .menu {
     position: fixed; z-index: 60; width: 272px; translate: 0 -100%;
-    background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-md);
+    background: var(--chrome); color: var(--ink); border: 1px solid var(--hair); border-radius: var(--r-lg);
     box-shadow: var(--e2); padding: 6px; animation: pop 0.16s var(--ease);
   }
   .menu.below { translate: 0 0; }
   @keyframes pop { from { opacity: 0; scale: 0.96; } }
   .meaning { padding: 8px 10px 4px; display: flex; flex-direction: column; gap: 2px; }
   .meaning b { font-size: 16px; font-weight: 600; color: var(--accent); user-select: text; }
-  .meaning small { color: var(--ink-dim); font-size: var(--t-meta); user-select: text; }
-  .ref { padding: 2px 10px 6px; color: var(--ink-faint); font-size: var(--t-meta); letter-spacing: 0.02em; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  .meaning small { color: var(--muted); font-size: var(--t-meta); font-style: italic; user-select: text; }
+  .ref { padding: 2px 10px 8px; color: var(--ink-faint); font-size: var(--t-meta); letter-spacing: 0.02em; border-bottom: 1px solid var(--hair); margin: 0 4px 6px; }
   .acts { display: flex; flex-direction: column; }
-  .acts button { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-md); font-size: var(--t-body); text-align: left; color: var(--ink); transition: background-color 0.12s; }
-  .acts button:hover { background: color-mix(in oklab, var(--ink) 8%, transparent); }
+  .acts button { display: flex; align-items: center; gap: 12px; height: 34px; padding: 0 10px; border-radius: var(--r-md); font-size: var(--t-body); text-align: left; color: var(--ink); transition: background-color 0.12s; }
+  .acts button:hover { background: var(--ink-6); }
   .acts button.on { color: var(--accent); }
-  .acts svg { color: var(--ink-dim); flex: none; }
+  .acts svg { color: var(--muted); flex: none; }
   .acts button.on svg { color: var(--accent); }
-  .note { width: calc(100% - 12px); margin: 4px 6px 6px; height: 30px; padding: 0 10px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: var(--t-body); user-select: text; }
+  .note { width: calc(100% - 12px); margin: 4px 6px 6px; height: 34px; padding: 0 10px; border-radius: var(--r-md); border: 1px solid var(--hair); background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--ink); font: inherit; font-size: var(--t-body); user-select: text; }
   .note:focus { outline: 2px solid var(--accent); outline-offset: 0; }
 </style>

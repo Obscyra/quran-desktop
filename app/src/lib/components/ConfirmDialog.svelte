@@ -52,18 +52,19 @@
 {/if}
 
 <style>
-  .scrim { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: #0008; animation: fade 0.18s; }
+  .scrim { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: color-mix(in oklab, var(--bg) 60%, transparent); backdrop-filter: blur(6px); animation: fade 0.18s; }
   @keyframes fade { from { opacity: 0; } }
-  .dlg { width: min(420px, calc((100vw - 32px) / var(--zoom, 1))); padding: 22px 22px 18px; border-radius: var(--r-lg); background: var(--panel); border: 1px solid var(--line); box-shadow: var(--e3); animation: pop 0.22s var(--ease); }
+  .dlg { width: min(420px, calc((100vw - 32px) / var(--zoom, 1))); padding: 22px 22px 18px; border-radius: var(--r-lg); background: var(--chrome); border: 1px solid var(--hair); box-shadow: var(--e3); animation: pop 0.22s var(--ease); }
   @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
-  .n { font-size: var(--t-cap); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 6px; }
-  h3 { font-size: var(--t-title); font-weight: 600; }
-  #cf-b { margin-top: 8px; color: var(--ink-dim); font-size: var(--t-body); line-height: 1.6; }
+  .n { font-size: var(--t-cap); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  h3 { font-size: var(--t-title); font-weight: 600; letter-spacing: -0.01em; }
+  #cf-b { margin-top: 8px; color: var(--muted); font-size: var(--t-body); line-height: 1.6; }
   .acts { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-  .acts button { height: 36px; padding: 0 18px; border-radius: var(--r-md); font-weight: 550; font-size: var(--t-body); }
-  .cancel { background: color-mix(in oklab, var(--ink) 10%, transparent); }
-  .cancel:hover { background: color-mix(in oklab, var(--ink) 16%, transparent); }
+  .acts button { height: 32px; padding: 0 14px; border-radius: var(--r-md); font-weight: 600; font-size: var(--t-body); transition: background-color 0.15s, opacity 0.2s; }
+  .cancel { background: var(--ink-6); color: var(--ink); }
+  .cancel:hover { background: var(--btn-hover); }
   .ok { background: var(--accent); color: var(--accent-ink); }
-  .ok.danger { background: #c4372c; color: #fff; }
+  .ok.danger { background: color-mix(in oklab, var(--danger) 12%, transparent); color: var(--danger); }
+  .ok.danger:hover { background: color-mix(in oklab, var(--danger) 20%, transparent); opacity: 1; }
   .ok:hover { opacity: 0.92; }
 </style>

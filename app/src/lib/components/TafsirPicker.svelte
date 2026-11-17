@@ -89,19 +89,19 @@
   .tp-btn.compact { min-width: 0; height: 28px; padding: 0 8px 0 10px; max-width: 220px; font-size: var(--t-meta); }
   .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .chev { flex: none; opacity: 0.6; }
-  .tp-pop { position: fixed; z-index: 80; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--e2); overflow: hidden; animation: tp 0.16s var(--ease); }
+  .tp-pop { position: fixed; z-index: 80; display: flex; flex-direction: column; background: var(--chrome); border: 1px solid var(--hair); border-radius: var(--r-lg); box-shadow: var(--e2); overflow: hidden; animation: tp 0.16s var(--ease); }
   @keyframes tp { from { opacity: 0; transform: translateY(6px) scale(0.98); } }
-  .find { flex: none; display: flex; align-items: center; gap: 8px; margin: 8px; padding: 0 10px; height: 32px; border-radius: var(--r-md); background: color-mix(in oklab, var(--ink) 8%, transparent); color: var(--ink-dim); }
+  .find { flex: none; display: flex; align-items: center; gap: 8px; margin: 8px; padding: 0 10px; height: 36px; border-radius: var(--r-md); background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--muted); }
   .find:focus-within { box-shadow: 0 0 0 2px var(--accent-soft); }
   .find input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: var(--t-body); }
   .tp-list { overflow-y: auto; padding: 0 6px 6px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
-  .lang { position: sticky; top: 0; z-index: 1; padding: 10px 10px 4px; background: var(--panel); font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
-  .opt { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: var(--r-md); min-height: 44px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
-  .opt:hover { background: color-mix(in oklab, var(--ink) 9%, transparent); }
+  .lang { position: sticky; top: 0; z-index: 1; padding: 10px 10px 4px; background: var(--chrome); font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .opt { width: 100%; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-radius: var(--r-md); min-height: 48px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
+  .opt:hover { background: var(--ink-6); }
   .opt.on { background: var(--accent-soft); color: var(--accent); }
   .who { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
   .who b { font-size: var(--t-body); font-weight: 600; }
-  .who small { font-size: var(--t-meta); color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .who small { font-size: var(--t-meta); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .opt.on .who small { color: inherit; opacity: 0.8; }
-  .empty { padding: 18px; text-align: center; color: var(--ink-dim); font-size: var(--t-body); }
+  .empty { padding: 18px; text-align: center; color: var(--muted); font-size: var(--t-body); }
 </style>

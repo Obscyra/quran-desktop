@@ -264,7 +264,7 @@
   .pane { flex: 1; min-width: 0; display: flex; }
   .pane.gone { display: none; }
   .over { position: absolute; inset: 0; display: flex; background: var(--canvas); z-index: 5; }
-  .toast { position: fixed; bottom: 14px; left: 14px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: var(--r-md); background: var(--panel); border: 1px solid var(--line); box-shadow: var(--e2); animation: in 0.45s var(--ease); z-index: 40; font-size: var(--t-body); }
-  .toast button { padding: 6px 12px; border-radius: var(--r-sm); background: var(--accent); color: var(--accent-ink); font-weight: 550; }
+  .toast { position: fixed; bottom: 14px; left: 14px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: var(--r-md); background: var(--chrome); border: 1px solid var(--hair); box-shadow: var(--e2); animation: in 0.45s var(--ease); z-index: 40; font-size: var(--t-body); }
+  .toast button { height: 32px; padding: 0 14px; border-radius: var(--r-md); background: var(--accent); color: var(--accent-ink); font-weight: 600; }
   @keyframes in { from { transform: translateY(12px); opacity: 0; } }
 </style>

@@ -90,7 +90,7 @@
           {@const r = row.r}
         <li role="option" aria-selected={r.id === selected} class:on={r.id === selected}>
           <button onclick={() => choose(r.id)}>
-            <Qari {r} size={52} />
+            <Qari {r} size={40} />
             <span class="who"><b>{r.name}</b><small>{(r.style ?? 'Murattal') + (r.approx ? ' · word highlight estimated' : '')}</small></span>
             {#if r.id === selected}
               <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 8.5 3.2 3L13 4.5" /></svg>
@@ -108,27 +108,27 @@
 <style>
   .rp-btn { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; height: 38px; padding: 0 12px 0 5px; border-radius: var(--r-md); background: var(--btn); border: 1px solid var(--btn-line); color: var(--ink); font-size: var(--t-body); font-weight: 500; transition: background-color 0.15s; }
   .rp-btn:hover { background: var(--btn-hover); }
-  .rp-btn.compact { height: 28px; padding: 0 6px 0 3px; background: transparent; border-color: transparent; color: var(--ink-dim); font-size: var(--t-meta); margin-left: -6px; }
+  .rp-btn.compact { height: 28px; padding: 0 6px 0 3px; background: transparent; border-color: transparent; color: var(--muted); font-size: var(--t-meta); margin-left: -6px; }
   .rp-btn.compact:hover { color: var(--ink); background: color-mix(in oklab, var(--ink) 8%, transparent); }
   .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .chev { flex: none; opacity: 0.6; }
 
-  .rp-pop { position: fixed; z-index: 80; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--e2); overflow: hidden; animation: rp 0.16s var(--ease); }
+  .rp-pop { position: fixed; z-index: 80; display: flex; flex-direction: column; background: var(--chrome); border: 1px solid var(--hair); border-radius: var(--r-lg); box-shadow: var(--e2); overflow: hidden; animation: rp 0.16s var(--ease); }
   @keyframes rp { from { opacity: 0; transform: translateY(6px) scale(0.98); } }
-  .find { flex: none; display: flex; align-items: center; gap: 8px; margin: 8px; padding: 0 10px; height: 32px; border-radius: var(--r-md); background: color-mix(in oklab, var(--ink) 8%, transparent); color: var(--ink-dim); }
+  .find { flex: none; display: flex; align-items: center; gap: 8px; margin: 8px; padding: 0 10px; height: 36px; border-radius: var(--r-md); background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--muted); }
   .find:focus-within { box-shadow: 0 0 0 2px var(--accent-soft); }
   .find input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: var(--t-body); }
   .rp-list { list-style: none; margin: 0; padding: 0 6px 6px; overflow-y: auto; }
-  .rp-list { display: grid; gap: 4px; }
-  .rp-list li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 10px 14px 10px 10px; border-radius: var(--r-md); min-height: 68px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
-  .rp-list li button:hover { background: color-mix(in oklab, var(--ink) 9%, transparent); }
+  .rp-list { display: grid; gap: 2px; }
+  .rp-list li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 0 14px 0 10px; border-radius: var(--r-md); min-height: 48px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
+  .rp-list li button:hover { background: var(--ink-6); }
   .rp-list li.on button { background: var(--accent-soft); color: var(--accent); }
   .who { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; text-align: left; }
   .who b { font-size: var(--t-sub); font-weight: 600; }
-  .who small { font-size: var(--t-meta); color: var(--ink-dim); }
+  .who small { font-size: var(--t-meta); color: var(--muted); }
   .rp-list li.on .who small { color: inherit; opacity: 0.8; }
-  .hd { position: sticky; top: 0; z-index: 1; display: flex; flex-direction: column; gap: 1px; padding: 12px 10px 6px; background: var(--panel); }
+  .hd { position: sticky; top: 0; z-index: 1; display: flex; flex-direction: column; gap: 1px; padding: 12px 10px 6px; background: var(--chrome); }
   .hd b { font-size: var(--t-cap); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
-  .hd small { font-size: var(--t-meta); color: var(--ink-dim); }
-  .none { padding: 18px; text-align: center; color: var(--ink-dim); font-size: var(--t-body); }
+  .hd small { font-size: var(--t-meta); color: var(--muted); }
+  .none { padding: 18px; text-align: center; color: var(--muted); font-size: var(--t-body); }
 </style>
