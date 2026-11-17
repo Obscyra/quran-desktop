@@ -210,7 +210,10 @@
 
   // the page being drawn gets its font first, ahead of any preload
   $effect(() => {
-    if (page && settings.script === 'mushaf') pageFonts.ensure([page.page]);
+    if (page && settings.script === 'mushaf') {
+      const n = page.page;
+      untrack(() => pageFonts.ensure([n]));
+    }
   });
 
   $effect(() => {

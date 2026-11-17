@@ -110,7 +110,7 @@
       for (const w of v.words) pages.add(w.gp);
       pages.add(v.endPage);
     }
-    pageFonts.ensure(pages);
+    untrack(() => pageFonts.ensure(pages));
   });
   $effect(() => {
     const k = kind;
