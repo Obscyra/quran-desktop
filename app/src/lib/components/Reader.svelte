@@ -947,7 +947,8 @@
   .retry:hover { background: var(--btn-hover); }
 
   /* ───── sub bar ───── */
-  .sub { flex: none; align-self: center; width: fit-content; max-width: calc(100% - 24px); margin: 10px auto 0; display: flex; align-items: center; gap: 0; height: 36px; min-height: 36px; padding: 0 4px; border: 1px solid var(--hair); border-radius: var(--r-lg); background: var(--chrome); box-shadow: var(--e2); position: relative; z-index: 4; }
+  .sub { flex: none; align-self: center; width: fit-content; max-width: calc(100% - 24px); margin: 10px auto 0; display: flex; align-items: center; gap: 0; height: 36px; min-height: 36px; padding: 0 4px; border: 1px solid var(--hair); border-radius: var(--r-lg); background: var(--chrome); box-shadow: var(--e2); position: relative; z-index: 4; overflow-x: auto; scrollbar-width: none; }
+  .sub::-webkit-scrollbar { display: none; }
   .sub > * + * { margin-left: 4px; padding-left: 4px; border-left: 1px solid var(--hair); }
   .grow { display: none; }
   .back { position: absolute; right: 22px; bottom: 18px; width: 42px; height: 42px; border-radius: var(--r-pill); display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: var(--e1); z-index: 5; transition: transform 0.15s var(--ease), opacity 0.15s; }
