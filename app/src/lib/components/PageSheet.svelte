@@ -98,14 +98,14 @@
     // (a transform): divide that out, so the size is right whenever the measuring happens.
     const k = box.getBoundingClientRect().width / avail || 1;
     const glyph = settings.script === 'mushaf';
-    const key = `${page?.page}|${settings.script}|${settings.layout}|${settings.uiScale}|${settings.fontFamily}|${pageFonts.tick}|${avail}|${rowH}|${rows.length}`;
+    const key = `${page?.page}|${settings.script}|${settings.layout}|${settings.uiScale}|${settings.fontFamily}|${!!page && pageFonts.has(page.page)}|${avail}|${rowH}|${rows.length}`;
     const hit = fitted.get(key);
     if (hit) {
       box.style.setProperty('--fs', hit.fs);
       rows.forEach((ln, i) => ln.classList.toggle('short', hit.short[i]));
       return;
     }
-    const sKey = `${page?.page}|${settings.script}|${settings.layout}|${settings.uiScale}|${settings.fontFamily}|${pageFonts.tick}|${rows.length}`;
+    const sKey = `${page?.page}|${settings.script}|${settings.layout}|${settings.uiScale}|${settings.fontFamily}|${!!page && pageFonts.has(page.page)}|${rows.length}`;
     const aspect = avail / rowH;
     // the standard layout in the page fonts: the size that shipped with the app, if this page (as it is now) is in it
     const standard = glyph && settings.layout === 'madani' && !!page && pageFonts.has(page.page);
@@ -217,8 +217,10 @@
   });
 
   $effect(() => {
-    page;
-    pageFonts.tick;
+    // the page's number, its words and its font: a page object rebuilt around the same words is not measured again
+    page?.page;
+    page?.lines.reduce((n, l) => n + l.cells.length, 0);
+    page && pageFonts.has(page.page);
     settings.script;
     settings.layout;
     settings.uiScale;

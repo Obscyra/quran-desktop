@@ -34,8 +34,6 @@ export function startPages(verses: { words: { gp: number }[]; endPage: number }[
 }
 
 class PageFonts {
-  /** bumps whenever a font finishes loading, so layouts re-measure */
-  tick = $state(0);
   /** pages whose font is loaded; has(p) reads one entry, so only readers of page p re-run */
   private ready = new SvelteSet<number>();
   private pending = new Map<number, Promise<boolean>>();
@@ -153,11 +151,9 @@ class PageFonts {
       document.fonts.add(face);
       this.ready.add(page);
       this.failed.delete(page);
-      this.tick++;
       return true;
     } catch {
       this.failed.set(page, Date.now());
-      this.tick++;
       return false;
     }
   }
