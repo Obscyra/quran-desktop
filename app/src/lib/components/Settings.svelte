@@ -1068,7 +1068,7 @@
   nav button.on svg { color: var(--accent); }
 
   .view { flex: 1; min-width: 0; overflow-y: auto; padding: 0 24px 64px; }
-  .col { max-width: 640px; margin: 0 auto; }
+  .col { max-width: calc(1200px / var(--zoom, 1)); margin: 0 auto; }
   header { display: flex; align-items: center; gap: 14px; position: sticky; top: 0; background: var(--bg); padding: 40px 0 8px; z-index: 2; }
   header h2 { font-size: var(--t-title); font-weight: 600; letter-spacing: -0.01em; flex: 1; }
   .back { width: 34px; height: 34px; border-radius: var(--r-md); display: grid; place-items: center; color: var(--ink-dim); margin-left: -8px; }
@@ -1084,11 +1084,11 @@
   /* big pickers (themes, scripts, page types, shortcuts) get the full width under their label */
   .row.wide { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
   .row.wide > .label, .row.about > .label { flex: none; }
-  .row.wide .label p { max-width: 62ch; }
+  .row.wide .label p { max-width: 70ch; }
   .view { container-type: inline-size; }
   @container (max-width: 560px) { .about-links { grid-template-columns: 1fr; } .about-intro { padding: 17px; } }
   .label h3 { font-size: var(--t-body); font-weight: 500; }
-  .label p { margin-top: 2px; color: var(--muted); font-size: var(--t-meta); line-height: 1.45; max-width: 46ch; }
+  .label p { margin-top: 2px; color: var(--muted); font-size: var(--t-meta); line-height: 1.45; max-width: 70ch; }
   .times { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .tm { display: inline-flex; align-items: center; gap: 2px; }
   .time, .text { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px 10px; font: inherit; color-scheme: inherit; }
@@ -1103,7 +1103,7 @@
   .preview p { font-family: var(--ar-font); font-size: var(--ar-size); line-height: var(--ar-lh); color: var(--ink); }
   .preview small { color: var(--ink-dim); }
 
-  .themes { display: grid; grid-template-columns: repeat(5, 96px); justify-content: space-between; gap: 20px 0; }
+  .themes { display: grid; grid-template-columns: repeat(auto-fill, 96px); justify-content: start; gap: 20px 28px; }
   .autoRow { margin-bottom: 12px; }
   .chipauto { height: 32px; padding: 0 14px; border-radius: var(--r-md); font-size: var(--t-body); font-weight: 500; background: var(--ink-6); }
   .chipauto:hover { background: var(--btn-hover); }
@@ -1155,7 +1155,7 @@
   .prog { width: min(360px, 100%); height: 6px; border-radius: var(--r-sm); background: color-mix(in oklab, var(--ink) 14%, transparent); overflow: hidden; }
   .prog i { display: block; height: 100%; background: var(--accent); transition: width 0.3s var(--ease); }
   .dls { list-style: none; padding: 0; border-top: 1px solid var(--line); }
-  .offline-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; width: min(900px, calc(100vw / var(--zoom, 1) - 220px - 48px)); margin-left: 50%; transform: translateX(-50%); align-items: stretch; }
+  .offline-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: stretch; }
   .offline-col { min-width: 0; padding: 0 16px 16px; border: 1px solid var(--hair); border-radius: var(--r-lg); background: var(--ink-4); }
   .offline-col .grp { margin-top: 18px; }
   .offline-col .row { flex-direction: column; align-items: flex-start; flex-wrap: nowrap; padding: 16px 0; }
