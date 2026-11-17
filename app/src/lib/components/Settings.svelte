@@ -44,6 +44,7 @@
     { area: 'appearance', title: 'Theme', text: 'colour color dark light night black madinah slate paper stone gold white auto system' },
     { area: 'appearance', title: 'Interface size', text: 'zoom scale bigger smaller menus buttons' },
     { area: 'appearance', title: 'Surah names in Arabic', text: 'arabic names list player' },
+    { area: 'text', title: 'Page layout', text: 'madani indopak 15 lines print 604 610 pages text fonts' },
     { area: 'text', title: 'Mushaf', text: 'font madani indopak pages 15 lines print 604 610 text fonts tajweed uthmani naskh amiri scheherazade arabic writing script' },
     { area: 'text', title: 'Text size', text: 'font arabic bigger larger' },
     { area: 'text', title: 'Line spacing', text: 'height lines gap' },
@@ -89,7 +90,7 @@
   // the settings behind each row, so a row can say it was changed and go back to its default
   const ROW_KEYS: Record<string, (keyof SettingsShape)[]> = {
     'Theme': ['theme'], 'Interface size': ['uiScale'], 'Surah names in Arabic': ['arabicNames'],
-    'Mushaf': ['script', 'pageType'], 'Text size': ['size'], 'Line spacing': ['spacing'],
+    'Mushaf': ['script', 'pageType'], 'Page layout': ['pageType'], 'Text size': ['size'], 'Line spacing': ['spacing'],
     'Open in': ['mode'], 'Continue where I left off': ['resume'], 'Translation': ['translation'], 'Translation and tafsir text size': ['translationSize'], 'Word meanings': ['wordMeaning'], 'Transliteration': ['transliteration'],
     'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Continuous book': ['continuous'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'],
     'Player bar': ['playerBar'], 'Playback speed': ['speed'], 'Play the next surah': ['autoAdvance'], 'Repeat surah': ['repeatSurah'],
@@ -376,11 +377,11 @@
   }
   // one Mushaf choice: the two printed Mushafs, or a plain text font (which keeps the page type it had)
   let lastFont = $state<Script>(settings.script !== 'mushaf' && settings.script !== 'indopak' ? settings.script : 'uthmani');
-  const mushafChoice = $derived<'madani' | 'indopak' | 'text'>(settings.script === 'mushaf' ? 'madani' : settings.script === 'indopak' ? 'indopak' : 'text');
+  const mushafChoice = $derived<'madani' | 'indopak' | 'text'>(settings.script === 'mushaf' ? 'madani' : settings.script === 'indopak' && settings.pageType === 'indopak' ? 'indopak' : 'text');
   function setMushaf(c: 'madani' | 'indopak' | 'text') {
     if (c === 'madani') { settings.script = 'mushaf'; settings.pageType = 'madani'; }
     else if (c === 'indopak') { settings.script = 'indopak'; settings.pageType = 'indopak'; }
-    else settings.script = lastFont;
+    else settings.script = lastFont; // keeps the current pageType on purpose
   }
   function setFont(id: Script) {
     lastFont = id;
@@ -532,7 +533,7 @@
       <div class="row wide">
         <div class="label"><h3>Font</h3><p>Every card shows the same verse.</p></div>
         <div class="scripts">
-          {#each SCRIPTS.filter((sc) => sc.id !== 'mushaf' && sc.id !== 'indopak') as sc (sc.id)}
+          {#each SCRIPTS.filter((sc) => sc.id !== 'mushaf' && (sc.id !== 'indopak' || settings.pageType === 'madani')) as sc (sc.id)}
             <button class="script" class:on={settings.script === sc.id} onclick={() => setFont(sc.id)} aria-pressed={settings.script === sc.id}>
               <span class="sample" class:tajweed={sc.id === 'tajweed'} dir="rtl" style:font-family={sc.family}>
                 {#if sc.id === 'tajweed'}{@html sample('tajweed')}{:else}{sample(sc.id)}{/if}
@@ -540,6 +541,13 @@
               <b>{sc.name}</b><small>{sc.hint}</small>
             </button>
           {/each}
+        </div>
+      </div>
+      <div class="row">
+        <div class="label"><h3>Page layout</h3>{@render rst('Page layout')}<p>Which printed Mushaf the pages follow: same text, different line breaks and page numbers.</p></div>
+        <div class="seg">
+          <button class:on={settings.pageType === 'madani'} onclick={() => (settings.pageType = 'madani')}>Madani (604)</button>
+          <button class:on={settings.pageType === 'indopak'} onclick={() => (settings.pageType = 'indopak')}>IndoPak (610)</button>
         </div>
       </div>
       {/if}

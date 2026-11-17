@@ -144,7 +144,8 @@ class Settings {
       const saved = JSON.parse(localStorage.getItem(KEY) ?? '{}');
       // older versions kept these as separate settings; fold them into the merged ones
       if (saved.follow === undefined) saved.follow = saved.lockPlaying === true ? 'lock' : saved.autoScroll === false ? 'off' : 'follow';
-      if (saved.playerBar === undefined) saved.playerBar = saved.listenBar === 'always' ? (saved.playerHover === false ? 'always' : 'autohide') : 'demand';
+      if (saved.playerBar === undefined) saved.playerBar = saved.listenBar === 'always' ? (saved.playerHover === false ? 'always' : 'autohide') : saved.playerHover === false ? 'always' : 'demand';
+      // demand + hover off was a bar docked in the layout while listening; 'always' is the only docked value, so it is the closest (it also shows when nothing plays)
       // earlier betas shipped smaller defaults; anyone who never changed them gets the larger ones
       if (saved.translationSize === 18) saved.translationSize = defaults.translationSize;
       if (typeof saved.tafsirSize === 'number') saved.translationSize = Math.max(typeof saved.translationSize === 'number' ? saved.translationSize : defaults.translationSize, saved.tafsirSize);

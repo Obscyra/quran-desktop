@@ -29,12 +29,12 @@ export const HINTS: Hint[] = [
     event: 'barPeek',
     need: 5,
     title: 'Keep the player in view?',
-    body: 'The player slides up when you move to the bottom edge. Switch this off and it stays where you can see it.',
-    label: 'Show the player only on hover',
+    body: 'The player slides up when you move to the bottom edge. Dock it and it stays where you can see it, even when nothing is playing.',
+    label: 'Keep the player bar docked',
     area: 'audio',
     eligible: () => settings.isDefault(['playerBar']),
-    on: () => settings.playerBar !== 'always',
-    set: (v) => (settings.playerBar = v ? 'demand' : 'always')
+    on: () => settings.playerBar === 'always',
+    set: (v) => (settings.playerBar = v ? 'always' : 'demand')
   },
   {
     id: 'lock-verse',
