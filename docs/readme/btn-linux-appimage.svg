@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="290" height="64" viewBox="0 0 290 64" role="img" aria-label="Download for Linux">
   <title>Download for Linux</title>
-  <rect x="0.5" y="0.5" width="289" height="63" rx="16" fill="#1f5f4a" stroke="#3f8a71" stroke-width="1"/>
+  <defs><linearGradient id="g-linux-appimage" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c974b"/><stop offset="1" stop-color="#1f883d"/></linearGradient></defs>
+  <rect x="0.5" y="0.5" width="289" height="63" rx="16" fill="url(#g-linux-appimage)" stroke="#1f2328" stroke-opacity="0.15" stroke-width="1"/>
   <g transform="translate(20 16) scale(1.3333)" fill="#ffffff" stroke="none">
     <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9l3 3-3 3M12 15h5"/></g>
   </g>
   <text x="68" y="29" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Download for Linux</text>
-  <text x="68" y="47" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" fill-opacity="0.8">.AppImage · x64</text>
+  <text x="68" y="47" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" fill-opacity="0.85">.AppImage · x64</text>
 </svg>
