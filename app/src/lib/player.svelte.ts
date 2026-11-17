@@ -2,7 +2,7 @@ import { wordLanguage } from './languages';
 import { translations } from './translations.svelte';
 import { BUNDLED_TRANSLATION, fetchChapterAudio, fetchChapters, fetchIndo, fetchReciters, fetchVerses, isPartial } from './api';
 import { autocache } from './autocache.svelte';
-import { pageFonts } from './fonts.svelte';
+import { pageFonts, startPages } from './fonts.svelte';
 import * as offline from './offline';
 import { settings } from './settings.svelte';
 import { ui } from './ui.svelte';
@@ -395,14 +395,14 @@ class Player {
     ]);
   }
 
-  private preloadFonts(verses: Verse[]) {
+  private preloadFonts(verses: Verse[], all = false) {
     if (settings.script !== 'mushaf') return;
     const pages = new Set<number>();
     for (const v of verses) {
       for (const w of v.words) pages.add(w.gp);
       pages.add(v.endPage);
     }
-    pageFonts.ensure(pages);
+    pageFonts.ensure(all ? pages : startPages(verses), { priority: 'low' });
   }
 
   private async fetchText(ch: number) {
@@ -640,7 +640,7 @@ class Player {
   /** Save one surah for one reciter: text, fonts, word timings and the audio itself. */
   private async fetchOne(r: number, ch: number, signal?: AbortSignal) {
     const verses = await this.textFor(ch);
-    this.preloadFonts(verses);
+    this.preloadFonts(verses, true);
     const a = (await offline.getAudioMeta(r, ch)) ?? (await this.fetchAudio(r, ch));
     if (await offline.getBlob(r, ch)) return;
     const key = `${r}:${ch}`;

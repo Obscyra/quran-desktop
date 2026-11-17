@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
-  import { pageFonts } from '$lib/fonts.svelte';
+  import { pageFonts, startPages } from '$lib/fonts.svelte';
   import { dataSync } from '$lib/datasync.svelte';
   import { notifier } from '$lib/notifications.svelte';
   import { player } from '$lib/player.svelte';
@@ -82,15 +82,10 @@
   $effect(() => {
     if (settings.needsIndo && player.verses.length && !player.verses[0].words[0]?.indo) untrack(() => player.refreshText());
   });
-  // glyph fonts for the open surah, if the script needs them
+  // glyph fonts for the start of the open surah, if the script needs them; later pages load as they come into view
   $effect(() => {
     if (settings.script === 'mushaf' && player.verses.length) {
-      const pages = new Set<number>();
-      for (const v of player.verses) {
-        for (const w of v.words) pages.add(w.gp);
-        pages.add(v.endPage);
-      }
-      pageFonts.ensure(pages);
+      pageFonts.ensure(startPages(player.verses), { priority: 'low' });
     }
   });
 

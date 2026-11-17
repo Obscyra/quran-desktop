@@ -208,6 +208,11 @@
     if (live && stale) untrack(schedule);
   });
 
+  // the page being drawn gets its font first, ahead of any preload
+  $effect(() => {
+    if (page && settings.script === 'mushaf') pageFonts.ensure([page.page]);
+  });
+
   $effect(() => {
     page;
     pageFonts.tick;

@@ -3,6 +3,7 @@
   import { cubicOut } from 'svelte/easing';
   import { copyVerse, toggleBookmark } from '$lib/actions';
   import { bookmarks } from '$lib/bookmarks.svelte';
+  import { pageFonts } from '$lib/fonts.svelte';
   import { hints } from '$lib/hints.svelte';
   import { cancelIdle, whenIdle } from '$lib/platform';
   import { player } from '$lib/player.svelte';
@@ -101,6 +102,16 @@
   const kind = $derived(mushafMode ? 'pages' : reading ? 'flow' : 'verses');
   const total = $derived(mushafMode ? reader.pages.length : player.verses.length);
   let upto = $state(0);
+  // verse by verse has no PageSheet: the verses drawn so far get their page fonts first
+  $effect(() => {
+    if (settings.script !== 'mushaf' || (settings.mode === 'reading' && settings.readingStyle === 'arabic')) return;
+    const pages = new Set<number>();
+    for (const v of player.verses.slice(0, upto)) {
+      for (const w of v.words) pages.add(w.gp);
+      pages.add(v.endPage);
+    }
+    pageFonts.ensure(pages);
+  });
   $effect(() => {
     const k = kind;
     const t = total;
