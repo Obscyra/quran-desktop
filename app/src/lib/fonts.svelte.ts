@@ -50,7 +50,18 @@ class PageFonts {
     return p;
   }
 
+  private warned = false;
+
   private async shipped(page: number): Promise<ArrayBuffer | undefined> {
+    const buf = await this.fetchShipped(page);
+    if (!buf && !this.warned) {
+      this.warned = true;
+      console.warn(`Shipped page font p${page}.woff2 is missing; falling back to cache/network. Run npm run bundle.`);
+    }
+    return buf;
+  }
+
+  private async fetchShipped(page: number): Promise<ArrayBuffer | undefined> {
     try {
       const res = await fetch(`/fonts/qcf/p${page}.woff2`);
       if (!res.ok) return undefined;
