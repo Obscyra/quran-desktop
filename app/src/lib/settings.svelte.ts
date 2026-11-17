@@ -4,7 +4,6 @@ export type PageFlow = 'page' | 'scroll';
 export type PageType = 'madani' | 'indopak';
 export type PageLook = 'paper' | 'frame' | 'plain';
 export type Script = 'mushaf' | 'tajweed' | 'uthmani' | 'indopak' | 'naskh' | 'amiri' | 'scheherazade';
-export type Highlight = 'sweep' | 'fill' | 'underline';
 export type WordMeaning = 'off' | 'hover' | 'below';
 export type ListenBar = 'demand' | 'always';
 
@@ -43,7 +42,6 @@ const defaults = {
   volume: 1,
   size: 56,
   spacing: 1.9,
-  highlight: 'sweep' as Highlight,
   translation: 20,
   translationSize: 20,
   wordMeaning: 'hover' as WordMeaning,
@@ -63,7 +61,6 @@ const defaults = {
   tips: true,
   /** keep surahs you listen to regularly offline, and drop them again after a month without listening */
   autoCache: true,
-  autoHideChrome: true,
   resume: true,
   checkUpdates: true,
   /** closing the window keeps the app in the system tray, so reminders still arrive */
@@ -107,7 +104,6 @@ class Settings {
   volume = $state(defaults.volume);
   size = $state(defaults.size);
   spacing = $state(defaults.spacing);
-  highlight = $state(defaults.highlight);
   translation = $state(defaults.translation);
   translationSize = $state(defaults.translationSize);
   wordMeaning = $state(defaults.wordMeaning);
@@ -125,7 +121,6 @@ class Settings {
   keepAwake = $state(defaults.keepAwake);
   tips = $state(defaults.tips);
   autoCache = $state(defaults.autoCache);
-  autoHideChrome = $state(defaults.autoHideChrome);
   /** reopen at the surah and verse that was being read */
   resume = $state(defaults.resume);
   checkUpdates = $state(defaults.checkUpdates);

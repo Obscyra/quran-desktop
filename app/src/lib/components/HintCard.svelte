@@ -17,7 +17,7 @@
   });
 </script>
 
-{#if h && !ui.focus}
+{#if h}
   <aside class="hint" class:above={ui.listening} role="status" aria-live="polite" onpointerenter={() => (hovered = true)} onpointerleave={() => (hovered = false)}>
     <header>
       <b>{h.title}</b>

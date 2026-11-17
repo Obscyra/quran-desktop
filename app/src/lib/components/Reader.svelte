@@ -689,7 +689,7 @@
   let stage = $state<HTMLElement>();
   let view = $state<HTMLElement>();
   let before: DOMRect | null = null;
-  const shape = () => `${settings.sidebar}${ui.settingsOpen}${ui.listening}${settings.listenBar}${settings.playerHover}${ui.focus}`;
+  const shape = () => `${settings.sidebar}${ui.settingsOpen}${ui.listening}${settings.listenBar}${settings.playerHover}`;
   const currentBook = () => {
     return stage?.querySelector<HTMLElement>('.book.cur') ?? null;
   };
@@ -743,7 +743,7 @@
   style:--tr-size="{settings.translationSize}px"
 >
   <!-- ───────── controls for the way you are reading ───────── -->
-  <div class="sub" class:away={ui.focus && !ui.chromeVisible} inert={ui.focus && !ui.chromeVisible}>
+  <div class="sub">
     {#if reading}
       <div class="seg" role="radiogroup" aria-label="Reading style">
         <button role="radio" aria-checked={settings.readingStyle === 'arabic'} onclick={() => (settings.readingStyle = 'arabic')}>Arabic</button>
@@ -814,7 +814,7 @@
     <p class="msg">Loading…</p>
   {:else if paged && reader.page}
     <!-- ───────── Mushaf pages ───────── -->
-    <div class="stage hl-{settings.highlight}" bind:this={stage} onwheel={wheel} ontouchstart={touchStart} ontouchend={touchEnd} role="presentation">
+    <div class="stage hl-sweep" bind:this={stage} onwheel={wheel} ontouchstart={touchStart} ontouchend={touchEnd} role="presentation">
       <!-- Arabic books open from the right: the next page is on the left -->
       <button class="turn next" onclick={() => reader.go(1)} disabled={!reader.canForward} aria-label="Next page (Page Down)">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5" /></svg>
@@ -859,7 +859,7 @@
 
       {#if mushafMode}
         <!-- scroll: the printed pages one after another -->
-        <div class="pages hl-{settings.highlight}">
+        <div class="pages hl-sweep">
           {#each reader.pages.slice(0, upto) as pg, i (pg.page)}
             <div class="pg" data-i={i} use:watchPage>{#if built(i)}<PageSheet page={pg} last={i === lastIdx} stagger live={inView.has(i)} />{/if}</div>
           {/each}
@@ -879,7 +879,7 @@
         </article>
       {:else}
         <!-- verse by verse -->
-        <div class="verses hl-{settings.highlight}">
+        <div class="verses hl-sweep">
           {#each player.verses.slice(0, upto) as v (v.n)}
             {@const saved = bookmarks.has(player.chapter, v.n)}
             <section class="verse" id="v-{v.n}" class:target={ui.target === v.n} class:now={activeVerse === v.n || (ui.pick?.verse === v.n)}>
@@ -947,9 +947,6 @@
 
   /* ───── sub bar ───── */
   .sub { flex: none; display: flex; align-items: center; gap: 10px; padding: 8px 16px; min-height: 46px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
-  /* in focus mode the title bar floats over the page, so the controls float just beneath it and leave together */
-  :global(.app.focus) .sub { position: fixed; top: 40px; left: 0; right: 0; z-index: 29; background: var(--bg-2); transition: transform 0.4s var(--ease), opacity 0.3s var(--ease); }
-  :global(.app.focus) .sub.away { transform: translateY(-140%); opacity: 0; pointer-events: none; }
   .grow { flex: 1; }
   .back { position: absolute; right: 22px; bottom: 18px; width: 42px; height: 42px; border-radius: 999px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 24px -8px #000b; z-index: 5; transition: transform 0.15s var(--ease), opacity 0.15s; }
   .back.lift { bottom: 118px; }

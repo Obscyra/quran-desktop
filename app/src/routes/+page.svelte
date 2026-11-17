@@ -75,7 +75,6 @@
     document.documentElement.style.setProperty('--zoom', String(settings.uiScale));
   });
 
-  const toChrome = () => ui.poke();
   const paged = $derived(settings.mode === 'reading' && settings.readingStyle === 'arabic' && settings.flow === 'page');
 
   // switching to a script that needs IndoPak spellings or layout: fetch them for the open surah
@@ -135,8 +134,7 @@
     } else if (e.key === 'PageUp' || (paged && e.key === 'ArrowUp')) {
       e.preventDefault();
       reader.go(-1);
-    } else if (e.key === 'z' || e.key === 'Z') ui.toggleFocus();
-    else if (e.key === 'f' || e.key === 'F') ui.toggleFullscreen();
+    } else if (e.key === 'f' || e.key === 'F') ui.toggleFullscreen();
     else if (e.key === 'b' || e.key === 'B') ui.toggleSidebar();
     else if (e.key === 'p' || e.key === 'P') settings.mode = settings.mode === 'verse' ? 'reading' : 'verse';
     else if (e.key === 't' || e.key === 'T') settings.spread = !settings.spread;
@@ -145,7 +143,6 @@
     else if (e.key === ',') ui.toggleSettings();
     else if (e.key === 'Escape') {
       if (ui.settingsOpen) ui.closeSettings();
-      else if (ui.focus) ui.toggleFocus();
       else if (ui.fullscreen) ui.toggleFullscreen();
     }
   }
@@ -225,10 +222,10 @@
   });
 </script>
 
-<svelte:window onkeydown={keys} onmousemove={toChrome} onmousedown={sideButton} onmouseup={sideButton} onauxclick={sideButton} oncontextmenu={noBrowserMenu} />
+<svelte:window onkeydown={keys} onmousedown={sideButton} onmouseup={sideButton} onauxclick={sideButton} oncontextmenu={noBrowserMenu} />
 
-<div class="app" class:focus={ui.focus} class:idle={ui.focus && !ui.chromeVisible}>
-  <TitleBar hidden={ui.focus && !ui.chromeVisible} />
+<div class="app">
+  <TitleBar />
   <div class="body">
     <Sidebar />
     <div class="main">
@@ -249,7 +246,7 @@
   {#if ui.welcome}<Welcome />{/if}
   <ConfirmDialog />
 
-  {#if updater.pending && !ui.focus}
+  {#if updater.pending}
     <aside class="toast" role="status">
       <span>Version {updater.version} is ready</span>
       <button onclick={() => updater.installAndRestart()}>Restart to update</button>
@@ -260,7 +257,6 @@
 <style>
   /* `zoom` scales the interface; the height is divided back so the app still fills the window exactly */
   .app { position: relative; display: flex; flex-direction: column; height: calc(var(--vh, 100vh) / var(--zoom, 1)); zoom: var(--zoom, 1); }
-  .app.idle { cursor: none; }
   .body { flex: 1; min-height: 0; display: flex; position: relative; }
   .main { flex: 1; min-width: 0; display: flex; position: relative; }
   .pane { flex: 1; min-width: 0; display: flex; }

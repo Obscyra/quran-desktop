@@ -102,9 +102,6 @@
   .t > :global(.fx) > :global(span) { display: block; white-space: nowrap; will-change: transform; }
   .w:global(.active) > .t > :global(.gl) { opacity: 0.95; transition-duration: 0.22s; }
   .w:global(.active) > .t > :global(.fx) { opacity: 1; transition-duration: 0.16s; }
-  :global(.hl-fill) .w:global(.active) { background: color-mix(in srgb, var(--accent) 24%, transparent); box-shadow: 0 0 0 0.1em color-mix(in srgb, var(--accent) 24%, transparent); border-radius: 0.28em; }
-  :global(.hl-fill) .w:global(.active) .t { color: var(--accent); }
-  :global(.hl-underline) .w:global(.active) .t { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 0.3em; color: var(--accent); filter: drop-shadow(0 0 0.16em color-mix(in srgb, var(--accent) 60%, transparent)); }
 
   .m { display: block; font-family: var(--ui); font-size: 12.5px; line-height: 1.35; color: var(--ink-dim); text-align: center; max-width: 9em; direction: ltr; user-select: text; white-space: normal; margin: -4px auto 0; }
   .m em { display: block; font-style: normal; opacity: 0.75; font-size: 11.5px; }

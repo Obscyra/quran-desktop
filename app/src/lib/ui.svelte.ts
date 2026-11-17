@@ -21,18 +21,12 @@ export interface Pick {
   pos: number;
 }
 
-/** Focus mode is switched off for now: set to true to bring back its button, shortcut and settings. */
-export const FOCUS_MODE = false;
-
 class Ui {
   /** the first-run setup (theme, reading style, language) */
   welcome = $state(settings.firstRun);
   settingsOpen = $state(false);
   area = $state<SettingsArea>('appearance');
-  focus = $state(false);
   fullscreen = $state(false);
-  /** In focus mode the player bar only shows while the pointer is active. */
-  chromeVisible = $state(true);
   /** the listening bar is opt-in: it opens when the reader asks to hear something */
   listening = $state(false);
   /** the hover-only player bar is showing over the page (things in the bottom corner step up out of its way) */
@@ -45,8 +39,6 @@ class Ui {
   networkFailure = $state<{ resource: 'audio' | 'translation' | 'tafsir'; retry: () => void } | null>(null);
   /** sidebar tab */
   tab = $state<'surahs' | 'bookmarks'>('surahs');
-
-  private idle = 0;
 
   failNetwork(resource: 'audio' | 'translation' | 'tafsir', retry: () => void) {
     this.networkFailure = { resource, retry };
@@ -78,30 +70,6 @@ class Ui {
   async toggleFullscreen() {
     this.fullscreen = !this.fullscreen;
     await setFullscreen(this.fullscreen).catch(() => (this.fullscreen = !this.fullscreen));
-  }
-
-  async toggleFocus() {
-    if (!FOCUS_MODE) return;
-    this.focus = !this.focus;
-    this.settingsOpen = false;
-    this.chromeVisible = true;
-    this.poke();
-    if (this.focus !== this.fullscreen) await this.toggleFullscreen();
-  }
-
-  /** Called on pointer movement: show the chrome, then hide it again after a quiet moment. */
-  poke() {
-    this.chromeVisible = true;
-    clearTimeout(this.idle);
-    if (this.focus) this.idle = window.setTimeout(() => this.settle(), 2600);
-  }
-  /** Hide the chrome after a quiet moment, but never while the pointer is resting on it. */
-  private settle() {
-    if (document.querySelector('.bar:hover, .sub:hover, footer:hover, .rp-pop')) {
-      this.idle = window.setTimeout(() => this.settle(), 1200);
-      return;
-    }
-    this.chromeVisible = false;
   }
 
   async syncFullscreen() {

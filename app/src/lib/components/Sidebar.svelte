@@ -106,7 +106,7 @@
     closeMenu();
     navigator.clipboard?.writeText(`${c.name_simple} (${c.name_arabic}) ${c.id}`).catch(() => {});
   }
-  const closed = $derived(!settings.sidebar || ui.focus || ui.settingsOpen);
+  const closed = $derived(!settings.sidebar || ui.settingsOpen);
   const go = (ch: number, v: number) => player.goTo(ch, v);
 
   // "55:13" jumps straight to a verse

@@ -4,9 +4,7 @@
   import { player } from '$lib/player.svelte';
   import { settings } from '$lib/settings.svelte';
   import { goBack, goForward } from '$lib/actions';
-  import { FOCUS_MODE, ui } from '$lib/ui.svelte';
-
-  let { hidden = false }: { hidden?: boolean } = $props();
+  import { ui } from '$lib/ui.svelte';
 
   const os = detectOs();
   /** Back leaves Settings first; otherwise it steps back through the surahs you opened. */
@@ -23,7 +21,7 @@
   });
 </script>
 
-<header class="bar" class:hidden inert={hidden} data-tauri-drag-region>
+<header class="bar" data-tauri-drag-region>
   <div class="left" data-tauri-drag-region>
     <button class="tool" class:active={settings.sidebar} onclick={() => ui.toggleSidebar()} aria-label="Toggle surah list (B)" aria-pressed={settings.sidebar} title="Surah list (B)">
       <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5" /><path d="M7.5 3.5v13" />{#if settings.sidebar}<path d="M2.5 6a2.5 2.5 0 0 1 2.5-2.5h2.5v13H5A2.5 2.5 0 0 1 2.5 14z" fill="currentColor" stroke="none" opacity=".35" />{/if}</svg>
@@ -62,11 +60,6 @@
       </i>
       <span>{player.playing ? 'Pause' : 'Play'}</span>
     </button>
-    {#if FOCUS_MODE}
-      <button class="tool" class:active={ui.focus} onclick={() => ui.toggleFocus()} aria-label="Focus mode (Z)" aria-pressed={ui.focus} title="Focus mode (Z)">
-        <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 10S4.6 4.5 10 4.5 18.2 10 18.2 10 15.4 15.5 10 15.5 1.8 10 1.8 10z" /><circle cx="10" cy="10" r="2.4" /></svg>
-      </button>
-    {/if}
     <button class="tool" class:active={ui.fullscreen} onclick={() => ui.toggleFullscreen()} aria-label="Full screen (F)" aria-pressed={ui.fullscreen} title="Full screen (F)">
       <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5v-4h4M16.5 7.5v-4h-4M3.5 12.5v4h4M16.5 12.5v4h-4" /></svg>
     </button>
@@ -101,8 +94,6 @@
     background: var(--bg-2); user-select: none; -webkit-user-select: none; position: relative; z-index: 30;
     transition: transform 0.4s var(--ease), opacity 0.3s var(--ease);
   }
-  .bar.hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-  :global(.app.focus) .bar { position: fixed; inset: 0 0 auto 0; }
   .left, .right { display: flex; align-items: center; height: 100%; min-width: 0; }
   .left { gap: 4px; padding-left: 8px; }
   .right { justify-content: flex-end; gap: 6px; padding-right: 0; }

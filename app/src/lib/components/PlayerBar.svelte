@@ -5,7 +5,6 @@
   import { ui } from '$lib/ui.svelte';
   import ReciterPicker from './ReciterPicker.svelte';
 
-  const hidden = $derived(ui.focus && !ui.chromeVisible);
   const shown = $derived(ui.listening || settings.listenBar === 'always');
 
   // "Show on hover": the bar floats over the bottom edge of the page and slides up while the mouse is
@@ -101,10 +100,9 @@
 {#if float && !peek}<div class="zone" role="presentation" onmouseenter={enter} onpointerenter={enter}><i></i></div>{/if}
 
 <footer
-  class:hidden
   class:float
   class:closed={!open}
-  inert={hidden || !open}
+  inert={!open}
   aria-label="Listening"
   onmouseenter={enter}
   onmouseleave={leave}
@@ -221,8 +219,6 @@
   .dl.busy b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 9.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
   .dl svg.spin { animation: spin 0.9s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  footer.hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
-  :global(.app.focus) footer { position: fixed; inset: auto 0 0 0; }
 
   .now { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .np { display: flex; align-items: baseline; gap: 8px; text-align: left; border-radius: 6px; margin: 0 -4px; padding: 1px 4px; min-width: 0; }

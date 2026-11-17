@@ -24,7 +24,7 @@
   }
 </script>
 
-{#if n && !ui.focus}
+{#if n}
   <aside class="notice" class:verse={n.kind === 'verse'} role="status" aria-live="polite">
     <header>
       <b>{n.title}</b>

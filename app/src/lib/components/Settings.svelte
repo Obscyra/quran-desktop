@@ -11,13 +11,12 @@
   import { reader } from '$lib/reader.svelte';
   import { getAutostart, isTauri, setAutostart } from '$lib/platform';
   import { hints } from '$lib/hints.svelte';
-  import { SCRIPTS, settings, type SettingsShape, type Highlight, type PageLook, type PageType, type Script, type WordMeaning } from '$lib/settings.svelte';
+  import { SCRIPTS, settings, type SettingsShape, type PageLook, type PageType, type Script, type WordMeaning } from '$lib/settings.svelte';
   import { THEMES } from '$lib/themes';
   import { translations } from '$lib/translations.svelte';
   import { autocache, KEEP_DAYS } from '$lib/autocache.svelte';
   import { confirm } from '$lib/confirm.svelte';
-  import { notifier } from '$lib/notifications.svelte';
-  import { FOCUS_MODE, ui, type SettingsArea } from '$lib/ui.svelte';
+  import { ui, type SettingsArea } from '$lib/ui.svelte';
   import { parseNotes } from '$lib/notes';
   import { updater } from '$lib/updater.svelte';
   import { tafsirs } from '$lib/tafsir.svelte';
@@ -68,7 +67,6 @@
     { area: 'audio', title: 'Play the next surah', text: 'auto advance continue' },
     { area: 'audio', title: 'Repeat surah', text: 'loop memorise memorize' },
     { area: 'audio', title: 'Say a word when clicked', text: 'word audio click play' },
-    { area: 'audio', title: 'Highlight style', text: 'sweep glow underline recited word' },
     { area: 'audio', title: 'Follow the recitation', text: 'auto scroll follow along' },
     { area: 'audio', title: 'Lock on the playing verse', text: 'scroll return centre center keep verse' },
     { area: 'manager', title: 'Reciter to manage', text: 'offline manager audio download delete recitation surah storage' },
@@ -98,7 +96,7 @@
     'Open in': ['mode'], 'Continue where I left off': ['resume'], 'Translation': ['translation'], 'Translation size': ['translationSize'], 'Tafsir text size': ['tafsirSize'], 'Word meanings': ['wordMeaning'], 'Transliteration': ['transliteration'],
     'Page type': ['pageType'], 'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Continuous book': ['continuous'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'],
     'Listening bar': ['listenBar'], 'Show the bar only on hover': ['playerHover'], 'Playback speed': ['speed'], 'Play the next surah': ['autoAdvance'], 'Repeat surah': ['repeatSurah'],
-    'Say a word when clicked': ['wordAudio'], 'Highlight style': ['highlight'], 'Follow the recitation': ['autoScroll'], 'Lock on the playing verse': ['lockPlaying'], 'Keep favourites offline': ['autoCache'],
+    'Say a word when clicked': ['wordAudio'], 'Follow the recitation': ['autoScroll'], 'Lock on the playing verse': ['lockPlaying'], 'Keep favourites offline': ['autoCache'],
     'Verse of the day': ['dailyVerse'], 'Show it from': ['dailyVerseTime'], 'Reading reminders': ['remindersOn'], 'Times': ['remindTimes'], 'Message': ['remindMessage'], 'Use system notifications': ['systemNotify'],
     'Keep the screen on': ['keepAwake'], 'Show tips': ['tips'], 'Keep running in the tray': ['background'], 'Update automatically': ['checkUpdates']
   };
@@ -292,16 +290,6 @@
     if (ok) await player.removeAllFor(dlReciter);
   }
 
-  let previewing = $state(false);
-  let previewMsg = $state('');
-  async function previewVerse() {
-    previewing = true;
-    previewMsg = '';
-    const ok = await notifier.showVerseOfTheDay();
-    previewing = false;
-    previewMsg = ok ? 'Shown at the bottom right.' : 'Could not reach quran.com. Check your connection and try again.';
-  }
-
   let version = $state('dev');
   let usedBytes = $state(0);
   let savedAt = $state(0);
@@ -370,11 +358,6 @@
     { id: 'frame', name: 'Frame', hint: 'Bordered like a printed page.' },
     { id: 'plain', name: 'Plain', hint: 'Just the text.' }
   ];
-  const HIGHLIGHTS: { id: Highlight; name: string }[] = [
-    { id: 'sweep', name: 'Sweep' },
-    { id: 'fill', name: 'Glow' },
-    { id: 'underline', name: 'Underline' }
-  ];
   const MEANINGS: { id: WordMeaning; name: string }[] = [
     { id: 'off', name: 'Off' },
     { id: 'hover', name: 'On hover' },
@@ -430,7 +413,7 @@
 </script>
 
 {#snippet preview()}
-  <div class="preview hl-{settings.highlight}" style:--ar-size="{Math.min(settings.size, 52)}px" style:--ar-lh={settings.spacing}>
+  <div class="preview hl-sweep" style:--ar-size="{Math.min(settings.size, 52)}px" style:--ar-lh={settings.spacing}>
     <p dir="rtl" class="sample" class:glyph={settings.script === 'mushaf'} style:font-family={settings.script === 'mushaf' ? 'QCF1' : settings.fontFamily}>
       {#if settings.script === 'tajweed'}{@html sample('tajweed')}{:else}{sample(settings.script)}{/if}
     </p>
@@ -712,14 +695,6 @@
       </div>
       <h3 class="grp">Following along</h3>
       <div class="row">
-        <div class="label"><h3>Highlight style</h3>{@render rst('Highlight style')}<p>How the recited word is marked.</p></div>
-        <div class="seg">
-          {#each HIGHLIGHTS as h (h.id)}
-            <button class:on={settings.highlight === h.id} onclick={() => (settings.highlight = h.id)}>{h.name}</button>
-          {/each}
-        </div>
-      </div>
-      <div class="row">
         <div class="label"><h3>Follow the recitation</h3>{@render rst('Follow the recitation')}<p>Scroll automatically so the current verse stays in view. Scrolling yourself pauses it for a moment.</p></div>
         {@render toggle(settings.autoScroll, (v) => (settings.autoScroll = v), 'Auto-scroll')}
       </div>
@@ -850,13 +825,6 @@
           <div class="label"><h3>Show it from</h3>{@render rst('Show it from')}<p>It appears at this time while the app is running (in the tray too), or the first time you open the app after it.</p></div>
           <input class="time" type="time" bind:value={settings.dailyVerseTime} aria-label="Verse of the day time" />
         </div>
-        <div class="row">
-          <div class="label"><h3>Preview today's verse</h3><p>Shows the card now, without waiting.</p></div>
-          <div class="stack">
-            <button class="secondary" onclick={previewVerse} disabled={previewing}>{previewing ? 'Loading…' : 'Show now'}</button>
-            {#if previewMsg}<small class="status" role="status">{previewMsg}</small>{/if}
-          </div>
-        </div>
       {/if}
       <div class="row">
         <div class="label"><h3>Reading reminders</h3>{@render rst('Reading reminders')}<p>A nudge at the times below, as long as the app is running.</p></div>
@@ -886,20 +854,10 @@
         <div class="label"><h3>Use system notifications</h3>{@render rst('Use system notifications')}<p>When the window is behind other apps or in the tray, notify through Windows or macOS as well. Do Not Disturb and Focus still apply.</p></div>
         {@render toggle(settings.systemNotify, (v) => (settings.systemNotify = v), 'System notifications')}
       </div>
-      <div class="row">
-        <div class="label"><h3>Try it</h3><p>Sends a test reminder with your message.</p></div>
-        <button class="secondary" onclick={() => notifier.test()}>Send a test</button>
-      </div>
     {/if}
 
     {#if browse && onPage('focus')}
       <h3 class="grp">Window</h3>
-      {#if FOCUS_MODE}
-      <div class="row">
-        <div class="label"><h3>Focus mode</h3><p>Hides the surah list and controls and goes full screen. Move the mouse to bring the player back. Press Esc to leave.</p></div>
-        <button class="primary" onclick={() => ui.toggleFocus()}>{ui.focus ? 'Leave focus mode' : 'Enter focus mode'}</button>
-      </div>
-      {/if}
       <div class="row">
         <div class="label"><h3>Full screen</h3><p>Use the whole display without changing the layout.</p></div>
         <button class="secondary" onclick={() => ui.toggleFullscreen()}>{ui.fullscreen ? 'Exit full screen' : 'Enter full screen'}</button>
@@ -912,12 +870,6 @@
         <div class="label"><h3>Show tips</h3>{@render rst('Show tips')}<p>Now and then a small card offers a setting that suits what you are doing, such as keeping the player in view. Switch off to never see them; switching on again brings them back.</p></div>
         {@render toggle(settings.tips, (v) => hints.enable(v), 'Show tips')}
       </div>
-      {#if FOCUS_MODE}
-      <div class="row">
-        <div class="label"><h3>Quiet in focus mode</h3><p>Update prompts stay hidden while you are in focus mode. For notifications from other apps, switch on Do Not Disturb in Windows (Focus) or macOS (Focus); apps are not allowed to change that for you.</p></div>
-        <span class="note">Built in</span>
-      </div>
-      {/if}
       {#if isTauri()}
         <h3 class="grp">Background</h3>
         <div class="row">
@@ -944,7 +896,6 @@
           <dt>T</dt><dd>Two-page spread</dd>
           <dt>L</dt><dd>Show or hide the listening bar</dd>
           <dt>B</dt><dd>Show or hide the surah list</dd>
-          {#if FOCUS_MODE}<dt>Z</dt><dd>Focus mode</dd>{/if}
           <dt>F</dt><dd>Full screen</dd>
           <dt>,</dt><dd>Settings</dd>
           <dt>Esc</dt><dd>Close a menu or leave Settings</dd>
@@ -1113,9 +1064,8 @@
   .rm { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: var(--ink-dim); }
   .rm:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
   .rp-wrap { justify-self: start; max-width: 100%; }
-  .row > :global(.toggle), .row > .times, .row > .time, .row > .text, .row > :global(.tp-btn), .row > .seg, .row > button.primary, .row > button.secondary, .row > .note { justify-self: start; }
+  .row > :global(.toggle), .row > .times, .row > .time, .row > .text, .row > :global(.tp-btn), .row > .seg, .row > button.secondary { justify-self: start; }
 
-  .dev p { margin-top: 4px; }
   .intro { margin: 0 0 4px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; line-height: 1.55; color: var(--ink); }
   .preview { background: var(--surface); border-radius: 16px; padding: 22px 28px; margin-bottom: 8px; text-align: center; }
   .preview p { font-family: var(--ar-font); font-size: var(--ar-size); line-height: var(--ar-lh); color: var(--ink); }
@@ -1136,7 +1086,6 @@
 
   .fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
   .font { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px; border-radius: 14px; background: var(--surface); outline: 2px solid transparent; }
-  .font small { font-family: var(--ui); color: var(--ink-dim); font-size: 12px; }
   .font.on { outline-color: var(--accent); }
 
   .layouts { display: grid; gap: 10px; }

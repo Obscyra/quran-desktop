@@ -178,7 +178,7 @@ class Hints {
 
   /** and the moment is right: nothing else is asking for attention */
   private clear() {
-    return !(this.current || ui.welcome || ui.settingsOpen || ui.notice || ui.focus);
+    return !(this.current || ui.welcome || ui.settingsOpen || ui.notice);
   }
 
   private due(h: Hint) {

@@ -176,12 +176,6 @@ class Notifier {
     }
     await this.system('Quran is still running', 'It stays in the tray so your reminders can arrive. Click the tray icon to open it, or right-click it to quit.');
   }
-
-  /** The Settings "Send a test" button. */
-  async test() {
-    ui.notice = { kind: 'reminder', title: 'Quran reminder', body: settings.remindMessage || 'Time to read.' };
-    if (settings.systemNotify) await this.system('Quran reminder', settings.remindMessage || 'Time to read.');
-  }
 }
 
 export const notifier = new Notifier();
