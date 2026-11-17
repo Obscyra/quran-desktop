@@ -1,62 +1,74 @@
 <div align="center">
 
-<img src="assets/icon.png" alt="Quran for Desktop" width="120"/>
+<img src="app/src-tauri/icons/128x128.png" alt="Quran for Desktop" width="110"/>
 
 # Quran for Desktop
 
-**A free, open-source Quran app for Windows, macOS and Linux.**<br/>
-Read the exact printed Mushaf, follow the recitation word by word, and read with no internet at all.
+**A free, open-source, ad-free Quran app for Windows, macOS and Linux.**<br/>
+Read the printed Mushaf, follow the recitation word by word, and keep reading with no internet.
 
-[![Latest release](https://img.shields.io/github/v/release/Obscyra/quran-desktop?style=for-the-badge&color=2ea44f&label=Download)](https://github.com/Obscyra/quran-desktop/releases/latest)
-
-[![Downloads](https://img.shields.io/github/downloads/Obscyra/quran-desktop/total)](https://github.com/Obscyra/quran-desktop/releases)
-[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-555)](#download)
 [![License: GPL v3](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/Obscyra/quran-desktop?include_prereleases&label=release)](https://github.com/Obscyra/quran-desktop/releases/latest)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-555)](#download)
+
+<p align="center">
+  <a href="https://github.com/Obscyra/quran-desktop/releases/latest"><img src="docs/readme/btn-windows.svg" alt="Download for Windows" height="64"></a>
+  <a href="https://github.com/Obscyra/quran-desktop/releases/latest"><img src="docs/readme/btn-macos.svg" alt="Download for macOS" height="64"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/Obscyra/quran-desktop/releases/latest"><img src="docs/readme/btn-linux-appimage.svg" alt="Download AppImage for Linux" height="64"></a>
+  <a href="https://github.com/Obscyra/quran-desktop/releases/latest"><img src="docs/readme/btn-linux-deb.svg" alt="Download deb for Linux" height="64"></a>
+  <a href="https://github.com/Obscyra/quran-desktop/releases/latest"><img src="docs/readme/btn-linux-rpm.svg" alt="Download rpm for Linux" height="64"></a>
+</p>
+
+<sub>Buttons open the newest release; all files are on the <a href="https://github.com/Obscyra/quran-desktop/releases/latest">Releases page</a> · <a href="https://qurandesktop.netlify.app">Website</a></sub>
 
 <img src="assets/screenshots/verse-by-verse-playing.webp" alt="Verse by Verse view with word-by-word meanings and the recited word highlighted" width="900"/>
 
 </div>
 
-<br/>
-
-## Why this app
-
-- **Reading comes first.** It opens as a Quran to read. Listening is one click away and never in the way.
-- **The real Mushaf.** Every page is drawn in its own per-page font, so each line matches the printed Madani Mushaf glyph for glyph.
-- **Works offline from the first launch.** The full Arabic text and all 604 page fonts are inside the installer. Only audio and other translations need a connection, and audio can be downloaded for later. Once a week the app checks for corrections to the text and fonts and applies them.
-- **Free for good.** No ads, no accounts, no paid features, no tracking.
-
-Website: **[qurandesktop.pages.dev](https://qurandesktop.pages.dev)**, with a live demo of the reader.
-
-Compared with the [quran.com](https://quran.com) website, this is a native desktop app that keeps working without a connection and runs quietly in the tray.
-
 ## Download
 
-Get the installer for your system from the **[latest release](https://github.com/Obscyra/quran-desktop/releases/latest)**.
+Use the buttons above, or pick a file from the [Releases page](https://github.com/Obscyra/quran-desktop/releases/latest).
 
-| System | File | Notes |
-| --- | --- | --- |
-| Windows 10 / 11 | `Quran_<version>_x64-setup.exe` (about 100 MB) | Installs for your user only, no administrator rights needed. Windows SmartScreen may warn because the app is not code-signed yet: choose **More info → Run anyway**. |
-| macOS | `Quran_<version>_universal.dmg` | Built automatically for Apple silicon and Intel. Not yet tested on a Mac by the maintainer. |
-| Linux (x86_64) | `Quran_<version>_amd64.AppImage`, `.deb` or `.rpm` | The AppImage runs on most distributions (`chmod +x`, then run) and updates itself; the `.deb` is for Debian and Ubuntu and the `.rpm` for Fedora and openSUSE (these two do not update themselves). Not yet tested on a Linux desktop by the maintainer. On GNOME the tray icon needs the AppIndicator extension. |
+- **Windows 10 / 11:** installs for your user only, no administrator rights needed. SmartScreen may warn because the installer isn't code-signed yet: choose **More info → Run anyway**.
+- **macOS:** one build for Apple silicon and Intel. On first launch, right-click the app and choose **Open**.
+- **Linux (x86_64):** the AppImage runs on most distributions (`chmod +x`, then run) and updates itself. The `.deb` is for Debian and Ubuntu, the `.rpm` for Fedora and openSUSE; these two don't update themselves. On GNOME the tray icon needs the AppIndicator extension.
 
-> **This is a beta.** Please report anything that looks wrong, especially in the Arabic text, with the
-> [Arabic text report form](https://github.com/Obscyra/quran-desktop/issues/new?template=arabic-text.yml).
+This is a beta, and the macOS and Linux builds haven't been tested much on real machines yet. Please report anything that looks wrong, especially in the Arabic text, with the [Arabic text report form](https://github.com/Obscyra/quran-desktop/issues/new?template=arabic-text.yml). New versions are offered inside the app (Settings → Updates).
 
-New versions are offered inside the app (Settings → Updates).
+## Features
 
-## Highlights
+**What's new in 0.0.10-beta**
+- A redesigned look: one calm frame for the title bar and sidebar, new icons, restyled menus and dialogs, and a clearer Verse by Verse / Reading switch.
+- **Calligraphic surah frames** on the first page of every surah, in the Madinah, Ottoman or IndoPak style to match your theme.
+- Simpler Settings in seven areas, with related options merged and your earlier choices carried over.
 
-- **Two ways to read:** *Verse by Verse* with translation and tools, or *Reading* the printed Mushaf as a two-page spread, single pages or one long scroll.
-- **Seven script styles**, including colour-coded Tajweed, and the Madani and IndoPak page layouts.
-- **100+ translations**, with word-by-word meanings in the translation's language, and transliteration.
-- **17 reciters** with word-by-word tracking that follows the recitation, plus **90+ more** to listen to surah by surah.
-- **Offline manager** to download audio and multilingual tafsir by surah for offline use.
-- **Bookmarks with notes**, jump to any verse by typing `55:13`, and the app reopens where you left off.
-- **Fifteen themes** (ten dark, five light), interface size from 50% to 200%, full screen, and a player bar that can hide until you need it. A short first-run setup (skippable) sets theme, size, language and reading mode. Settings has a search bar, a Reset on each setting and a list of what you changed. Small tips offer a setting when you keep doing what it is for (and can be switched off).
-- **Runs in the system tray** with optional reminders and the Verse of the Day.
+**Reading**
+- *Verse by Verse* with translation and tools, or *Reading* the printed Mushaf as a two-page spread, single pages or one long scroll.
+- Every page drawn in its own per-page font, so lines match the printed Madani Mushaf. Madani and IndoPak page layouts.
+- Seven script styles, including colour-coded Tajweed.
+- Bookmarks with notes, jump to any verse by typing `55:13`, and the app reopens where you left off.
 
-The complete list, with the keyboard shortcuts, is in **[docs/FEATURES.md](docs/FEATURES.md)**.
+**Listening**
+- 17 reciters with word-by-word tracking that follows the recitation, plus 90+ more to listen to surah by surah.
+- Play one word or one verse, with speed control, repeat and automatic next surah.
+- Media keys and, on Windows, taskbar buttons work with the window closed.
+
+**Translation and tafsir**
+- 100+ translations, transliteration, and word-by-word meanings in the translation's language.
+- Tafsir verse by verse: choose a commentary edition, and open it only where you want it.
+
+**Offline**
+- The full Arabic text and all 604 page fonts are inside the installer, so reading needs no connection. Once a week, while online, the app checks for corrections and applies them.
+- An Offline manager saves audio and tafsir by surah.
+
+**Comfort**
+- Fifteen themes (ten dark, five light), interface size from 50% to 200%, full screen, and a player bar that opens on demand.
+- Runs in the system tray with optional reminders and the Verse of the Day.
+- No ads, no accounts, no paid features, no tracking.
+
+The full list, with keyboard shortcuts, is in [docs/FEATURES.md](docs/FEATURES.md).
 
 ## Screenshots
 
@@ -109,7 +121,7 @@ Fifteen themes: ten dark and five light, or follow your system. The dark ones av
 
 ## Privacy
 
-There are no accounts, no analytics and no tracking. The app talks to the [Quran.com](https://quran.com) API and its audio hosts only to fetch audio, translations other than the bundled one, the reciter list, and the Verse of the Day. Bookmarks, settings and downloads stay on your computer.
+There are no accounts, no analytics and no tracking. The app talks to the [Quran.com](https://quran.com) API and its audio hosts only to fetch audio, translations other than the bundled one, tafsir, the reciter list, and the Verse of the Day. Bookmarks, settings and downloads stay on your computer.
 
 ## Build from source
 
@@ -121,21 +133,21 @@ cd quran-desktop/app
 npm install
 npm run bundle        # once: downloads the Quran text and page fonts (about 120 MB) that ship with the app
 
-npm run tauri dev     # the desktop app, with hot reload
-npm run dev           # the interface alone, in a browser at http://localhost:1420
-npm run check         # type check
-npm run tauri build   # an installer for your system
+npx vite dev --port 1420   # the interface alone, in a browser at http://localhost:1420
+npm run tauri dev          # the desktop app, with hot reload
+npm run check              # type check
+npm run tauri build        # an installer for your system
 ```
 
 **Tech stack:** [Tauri 2](https://tauri.app) (Rust) with [SvelteKit](https://svelte.dev/docs/kit), Svelte 5 and TypeScript. Text, word timings and audio come from the Quran.com API; downloads are kept in IndexedDB.
 
 ## Contributing
 
-Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Want a feature? [Request it here](https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml). Found a security problem? See [SECURITY.md](SECURITY.md). Release notes are on the [Releases page](https://github.com/Obscyra/quran-desktop/releases).
+Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Want a feature? [Request it here](https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml). Found a security problem? See [SECURITY.md](SECURITY.md).
 
 ## Credits
 
-- **Data and audio:** the [Quran.com](https://quran.com) / [Quran.Foundation](https://quran.foundation) public API, and the audio hosts it points to such as [quranicaudio.com](https://quranicaudio.com).
+- **Data and audio:** the [Quran.com](https://quran.com) / [Quran.Foundation](https://quran.foundation) public API (v4), and the audio hosts it points to such as [quranicaudio.com](https://quranicaudio.com).
 - **Mushaf fonts, tajweed markup and IndoPak text:** Quran.com and the King Fahd Quran Printing Complex.
 - **Other Arabic fonts** (SIL Open Font License, bundled): [Amiri Quran](https://github.com/aliftype/amiri-quran), [Scheherazade New](https://software.sil.org/scheherazade/) and [Noto Naskh Arabic](https://fonts.google.com/noto/specimen/Noto+Naskh+Arabic).
 - **Bengali text font** (SIL Open Font License, bundled in WOFF2 and TrueType formats): [Noto Sans Bengali](https://fonts.google.com/noto/specimen/Noto+Sans+Bengali).

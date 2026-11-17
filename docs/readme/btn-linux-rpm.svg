@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="290" height="64" viewBox="0 0 290 64" role="img" aria-label="Download for Linux">
+  <title>Download for Linux</title>
+  <rect x="0.5" y="0.5" width="289" height="63" rx="16" fill="#1f5f4a" stroke="#3f8a71" stroke-width="1"/>
+  <g transform="translate(20 16) scale(1.3333)" fill="#ffffff" stroke="none">
+    <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></g>
+  </g>
+  <text x="68" y="29" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Download for Linux</text>
+  <text x="68" y="47" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" fill-opacity="0.8">.rpm · Fedora</text>
+</svg>

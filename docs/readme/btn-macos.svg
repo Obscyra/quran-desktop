@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="290" height="64" viewBox="0 0 290 64" role="img" aria-label="Download for macOS">
+  <title>Download for macOS</title>
+  <rect x="0.5" y="0.5" width="289" height="63" rx="16" fill="#1f5f4a" stroke="#3f8a71" stroke-width="1"/>
+  <g transform="translate(20 16) scale(1.3333)" fill="#ffffff" stroke="none">
+    <path fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 9V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z"/>
+  </g>
+  <text x="68" y="29" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Download for macOS</text>
+  <text x="68" y="47" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#ffffff" fill-opacity="0.8">.dmg · Apple Silicon &amp; Intel</text>
+</svg>
