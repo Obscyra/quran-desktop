@@ -24,8 +24,8 @@ class Player {
   private readonly linked = fromHash() > 0;
   chapter = $state(fromHash() || (settings.resume ? read(LS.chapter, 1) : 1));
   reciterId = $state(read(LS.reciter, 7));
-  verses = $state<Verse[]>([]);
-  audio = $state<ChapterAudio | null>(null);
+  verses = $state.raw<Verse[]>([]);
+  audio = $state.raw<ChapterAudio | null>(null);
   playing = $state(false);
   loading = $state(false);
   error = $state('');
@@ -285,13 +285,14 @@ class Player {
     try {
       const reciter = this.reciterId;
       const verses = await this.textFor(chapter);
-      // audio is only fetched when someone listens; a downloaded copy is picked up for free
-      const audio = (await offline.getAudioMeta(reciter, chapter)) ?? null;
-      if (token !== this.token) return;
+      // audio is only fetched when someone listens; a downloaded copy is picked up for free. It runs beside the fonts and never holds the text back
+      const audioMeta = offline.getAudioMeta(reciter, chapter).then((a) => a ?? null, () => null);
       // the first pages' glyph fonts are in before the text shows, so a page never draws once with missing glyphs and again when its font arrives
       await this.firstFonts(verses);
       if (token !== this.token) return;
       this.verses = verses;
+      const audio = await audioMeta;
+      if (token !== this.token) return;
       this.audio = audio;
       if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
       this.objectUrl = '';
@@ -391,7 +392,7 @@ class Player {
     const pages = [...first];
     await Promise.race([
       pageFonts.ensure(pages).then(() => Promise.all(pages.map((n) => document.fonts.load(`1em ${pageFonts.family(n)}`, '\ue000')))),
-      new Promise((r) => setTimeout(r, 400))
+      new Promise((r) => setTimeout(r, 60))
     ]);
   }
 
