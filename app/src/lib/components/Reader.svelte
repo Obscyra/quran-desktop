@@ -942,29 +942,29 @@
 <style>
   .reader { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; font-family: var(--ui); }
   .msg { margin: auto; color: var(--ink-dim); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-  .retry { height: 34px; padding: 0 18px; border-radius: 999px; background: var(--btn); color: var(--ink); font-weight: 550; font-size: 13px; transition: background-color 0.15s; }
+  .retry { height: 34px; padding: 0 18px; border-radius: var(--r-pill); background: var(--btn); color: var(--ink); font-weight: 550; font-size: var(--t-body); transition: background-color 0.15s; }
   .retry:hover { background: var(--btn-hover); }
 
   /* ───── sub bar ───── */
   .sub { flex: none; display: flex; align-items: center; gap: 10px; padding: 8px 16px; min-height: 46px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
   .grow { flex: 1; }
-  .back { position: absolute; right: 22px; bottom: 18px; width: 42px; height: 42px; border-radius: 999px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 24px -8px #000b; z-index: 5; transition: transform 0.15s var(--ease), opacity 0.15s; }
+  .back { position: absolute; right: 22px; bottom: 18px; width: 42px; height: 42px; border-radius: var(--r-pill); display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: var(--e1); z-index: 5; transition: transform 0.15s var(--ease), opacity 0.15s; }
   .back.lift { bottom: 118px; }
   .back:hover { transform: scale(1.06); }
   .back.up svg { transform: rotate(180deg); }
-  .where { color: var(--ink-dim); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .seg { display: inline-flex; background: var(--btn); border: 1px solid var(--btn-line); border-radius: 10px; padding: 2px; flex: none; }
-  .seg button { padding: 0 13px; height: 28px; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-dim); white-space: nowrap; transition: background-color 0.2s, color 0.2s; }
+  .where { color: var(--ink-dim); font-size: var(--t-meta); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .seg { display: inline-flex; background: var(--btn); border: 1px solid var(--btn-line); border-radius: var(--r-md); padding: 2px; flex: none; }
+  .seg button { padding: 0 13px; height: 28px; border-radius: var(--r-md); font-size: var(--t-meta); font-weight: 600; color: var(--ink-dim); white-space: nowrap; transition: background-color 0.2s, color 0.2s; }
   .seg button:hover { color: var(--ink); }
   .seg button[aria-checked='true'] { background: var(--sel); color: var(--accent); }
-  .tafsir-note { color: var(--ink-dim); font-size: 11px; white-space: nowrap; }
-  .icon { min-width: 32px; height: 30px; padding: 0 6px; border-radius: 8px; display: inline-grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid var(--btn-line); font-size: 12.5px; font-weight: 600; transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
+  .tafsir-note { color: var(--ink-dim); font-size: var(--t-meta); white-space: nowrap; }
+  .icon { min-width: 32px; height: 30px; padding: 0 6px; border-radius: var(--r-md); display: inline-grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid var(--btn-line); font-size: var(--t-meta); font-weight: 600; transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
   .icon:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
   .icon.on { color: var(--accent); background: var(--btn-on); }
   .icon:disabled { opacity: 0.4; }
   .size { gap: 4px; }
   .size { display: inline-flex; align-items: center; }
-  .pick { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-dim); flex: none; }
+  .pick { display: inline-flex; align-items: center; gap: 8px; font-size: var(--t-meta); color: var(--ink-dim); flex: none; }
 
   /* ───── page stage ───── */
   .stage { flex: 1; min-height: 0; position: relative; }
@@ -979,7 +979,7 @@
   /* fill: the page takes the full width of the window, and the window scrolls down it */
   .book.fill { --sh: calc(((100cqw - 96px) / 0.66) * var(--pz, 1)); }
   .book.fill.spread { --sh: calc(((100cqw - 64px) / 1.32) * var(--pz, 1)); }
-  .turn { position: absolute; top: 50%; translate: 0 -50%; width: 44px; height: 88px; border-radius: 14px; display: grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid transparent; backdrop-filter: blur(6px); transition: background-color 0.15s, color 0.15s, opacity 0.15s, border-color 0.15s; z-index: 2; }
+  .turn { position: absolute; top: 50%; translate: 0 -50%; width: 44px; height: 88px; border-radius: var(--r-lg); display: grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid transparent; backdrop-filter: blur(6px); transition: background-color 0.15s, color 0.15s, opacity 0.15s, border-color 0.15s; z-index: 2; }
   .turn:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
   .turn:disabled { opacity: 0.25; }
   .turn.next { left: 14px; }
@@ -991,11 +991,11 @@
   /* the book grows above the reader: the scroll position is kept by hand (see growUp), not by the browser's anchoring */
   .scroll { flex: 1; overflow: auto; overflow-anchor: none; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
   .head { text-align: center; padding: 36px 0 16px; }
-  .kicker { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
+  .kicker { font-size: var(--t-meta); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
   h2 { font-family: 'KFGQPC Uthmanic Hafs', serif; font-weight: 400; font-size: clamp(48px, 6vw, 80px); line-height: 1.6; margin: 4px 0 6px; color: var(--accent); }
   .sub2 { color: var(--ink-dim); }
   .head-actions { margin-top: 16px; display: flex; justify-content: center; gap: 10px; }
-  .listen { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 18px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 13px; transition: transform 0.15s var(--ease), opacity 0.15s; }
+  .listen { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 18px; border-radius: var(--r-pill); background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: var(--t-body); transition: transform 0.15s var(--ease), opacity 0.15s; }
   .listen:hover { opacity: 0.92; }
   .listen:active { transform: scale(0.97); }
   .bismillah { font-family: 'KFGQPC Uthmanic Hafs', serif; font-size: calc(var(--ar-size) * 0.95); text-align: center; color: var(--ink-dim); margin: 14px 0 10px; line-height: 2; }
@@ -1006,14 +1006,14 @@
 
   .scroll.fill { padding: 0 12px; }
   .scroll.fill .pg { --sh: calc(100cqw * var(--pz, 1) / 0.66); }
-  .pct { min-width: 44px; text-align: center; font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--ink-dim); }
+  .pct { min-width: 44px; text-align: center; font-size: var(--t-meta); font-variant-numeric: tabular-nums; color: var(--ink-dim); }
   .verses { max-width: 900px; margin: 0 auto; }
   /* verses off screen are not laid out: a change of text size only has to lay out what is in view */
-  .verse { content-visibility: auto; contain-intrinsic-size: auto 240px; padding: 18px 14px 22px; border-radius: 14px; transition: background-color 0.3s; border-bottom: 1px solid var(--line); }
-  .verse.target, .tflow p.target { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 3px 0 0 var(--accent), 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 10px; }
-  .verse.now { background: color-mix(in srgb, var(--accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+  .verse { content-visibility: auto; contain-intrinsic-size: auto 240px; padding: 18px 14px 22px; border-radius: var(--r-lg); transition: background-color 0.3s; border-bottom: 1px solid var(--line); }
+  .verse.target, .tflow p.target { background: color-mix(in oklab, var(--accent) 16%, transparent); box-shadow: inset 3px 0 0 var(--accent), 0 0 0 1px color-mix(in oklab, var(--accent) 55%, transparent); border-radius: var(--r-md); }
+  .verse.now { background: color-mix(in oklab, var(--accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
   .tools { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .tools .icon { min-width: 40px; height: 38px; border-radius: 9px; }
+  .tools .icon { min-width: 40px; height: 38px; border-radius: var(--r-md); }
   .tools .icon svg { width: 22px; height: 22px; }
   .tools .verse-tafsir { position: relative; width: 40px; min-width: 40px; padding: 0; display: grid; place-items: center; flex: 0 0 40px; }
   .tools .verse-tafsir i { display: none; }
@@ -1022,21 +1022,21 @@
   .ref { font-size: 16px; color: var(--ink-dim); font-variant-numeric: tabular-nums; margin-right: 8px; min-width: 42px; }
   .ar { text-align: right; line-height: var(--ar-lh); }
   .ar.below { display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: flex-start; align-items: flex-start; }
-  .tr { margin-top: 12px; font-size: var(--tr-size); line-height: 1.7; color: color-mix(in srgb, var(--ink) 88%, var(--bg)); max-width: 68ch; user-select: text; -webkit-user-select: text; }
-  .tafsir-text { margin-top: 14px; width: 100%; max-width: 100%; box-sizing: border-box; padding: 18px 20px; border-inline-start: 3px solid var(--accent); border-radius: 4px 10px 10px 4px; color: var(--ink); background: color-mix(in srgb, var(--accent) 7%, var(--bg-2)); font-size: 18px; line-height: 1.8; user-select: text; -webkit-user-select: text; }
-  .tafsir-text b { display: block; margin-bottom: 6px; color: var(--accent); font-size: 12px; }
+  .tr { margin-top: 12px; font-size: var(--tr-size); line-height: 1.7; color: color-mix(in oklab, var(--ink) 88%, var(--bg)); max-width: 68ch; user-select: text; -webkit-user-select: text; }
+  .tafsir-text { margin-top: 14px; width: 100%; max-width: 100%; box-sizing: border-box; padding: 18px 20px; border-inline-start: 3px solid var(--accent); border-radius: var(--r-sm) var(--r-md) var(--r-md) var(--r-sm); color: var(--ink); background: color-mix(in oklab, var(--accent) 7%, var(--bg-2)); font-size: 18px; line-height: 1.8; user-select: text; -webkit-user-select: text; }
+  .tafsir-text b { display: block; margin-bottom: 6px; color: var(--accent); font-size: var(--t-meta); }
   .tafsir-text p { margin: 0; white-space: pre-line; unicode-bidi: plaintext; }
-  .tafsir-repeat { display: inline-block; margin: 0 0 10px; padding: 4px 8px; border-radius: 999px; color: var(--accent); background: var(--btn-on); font-size: 12px; font-weight: 650; }
-  .tafsir-status { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: var(--ink-dim); font-size: 12.5px; }
-  .tafsir-unavailable { align-items: flex-start; flex-direction: column; gap: 3px; max-width: 68ch; padding: 11px 13px; border-inline-start: 3px solid var(--accent); border-radius: 4px 9px 9px 4px; color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, var(--bg-2)); }
-  .tafsir-unavailable b { font-size: 13px; color: var(--ink); }
+  .tafsir-repeat { display: inline-block; margin: 0 0 10px; padding: 4px 8px; border-radius: var(--r-pill); color: var(--accent); background: var(--btn-on); font-size: var(--t-meta); font-weight: 650; }
+  .tafsir-status { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: var(--ink-dim); font-size: var(--t-meta); }
+  .tafsir-unavailable { align-items: flex-start; flex-direction: column; gap: 3px; max-width: 68ch; padding: 11px 13px; border-inline-start: 3px solid var(--accent); border-radius: var(--r-sm) var(--r-md) var(--r-md) var(--r-sm); color: var(--ink); background: color-mix(in oklab, var(--accent) 10%, var(--bg-2)); }
+  .tafsir-unavailable b { font-size: var(--t-body); color: var(--ink); }
   .tafsir-unavailable span { color: var(--ink); }
 
   .tflow { max-width: 740px; margin: 0 auto; padding-top: 8px; }
-  .tflow p { font-size: var(--tr-size); line-height: 1.85; padding: 8px 12px; border-radius: 10px; color: var(--ink); user-select: text; -webkit-user-select: text; transition: background-color 0.3s; }
-  .tflow p.now { background: color-mix(in srgb, var(--accent) 8%, transparent); }
-  .vn { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; margin-right: 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; vertical-align: 1px; }
-  .vn:hover { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+  .tflow p { font-size: var(--tr-size); line-height: 1.85; padding: 8px 12px; border-radius: var(--r-md); color: var(--ink); user-select: text; -webkit-user-select: text; transition: background-color 0.3s; }
+  .tflow p.now { background: color-mix(in oklab, var(--accent) 8%, transparent); }
+  .vn { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; margin-right: 8px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; vertical-align: 1px; }
+  .vn:hover { background: color-mix(in oklab, var(--accent) 28%, transparent); }
   .vn.saved { background: var(--accent); color: var(--accent-ink); }
   .hint { color: var(--ink-dim); text-align: center; padding: 30px 0; }
 </style>

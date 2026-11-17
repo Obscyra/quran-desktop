@@ -45,22 +45,22 @@
 {/if}
 
 <style>
-  .hint { position: fixed; right: 16px; bottom: 16px; width: min(360px, calc((100vw - 32px) / var(--zoom, 1))); padding: 14px 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 18px 44px -14px #000b; z-index: 59; animation: up 0.4s var(--ease); display: flex; flex-direction: column; gap: 10px; }
+  .hint { position: fixed; right: 16px; bottom: 16px; width: min(360px, calc((100vw - 32px) / var(--zoom, 1))); padding: 14px 16px; border-radius: var(--r-lg); background: var(--panel); border: 1px solid var(--line); box-shadow: var(--e2); z-index: 59; animation: up 0.4s var(--ease); display: flex; flex-direction: column; gap: 10px; }
   .hint.above { bottom: 92px; }
   @keyframes up { from { transform: translateY(14px); opacity: 0; } }
   header { display: flex; align-items: center; gap: 8px; }
-  header b { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--accent); }
-  .x { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; color: var(--ink-dim); }
-  .x:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
-  p { font-size: 13px; line-height: 1.55; color: var(--ink-dim); }
-  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--ink) 6%, transparent); font-size: 13px; font-weight: 550; }
-  .toggle { width: 42px; height: 24px; border-radius: 999px; background: var(--line); position: relative; transition: background 0.25s; flex: none; }
+  header b { flex: 1; font-size: var(--t-body); font-weight: 600; color: var(--accent); }
+  .x { width: 24px; height: 24px; border-radius: var(--r-sm); display: grid; place-items: center; color: var(--ink-dim); }
+  .x:hover { background: color-mix(in oklab, var(--ink) 10%, transparent); color: var(--ink); }
+  p { font-size: var(--t-body); line-height: 1.55; color: var(--ink-dim); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: var(--r-md); background: color-mix(in oklab, var(--ink) 6%, transparent); font-size: var(--t-body); font-weight: 550; }
+  .toggle { width: 42px; height: 24px; border-radius: var(--r-pill); background: var(--line); position: relative; transition: background 0.25s; flex: none; }
   .toggle i { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); transition: transform 0.25s var(--ease); }
   .toggle.on { background: var(--accent); }
   .toggle.on i { transform: translateX(18px); background: var(--accent-ink); }
   .acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .acts button { height: 28px; padding: 0 12px; border-radius: 8px; font-size: 12.5px; font-weight: 550; background: color-mix(in srgb, var(--ink) 9%, transparent); }
-  .acts button:hover { background: color-mix(in srgb, var(--ink) 15%, transparent); }
+  .acts button { height: 28px; padding: 0 12px; border-radius: var(--r-md); font-size: var(--t-meta); font-weight: 550; background: color-mix(in oklab, var(--ink) 9%, transparent); }
+  .acts button:hover { background: color-mix(in oklab, var(--ink) 15%, transparent); }
   .acts .go { background: var(--accent); color: var(--accent-ink); }
   .acts .link { margin-left: auto; background: none; color: var(--accent); padding: 0 4px; }
   .acts .link:hover { background: none; text-decoration: underline; }

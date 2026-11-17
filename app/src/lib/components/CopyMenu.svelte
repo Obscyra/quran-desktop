@@ -37,9 +37,9 @@
 {/if}
 
 <style>
-  .copymenu { position: fixed; z-index: 70; min-width: 110px; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 14px 34px -12px #000b; animation: pop 0.14s var(--ease); }
+  .copymenu { position: fixed; z-index: 70; min-width: 110px; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--e2); animation: pop 0.14s var(--ease); }
   @keyframes pop { from { opacity: 0; scale: 0.96; } }
-  button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 12px; border-radius: 7px; font-size: 13px; text-align: left; color: var(--ink); }
-  button:hover { background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 12px; border-radius: var(--r-sm); font-size: var(--t-body); text-align: left; color: var(--ink); }
+  button:hover { background: color-mix(in oklab, var(--ink) 9%, transparent); }
   svg { color: var(--ink-dim); }
 </style>

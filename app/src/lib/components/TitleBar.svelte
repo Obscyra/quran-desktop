@@ -98,35 +98,35 @@
   .left { gap: 4px; padding-left: 8px; }
   .right { justify-content: flex-end; gap: 6px; padding-right: 0; }
   .right > .tool:last-of-type { margin-right: 6px; }
-  .brand { font-size: 13px; font-weight: 600; color: var(--ink-dim); padding: 0 8px; pointer-events: none; }
-  .beta { font-style: normal; margin-left: 7px; padding: 1px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .brand { font-size: var(--t-body); font-weight: 600; color: var(--ink-dim); padding: 0 8px; pointer-events: none; }
+  .beta { font-style: normal; margin-left: 7px; padding: 1px 6px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent); font-size: var(--t-cap); letter-spacing: 0.06em; text-transform: uppercase; }
   .hist { display: flex; margin: 0 2px 0 4px; padding-right: 6px; border-right: 1px solid var(--line); }
   /* a narrow window (or a large interface size) drops the app name to keep the controls clear */
   @container (max-width: 900px) { .brand { display: none; } .seg button { padding: 0 10px; } }
   .center { display: flex; justify-content: center; }
 
-  .tool { width: 34px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
+  .tool { width: 34px; height: 30px; border-radius: var(--r-md); display: grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
   .tool:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
   .tool:active:not(:disabled) { background: var(--btn-hover); transform: scale(0.97); }
   .tool.active { color: var(--accent); background: var(--btn-on); }
   .tool.play i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
   .tool.play { color: var(--ink); }
   .tool.play.active { color: var(--ink); }
-  .tool.labeled { width: auto; display: inline-flex; align-items: center; gap: 7px; padding: 0 11px 0 9px; font-size: 12.5px; font-weight: 600; }
+  .tool.labeled { width: auto; display: inline-flex; align-items: center; gap: 7px; padding: 0 11px 0 9px; font-size: var(--t-meta); font-weight: 600; }
   @container (max-width: 900px) { .tool.labeled { width: 34px; padding: 0; justify-content: center; } .tool.labeled span { display: none; } }
   .tool:disabled { opacity: 0.35; }
 
   /* the chosen view is a solid accent block, like the Play button, so which one is on reads at a glance */
-  .seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; background: var(--btn); border: 1px solid var(--btn-line); border-radius: 10px; padding: 2px; }
-  .seg i { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 8px; background: var(--accent); box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--accent) 55%, transparent); transition: transform 0.28s var(--ease); }
+  .seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; background: var(--btn); border: 1px solid var(--btn-line); border-radius: var(--r-md); padding: 2px; }
+  .seg i { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: var(--r-md); background: var(--accent); box-shadow: 0 4px 12px -6px color-mix(in oklab, var(--accent) 55%, transparent); transition: transform 0.28s var(--ease); }
   .seg[data-view='reading'] i { transform: translateX(100%); }
-  .seg button { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; height: 26px; border-radius: 7px; font-size: 12.5px; font-weight: 600; color: var(--ink); transition: color 0.2s; }
+  .seg button { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; height: 26px; border-radius: var(--r-sm); font-size: var(--t-meta); font-weight: 600; color: var(--ink); transition: color 0.2s; }
   .seg button[aria-checked='true'] { color: var(--accent-ink); }
 
   .win { display: flex; height: 100%; margin-left: 4px; }
   .win button { width: 46px; height: 100%; display: grid; place-items: center; color: var(--ink); transition: background-color 0.12s; }
-  .win button:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); }
-  .win button:active { background: color-mix(in srgb, var(--ink) 16%, transparent); }
+  .win button:hover { background: color-mix(in oklab, var(--ink) 10%, transparent); }
+  .win button:active { background: color-mix(in oklab, var(--ink) 16%, transparent); }
   .win .close:hover { background: #c42b1c; color: #fff; }
   .win .close:active { background: #b02a1e; color: #fff; }
 </style>

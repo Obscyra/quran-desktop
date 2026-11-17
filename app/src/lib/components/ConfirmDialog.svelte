@@ -54,15 +54,15 @@
 <style>
   .scrim { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: #0008; animation: fade 0.18s; }
   @keyframes fade { from { opacity: 0; } }
-  .dlg { width: min(420px, calc((100vw - 32px) / var(--zoom, 1))); padding: 22px 22px 18px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 24px 60px -16px #000c; animation: pop 0.22s var(--ease); }
+  .dlg { width: min(420px, calc((100vw - 32px) / var(--zoom, 1))); padding: 22px 22px 18px; border-radius: var(--r-lg); background: var(--panel); border: 1px solid var(--line); box-shadow: var(--e3); animation: pop 0.22s var(--ease); }
   @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
-  .n { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 6px; }
-  h3 { font-size: 17px; font-weight: 600; }
-  #cf-b { margin-top: 8px; color: var(--ink-dim); font-size: 14px; line-height: 1.6; }
+  .n { font-size: var(--t-cap); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 6px; }
+  h3 { font-size: var(--t-title); font-weight: 600; }
+  #cf-b { margin-top: 8px; color: var(--ink-dim); font-size: var(--t-body); line-height: 1.6; }
   .acts { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-  .acts button { height: 36px; padding: 0 18px; border-radius: 9px; font-weight: 550; font-size: 13.5px; }
-  .cancel { background: color-mix(in srgb, var(--ink) 10%, transparent); }
-  .cancel:hover { background: color-mix(in srgb, var(--ink) 16%, transparent); }
+  .acts button { height: 36px; padding: 0 18px; border-radius: var(--r-md); font-weight: 550; font-size: var(--t-body); }
+  .cancel { background: color-mix(in oklab, var(--ink) 10%, transparent); }
+  .cancel:hover { background: color-mix(in oklab, var(--ink) 16%, transparent); }
   .ok { background: var(--accent); color: var(--accent-ink); }
   .ok.danger { background: #c4372c; color: #fff; }
   .ok:hover { opacity: 0.92; }

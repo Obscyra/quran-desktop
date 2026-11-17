@@ -200,9 +200,9 @@
   }
   /* Closed, the bar leaves the layout at once (the page below it reflows one time) and slides out over the
      bottom edge. Animating its height instead made the page refit on every frame, which stuttered. */
-  footer.float { position: absolute; inset: auto 14px 12px 14px; border: 1px solid var(--line); border-radius: 20px; background: color-mix(in srgb, var(--bg-2) 88%, transparent); backdrop-filter: blur(18px) saturate(1.2); box-shadow: 0 18px 44px -14px #000c, 0 0 0 1px color-mix(in srgb, var(--ink) 4%, transparent); }
+  footer.float { position: absolute; inset: auto 14px 12px 14px; border: 1px solid var(--line); border-radius: var(--r-lg); background: color-mix(in oklab, var(--bg-2) 88%, transparent); backdrop-filter: blur(18px) saturate(1.2); box-shadow: var(--e2), 0 0 0 1px color-mix(in oklab, var(--ink) 4%, transparent); }
   .zone { position: absolute; inset: auto 0 0 0; height: 44px; z-index: 29; display: flex; justify-content: center; align-items: flex-end; }
-  .zone i { width: 64px; height: 4px; margin-bottom: 8px; border-radius: 4px; background: var(--ink-dim); opacity: 0.45; pointer-events: none; }
+  .zone i { width: 64px; height: 4px; margin-bottom: 8px; border-radius: var(--r-sm); background: var(--ink-dim); opacity: 0.45; pointer-events: none; }
   footer.closed { position: absolute; inset: auto 0 0 0; transform: translateY(calc(100% + 24px)); opacity: 0; pointer-events: none; }
   footer.float.closed { inset: auto 14px 12px 14px; }
   .now em { font-style: normal; font-weight: 400; color: var(--accent); }
@@ -210,21 +210,21 @@
   .dl { position: relative; flex: none; box-sizing: border-box; padding: 0; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); background: none; border: 0; transition: color 0.15s, opacity 0.15s; }
   .dl:hover:not(:disabled) { opacity: 0.8; }
   .dl.done { color: var(--accent); }
-  .play .wait { width: 20px; height: 20px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--accent-ink) 30%, transparent); border-top-color: var(--accent-ink); animation: spin 0.8s linear infinite; }
+  .play .wait { width: 20px; height: 20px; border-radius: 50%; border: 3px solid color-mix(in oklab, var(--accent-ink) 30%, transparent); border-top-color: var(--accent-ink); animation: spin 0.8s linear infinite; }
   .vs.load { color: var(--accent); }
-  .bar .clip { position: absolute; inset: 0; overflow: hidden; border-radius: 4px; pointer-events: none; }
-  .bar .shimmer { position: absolute; inset: 0; width: 35%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 70%, transparent), transparent); animation: slide 1.1s ease-in-out infinite; pointer-events: none; }
+  .bar .clip { position: absolute; inset: 0; overflow: hidden; border-radius: var(--r-sm); pointer-events: none; }
+  .bar .shimmer { position: absolute; inset: 0; width: 35%; background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent) 70%, transparent), transparent); animation: slide 1.1s ease-in-out infinite; pointer-events: none; }
   @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
   .dl.busy { color: var(--accent); }
-  .dl.busy b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 9.5px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .dl.busy b { position: absolute; inset: 0; display: grid; place-items: center; font-size: var(--t-meta); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
   .dl svg.spin { animation: spin 0.9s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .now { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .np { display: flex; align-items: baseline; gap: 8px; text-align: left; border-radius: 6px; margin: 0 -4px; padding: 1px 4px; min-width: 0; }
-  .np:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-  .np b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .vs { font-size: 12.5px; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .np { display: flex; align-items: baseline; gap: 8px; text-align: left; border-radius: var(--r-sm); margin: 0 -4px; padding: 1px 4px; min-width: 0; }
+  .np:hover { background: color-mix(in oklab, var(--ink) 8%, transparent); }
+  .np b { font-size: var(--t-body); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vs { font-size: var(--t-meta); color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .vs i { font-style: normal; color: var(--ink-dim); margin-left: 3px; }
 
   .mid { display: flex; flex-direction: column; gap: 6px; align-items: center; }
@@ -233,28 +233,28 @@
   .ctl:disabled { opacity: 0.35; pointer-events: auto; cursor: not-allowed; }
   .ctl:hover:not(:disabled) { background: var(--btn-hover); }
   .ctl:active:not(:disabled) { transform: scale(0.92); }
-  .play { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--accent) 55%, transparent); transition: transform 0.2s var(--ease), box-shadow 0.2s, opacity 0.15s; }
-  .play:hover:not(:disabled) { transform: scale(1.07); box-shadow: 0 8px 22px -6px color-mix(in srgb, var(--accent) 85%, transparent); }
+  .play { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: 0 4px 12px -6px color-mix(in oklab, var(--accent) 55%, transparent); transition: transform 0.2s var(--ease), box-shadow 0.2s, opacity 0.15s; }
+  .play:hover:not(:disabled) { transform: scale(1.07); box-shadow: 0 8px 22px -6px color-mix(in oklab, var(--accent) 85%, transparent); }
   .play:active:not(:disabled) { transform: scale(0.95); }
   .play:disabled { opacity: 0.4; }
-  .scrub { display: flex; align-items: center; gap: 10px; width: 100%; font-size: 11px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
-  .bar { flex: 1; height: 5px; background: color-mix(in srgb, var(--ink) 20%, transparent); border-radius: 5px; cursor: pointer; position: relative; transition: height 0.2s var(--ease); }
+  .scrub { display: flex; align-items: center; gap: 10px; width: 100%; font-size: var(--t-meta); color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+  .bar { flex: 1; height: 5px; background: color-mix(in oklab, var(--ink) 20%, transparent); border-radius: var(--r-sm); cursor: pointer; position: relative; transition: height 0.2s var(--ease); }
   .bar::before { content: ''; position: absolute; inset: -8px 0; }
   .bar:hover, .bar:focus-visible { height: 7px; }
-  .bar i { display: block; position: relative; height: 100%; background: var(--accent); border-radius: 5px; pointer-events: none; transition: width 0.3s linear; }
-  .bar i::after { content: ''; position: absolute; right: -6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); transform: scale(0); transition: transform 0.2s var(--ease); }
+  .bar i { display: block; position: relative; height: 100%; background: var(--accent); border-radius: var(--r-sm); pointer-events: none; transition: width 0.3s linear; }
+  .bar i::after { content: ''; position: absolute; right: -6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent); transform: scale(0); transition: transform 0.2s var(--ease); }
   .bar:hover i::after, .bar:focus-visible i::after { transform: scale(1); }
 
   .tools { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
-  .chip { height: 28px; padding: 0 11px; border-radius: 8px; color: var(--ink-dim); font-size: 12px; font-weight: 600; background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s; font-variant-numeric: tabular-nums; }
+  .chip { height: 28px; padding: 0 11px; border-radius: var(--r-md); color: var(--ink-dim); font-size: var(--t-meta); font-weight: 600; background: var(--btn); border: 1px solid var(--btn-line); transition: background-color 0.15s, color 0.15s; font-variant-numeric: tabular-nums; }
   .chip:hover:not(:disabled) { background: var(--btn-hover); }
   .chip:disabled { opacity: 0.5; }
-  .chip.rep { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; border-radius: 9px; color: var(--ink); }
+  .chip.rep { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; border-radius: var(--r-md); color: var(--ink); }
   .chip.rep.on { background: var(--btn-on); color: var(--accent); }
-  .chip.speed { height: 36px; padding: 0 13px 0 10px; display: inline-flex; align-items: center; gap: 7px; font-size: 14px; border-radius: 9px; }
+  .chip.speed { height: 36px; padding: 0 13px 0 10px; display: inline-flex; align-items: center; gap: 7px; font-size: var(--t-body); border-radius: var(--r-md); }
   .vol { display: flex; align-items: center; gap: 8px; color: var(--ink); }
   .vol input { appearance: none; -webkit-appearance: none; width: 96px; height: 24px; background: transparent; --v: calc(var(--vol, 1) * 100%); }
-  .vol input::-webkit-slider-runnable-track { height: 5px; border-radius: 5px; background: linear-gradient(90deg, var(--accent) var(--v), color-mix(in srgb, var(--ink) 22%, transparent) var(--v)); }
+  .vol input::-webkit-slider-runnable-track { height: 5px; border-radius: var(--r-sm); background: linear-gradient(90deg, var(--accent) var(--v), color-mix(in oklab, var(--ink) 22%, transparent) var(--v)); }
   .vol input::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -4.5px; border-radius: 50%; background: var(--ink); border: 0; box-shadow: 0 1px 4px #0006; transition: transform 0.15s var(--ease); }
   .vol input:hover::-webkit-slider-thumb { transform: scale(1.2); }
 </style>

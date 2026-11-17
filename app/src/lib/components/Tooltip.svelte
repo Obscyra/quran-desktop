@@ -88,21 +88,21 @@
 <style>
   .tip {
     position: fixed; z-index: 120; pointer-events: none; display: flex; align-items: center; gap: 9px; max-width: 280px;
-    padding: 6px 10px; border-radius: 9px; font-size: 12.5px; font-weight: 500; line-height: 1.35; letter-spacing: 0.005em;
-    color: var(--ink); background: color-mix(in srgb, var(--surface) 82%, var(--ink) 6%); border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
-    box-shadow: 0 10px 28px -10px #000c, 0 1px 0 color-mix(in srgb, var(--ink) 8%, transparent) inset;
+    padding: 6px 10px; border-radius: var(--r-md); font-size: var(--t-meta); font-weight: 500; line-height: 1.35; letter-spacing: 0.005em;
+    color: var(--ink); background: color-mix(in oklab, var(--surface) 82%, var(--ink) 6%); border: 1px solid color-mix(in oklab, var(--accent) 24%, var(--line));
+    box-shadow: var(--e2), 0 1px 0 color-mix(in oklab, var(--ink) 8%, transparent) inset;
     backdrop-filter: blur(8px); animation: tip 0.14s var(--ease);
   }
   .tip::before {
     content: ''; position: absolute; left: var(--arrow); top: -5px; width: 8px; height: 8px; margin-left: -4px; rotate: 45deg;
-    background: inherit; border: inherit; border-right: 0; border-bottom: 0; border-radius: 2px 0 0 0;
+    background: inherit; border: inherit; border-right: 0; border-bottom: 0; border-radius: var(--r-sm) 0 0 0;
   }
   .tip.above::before { top: auto; bottom: -5px; rotate: 225deg; }
   @keyframes tip { from { opacity: 0; translate: 0 3px; } }
   .tip.above { animation-name: tip-up; }
   @keyframes tip-up { from { opacity: 0; translate: 0 -3px; } }
   kbd {
-    font: inherit; font-size: 11px; font-weight: 600; min-width: 18px; text-align: center; padding: 1px 6px; border-radius: 5px;
-    color: var(--accent); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    font: inherit; font-size: var(--t-meta); font-weight: 600; min-width: 18px; text-align: center; padding: 1px 6px; border-radius: var(--r-sm);
+    color: var(--accent); background: var(--accent-soft); border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent);
   }
 </style>

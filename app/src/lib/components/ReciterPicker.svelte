@@ -106,29 +106,29 @@
 {/if}
 
 <style>
-  .rp-btn { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; height: 38px; padding: 0 12px 0 5px; border-radius: 8px; background: var(--btn); border: 1px solid var(--btn-line); color: var(--ink); font-size: 13px; font-weight: 500; transition: background-color 0.15s; }
+  .rp-btn { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; height: 38px; padding: 0 12px 0 5px; border-radius: var(--r-md); background: var(--btn); border: 1px solid var(--btn-line); color: var(--ink); font-size: var(--t-body); font-weight: 500; transition: background-color 0.15s; }
   .rp-btn:hover { background: var(--btn-hover); }
-  .rp-btn.compact { height: 28px; padding: 0 6px 0 3px; background: transparent; border-color: transparent; color: var(--ink-dim); font-size: 12.5px; margin-left: -6px; }
-  .rp-btn.compact:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .rp-btn.compact { height: 28px; padding: 0 6px 0 3px; background: transparent; border-color: transparent; color: var(--ink-dim); font-size: var(--t-meta); margin-left: -6px; }
+  .rp-btn.compact:hover { color: var(--ink); background: color-mix(in oklab, var(--ink) 8%, transparent); }
   .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .chev { flex: none; opacity: 0.6; }
 
-  .rp-pop { position: fixed; z-index: 80; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 44px -14px #000b; overflow: hidden; animation: rp 0.16s var(--ease); }
+  .rp-pop { position: fixed; z-index: 80; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--e2); overflow: hidden; animation: rp 0.16s var(--ease); }
   @keyframes rp { from { opacity: 0; transform: translateY(6px) scale(0.98); } }
-  .find { flex: none; display: flex; align-items: center; gap: 8px; margin: 8px; padding: 0 10px; height: 32px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink-dim); }
+  .find { flex: none; display: flex; align-items: center; gap: 8px; margin: 8px; padding: 0 10px; height: 32px; border-radius: var(--r-md); background: color-mix(in oklab, var(--ink) 8%, transparent); color: var(--ink-dim); }
   .find:focus-within { box-shadow: 0 0 0 2px var(--accent-soft); }
-  .find input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: 13px; }
+  .find input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: var(--t-body); }
   .rp-list { list-style: none; margin: 0; padding: 0 6px 6px; overflow-y: auto; }
   .rp-list { display: grid; gap: 4px; }
-  .rp-list li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 10px 14px 10px 10px; border-radius: 12px; min-height: 68px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
-  .rp-list li button:hover { background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  .rp-list li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 10px 14px 10px 10px; border-radius: var(--r-md); min-height: 68px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
+  .rp-list li button:hover { background: color-mix(in oklab, var(--ink) 9%, transparent); }
   .rp-list li.on button { background: var(--accent-soft); color: var(--accent); }
   .who { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; text-align: left; }
-  .who b { font-size: 15.5px; font-weight: 600; }
-  .who small { font-size: 12px; color: var(--ink-dim); }
+  .who b { font-size: var(--t-sub); font-weight: 600; }
+  .who small { font-size: var(--t-meta); color: var(--ink-dim); }
   .rp-list li.on .who small { color: inherit; opacity: 0.8; }
   .hd { position: sticky; top: 0; z-index: 1; display: flex; flex-direction: column; gap: 1px; padding: 12px 10px 6px; background: var(--panel); }
-  .hd b { font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
-  .hd small { font-size: 12px; color: var(--ink-dim); }
-  .none { padding: 18px; text-align: center; color: var(--ink-dim); font-size: 13px; }
+  .hd b { font-size: var(--t-cap); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
+  .hd small { font-size: var(--t-meta); color: var(--ink-dim); }
+  .none { padding: 18px; text-align: center; color: var(--ink-dim); font-size: var(--t-body); }
 </style>

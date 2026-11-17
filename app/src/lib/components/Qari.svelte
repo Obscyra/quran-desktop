@@ -22,6 +22,6 @@
 </span>
 
 <style>
-  .qari { flex: none; display: inline-grid; place-items: center; border-radius: 50%; overflow: hidden; background: var(--accent-soft); color: var(--accent); font-weight: 650; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 14%, transparent); }
+  .qari { flex: none; display: inline-grid; place-items: center; border-radius: 50%; overflow: hidden; background: var(--accent-soft); color: var(--accent); font-weight: 650; box-shadow: 0 0 0 1px color-mix(in oklab, var(--ink) 14%, transparent); }
   img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; display: block; }
 </style>

@@ -96,21 +96,21 @@
 <style>
   .menu {
     position: fixed; z-index: 60; width: 272px; translate: 0 -100%;
-    background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 12px;
-    box-shadow: 0 18px 44px -14px #000b; padding: 6px; animation: pop 0.16s var(--ease);
+    background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-md);
+    box-shadow: var(--e2); padding: 6px; animation: pop 0.16s var(--ease);
   }
   .menu.below { translate: 0 0; }
   @keyframes pop { from { opacity: 0; scale: 0.96; } }
   .meaning { padding: 8px 10px 4px; display: flex; flex-direction: column; gap: 2px; }
   .meaning b { font-size: 16px; font-weight: 600; color: var(--accent); user-select: text; }
-  .meaning small { color: var(--ink-dim); font-size: 12.5px; user-select: text; }
-  .ref { padding: 2px 10px 6px; color: var(--ink-faint); font-size: 11.5px; letter-spacing: 0.02em; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  .meaning small { color: var(--ink-dim); font-size: var(--t-meta); user-select: text; }
+  .ref { padding: 2px 10px 6px; color: var(--ink-faint); font-size: var(--t-meta); letter-spacing: 0.02em; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
   .acts { display: flex; flex-direction: column; }
-  .acts button { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 13px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
-  .acts button:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .acts button { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-md); font-size: var(--t-body); text-align: left; color: var(--ink); transition: background-color 0.12s; }
+  .acts button:hover { background: color-mix(in oklab, var(--ink) 8%, transparent); }
   .acts button.on { color: var(--accent); }
   .acts svg { color: var(--ink-dim); flex: none; }
   .acts button.on svg { color: var(--accent); }
-  .note { width: calc(100% - 12px); margin: 4px 6px 6px; height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 13px; user-select: text; }
+  .note { width: calc(100% - 12px); margin: 4px 6px 6px; height: 30px; padding: 0 10px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: var(--t-body); user-select: text; }
   .note:focus { outline: 2px solid var(--accent); outline-offset: 0; }
 </style>
