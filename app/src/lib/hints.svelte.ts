@@ -31,7 +31,7 @@ export const HINTS: Hint[] = [
     title: 'Keep the player in view?',
     body: 'The player slides up when you move to the bottom edge. Dock it and it stays where you can see it, even when nothing is playing.',
     label: 'Keep the player bar docked',
-    area: 'audio',
+    area: 'listening',
     eligible: () => settings.isDefault(['playerBar']),
     on: () => settings.playerBar === 'always',
     set: (v) => (settings.playerBar = v ? 'always' : 'demand')
@@ -43,7 +43,7 @@ export const HINTS: Hint[] = [
     title: 'Stay with the recitation?',
     body: 'Lock on the playing verse brings the page back to the verse being recited whenever you let go of the scroll.',
     label: 'Lock on the playing verse',
-    area: 'reading',
+    area: 'translation',
     eligible: () => settings.isDefault(['follow']),
     on: () => settings.follow === 'lock',
     set: (v) => (settings.follow = v ? 'lock' : 'follow')
@@ -55,7 +55,7 @@ export const HINTS: Hint[] = [
     title: 'Want the page wider?',
     body: 'Fill lets the page take the full width of the window, instead of fitting the whole page in view.',
     label: 'Fill the width of the window',
-    area: 'pages',
+    area: 'mushaf',
     eligible: () => settings.isDefault(['pageFit']),
     on: () => settings.pageFit === 'fill',
     set: (v) => {
@@ -71,7 +71,7 @@ export const HINTS: Hint[] = [
     title: 'Read it like a book?',
     body: 'Two pages side by side, the way the Mushaf opens. You can turn it on or off any time.',
     label: 'Two pages side by side',
-    area: 'pages',
+    area: 'mushaf',
     eligible: () => settings.flow === 'page' && settings.isDefault(['spread']) && window.innerWidth >= 1100,
     on: () => settings.spread,
     set: (v) => (settings.spread = v)
@@ -82,7 +82,7 @@ export const HINTS: Hint[] = [
     need: 10,
     title: 'Read it in your language',
     body: 'Verse by Verse shows a translation under every verse. Pick the one you like best, and word meanings too.',
-    area: 'reading',
+    area: 'translation',
     link: 'Choose a translation',
     eligible: () => settings.isDefault(['translation'])
   },
@@ -93,7 +93,7 @@ export const HINTS: Hint[] = [
     title: 'Prefer to scroll?',
     body: 'Instead of turning pages, the whole surah flows on one long page. Your place is kept either way.',
     label: 'Scroll instead of turning pages',
-    area: 'pages',
+    area: 'mushaf',
     eligible: () => settings.isDefault(['flow']),
     on: () => settings.flow === 'scroll',
     set: (v) => (settings.flow = v ? 'scroll' : 'page')
@@ -104,7 +104,7 @@ export const HINTS: Hint[] = [
     need: 20,
     title: 'Make the text fit you',
     body: 'The + and − above the page zoom in and out, and Fit or Fill chooses between the whole page and the full width.',
-    area: 'pages',
+    area: 'mushaf',
     link: 'Page settings',
     eligible: () => settings.pageZoom === 1 && settings.isDefault(['pageFit'])
   }

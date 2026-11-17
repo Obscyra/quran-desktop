@@ -21,71 +21,78 @@
   import { updater } from '$lib/updater.svelte';
   import { tafsirs } from '$lib/tafsir.svelte';
 
-  // Each page holds one or more sections (the blocks below); a setting is found by its section, shown on its page.
-  type Section = SettingsArea | 'text' | 'manager' | 'shortcuts' | 'updates';
-  const AREAS: { id: SettingsArea; name: string; hint: string; group: string }[] = [
-    { id: 'appearance', name: 'Appearance', hint: 'Theme, interface size, Arabic script', group: 'Look' },
-    { id: 'reading', name: 'Translation & meanings', hint: 'Start view, translation, word meanings', group: 'Read' },
-    { id: 'pages', name: 'Mushaf pages', hint: 'Printed page layout (Reading mode)', group: 'Read' },
-    { id: 'audio', name: 'Listening', hint: 'Reciter, player, following along', group: 'Listen' },
-    { id: 'downloads', name: 'Offline manager', hint: 'Download audio and tafsir for offline use', group: 'Listen' },
-    { id: 'reminders', name: 'Reminders', hint: 'Verse of the day, reading reminders', group: 'App' },
-    { id: 'focus', name: 'App & window', hint: 'Window, tray, start-up', group: 'App' },
-    { id: 'data', name: 'Data & help', hint: 'Bookmarks, storage, shortcuts, reset', group: 'App' },
-    { id: 'about', name: 'About', hint: 'Version, updates, developer', group: 'App' }
+  const AREAS: { id: SettingsArea; name: string; hint: string }[] = [
+    { id: 'appearance', name: 'Appearance', hint: 'Theme, interface size, surah names' },
+    { id: 'mushaf', name: 'Mushaf & script', hint: 'Script, page layout, text size' },
+    { id: 'translation', name: 'Translation & tafsir', hint: 'Translation, tafsir, word meanings' },
+    { id: 'listening', name: 'Listening', hint: 'Reciter, follow along, player' },
+    { id: 'offline', name: 'Offline', hint: 'Downloads for offline use' },
+    { id: 'reminders', name: 'Reminders', hint: 'Verse of the day, reading reminders' },
+    { id: 'app', name: 'App', hint: 'Window, updates, data, about' }
   ];
-  const PAGE_OF: Partial<Record<Section, SettingsArea>> = { text: 'appearance', manager: 'downloads', shortcuts: 'data', updates: 'about' };
-  const pageOf = (s: Section) => PAGE_OF[s] ?? (s as SettingsArea);
-  const onPage = (s: Section) => ui.area === pageOf(s);
+  // Lucide (ISC) icon bodies, 24 grid
+  const ICONS: Record<SettingsArea, string> = {
+    appearance: '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
+    mushaf: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+    translation: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+    listening: '<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
+    offline: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+    reminders: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    app: '<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>'
+  };
+  const onPage = (s: SettingsArea) => ui.area === s;
 
   // ───── search ─────
   // every setting, with the words people may look for it by (the area it lives in is added when searching)
-  const ROWS: { area: Section; title: string; text: string }[] = [
+  const ROWS: { area: SettingsArea; title: string; text: string }[] = [
     { area: 'appearance', title: 'Theme', text: 'colour color dark light night black madinah slate paper stone gold white auto system' },
     { area: 'appearance', title: 'Interface size', text: 'zoom scale bigger smaller menus buttons' },
     { area: 'appearance', title: 'Surah names in Arabic', text: 'arabic names list player' },
-    { area: 'text', title: 'Page layout', text: 'madani indopak 15 lines print 604 610 pages text fonts' },
-    { area: 'text', title: 'Mushaf', text: 'font madani indopak pages 15 lines print 604 610 text fonts tajweed uthmani naskh amiri scheherazade arabic writing script' },
-    { area: 'text', title: 'Text size', text: 'font arabic bigger larger' },
-    { area: 'text', title: 'Line spacing', text: 'height lines gap' },
-    { area: 'reading', title: 'Continue where I left off', text: 'resume reopen last place surah verse start remember position' },
-    { area: 'reading', title: 'Open in', text: 'start view verse by verse reading mode default' },
-    { area: 'reading', title: 'Translation', text: 'language english urdu meaning verse' },
-    { area: 'reading', title: 'Translation and tafsir text size', text: 'font bigger tafsir commentary' },
-    { area: 'reading', title: 'Word meanings', text: 'word by word hover below under each word language' },
-    { area: 'reading', title: 'Transliteration', text: 'pronounce latin letters' },
-    { area: 'pages', title: 'Page look', text: 'paper frame plain border background' },
-    { area: 'pages', title: 'Page flow', text: 'scroll turn one page long sheet' },
-    { area: 'pages', title: 'Two-page spread', text: 'facing book open wide T' },
-    { area: 'pages', title: 'Continuous book', text: 'continuous across surahs next surah run on book join' },
-    { area: 'pages', title: 'Page info', text: 'surah name juz page number header footer' },
-    { area: 'pages', title: 'Highlight bookmarks', text: 'ornament marker verse end' },
-    { area: 'audio', title: 'Player bar', text: 'listening player always on demand dock auto-hide hover bottom edge' },
-    { area: 'audio', title: 'Reciter', text: 'qari sheikh voice recitation' },
-    { area: 'audio', title: 'Playback speed', text: 'faster slower rate' },
-    { area: 'audio', title: 'Play the next surah', text: 'auto advance continue' },
-    { area: 'audio', title: 'Repeat surah', text: 'loop memorise memorize' },
-    { area: 'audio', title: 'Say a word when clicked', text: 'word audio click play' },
-    { area: 'audio', title: 'Follow the recitation', text: 'auto scroll follow along lock verse scroll return centre center keep' },
-    { area: 'manager', title: 'Reciter to manage', text: 'offline manager audio download delete recitation surah storage' },
-    { area: 'manager', title: 'Tafsir edition to manage', text: 'tafsir tafseer language edition download delete offline surah' },
-    { area: 'manager', title: 'Keep favourites offline', text: 'auto cache save automatically' },
+    { area: 'mushaf', title: 'Page layout', text: 'madani indopak 15 lines print 604 610 pages text fonts' },
+    { area: 'mushaf', title: 'Mushaf', text: 'font madani indopak pages 15 lines print 604 610 text fonts tajweed uthmani naskh amiri scheherazade arabic writing script' },
+    { area: 'mushaf', title: 'Font', text: 'text fonts script card sample' },
+    { area: 'mushaf', title: 'Text size', text: 'font arabic bigger larger' },
+    { area: 'mushaf', title: 'Line spacing', text: 'height lines gap' },
+    { area: 'translation', title: 'Continue where I left off', text: 'resume reopen last place surah verse start remember position' },
+    { area: 'translation', title: 'Open in', text: 'start view verse by verse reading mode default' },
+    { area: 'translation', title: 'Tafsir edition', text: 'tafsir tafseer commentary language edition follow translation' },
+    { area: 'translation', title: 'Translation', text: 'language english urdu meaning verse' },
+    { area: 'translation', title: 'Translation and tafsir text size', text: 'font bigger tafsir commentary' },
+    { area: 'translation', title: 'Word meanings', text: 'word by word hover below under each word language' },
+    { area: 'translation', title: 'Transliteration', text: 'pronounce latin letters' },
+    { area: 'mushaf', title: 'Page look', text: 'paper frame plain border background' },
+    { area: 'mushaf', title: 'Page flow', text: 'scroll turn one page long sheet' },
+    { area: 'mushaf', title: 'Two-page spread', text: 'facing book open wide T' },
+    { area: 'mushaf', title: 'Continuous book', text: 'continuous across surahs next surah run on book join' },
+    { area: 'mushaf', title: 'Page info', text: 'surah name juz page number header footer' },
+    { area: 'mushaf', title: 'Highlight bookmarks', text: 'ornament marker verse end' },
+    { area: 'listening', title: 'Player bar', text: 'listening player always on demand dock auto-hide hover bottom edge' },
+    { area: 'listening', title: 'Reciter', text: 'qari sheikh voice recitation' },
+    { area: 'listening', title: 'Playback speed', text: 'faster slower rate' },
+    { area: 'listening', title: 'Play the next surah', text: 'auto advance continue' },
+    { area: 'listening', title: 'Repeat surah', text: 'loop memorise memorize' },
+    { area: 'listening', title: 'Say a word when clicked', text: 'word audio click play' },
+    { area: 'listening', title: 'Follow the recitation', text: 'auto scroll follow along lock verse scroll return centre center keep' },
+    { area: 'offline', title: 'Reciter to manage', text: 'offline manager audio download delete recitation surah storage' },
+    { area: 'offline', title: 'Tafsir edition', text: 'tafsir tafseer language edition download delete offline surah' },
+    { area: 'listening', title: 'Saved offline content', text: 'storage downloads manager size' },
+    { area: 'offline', title: 'Keep favourites offline', text: 'auto cache save automatically' },
     { area: 'reminders', title: 'Verse of the day', text: 'daily notification card' },
     { area: 'reminders', title: 'Reading reminders', text: 'notify nudge times alarm' },
     { area: 'reminders', title: 'Use system notifications', text: 'windows macos toast do not disturb' },
-    { area: 'focus', title: 'Full screen', text: 'fullscreen display F' },
-    { area: 'focus', title: 'Keep the screen on', text: 'awake sleep display wake lock' },
-    { area: 'focus', title: 'Show tips', text: 'hints suggestions popup cards help discover features' },
-    { area: 'focus', title: 'Keep running in the tray', text: 'background close system tray hide quit' },
-    { area: 'focus', title: 'Start with the computer', text: 'autostart startup boot login sign in' },
-    { area: 'shortcuts', title: 'Keyboard', text: 'shortcuts keys hotkeys commands' },
-    { area: 'about', title: 'Version', text: 'about release beta software' },
-    { area: 'updates', title: 'Update automatically', text: 'updates download new version' },
-    { area: 'data', title: 'Offline downloads', text: 'storage space size audio' },
-    { area: 'data', title: 'Bookmarks', text: 'export import backup notes' },
-    { area: 'data', title: 'Reset settings', text: 'defaults restore' },
-    { area: 'about', title: 'About', text: 'credits licence license open source version' },
-    { area: 'about', title: 'Developer', text: 'author contact fahim shahriar github email website who made' }
+    { area: 'app', title: 'Full screen', text: 'fullscreen display F' },
+    { area: 'app', title: 'Keep the screen on', text: 'awake sleep display wake lock' },
+    { area: 'app', title: 'Show tips', text: 'hints suggestions popup cards help discover features' },
+    { area: 'app', title: 'Keep running in the tray', text: 'background close system tray hide quit' },
+    { area: 'app', title: 'Start with the computer', text: 'autostart startup boot login sign in' },
+    { area: 'app', title: 'Keyboard', text: 'shortcuts keys hotkeys commands' },
+    { area: 'app', title: 'Version', text: 'about release beta software' },
+    { area: 'app', title: 'Update automatically', text: 'updates download new version' },
+    { area: 'app', title: 'Offline downloads', text: 'storage space size audio' },
+    { area: 'app', title: 'Bookmarks', text: 'export import backup notes' },
+    { area: 'app', title: 'Reset settings', text: 'defaults restore' },
+    { area: 'app', title: 'About', text: 'credits licence license open source version' },
+    { area: 'app', title: 'Developer', text: 'author contact fahim shahriar github email website who made' }
   ];
   // the settings behind each row, so a row can say it was changed and go back to its default
   const ROW_KEYS: Record<string, (keyof SettingsShape)[]> = {
@@ -109,7 +116,7 @@
   // the pages show only when neither the search nor the list of changed settings is on
   const browse = $derived(!query && !showChanged);
   let searchEl = $state<HTMLInputElement>();
-  const areaName = (id: Section) => AREAS.find((a) => a.id === pageOf(id))?.name ?? '';
+  const areaName = (id: SettingsArea) => AREAS.find((a) => a.id === id)?.name ?? '';
   const found = $derived.by(() => {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return [];
@@ -125,10 +132,10 @@
       .sort((a, b) => a.rank - b.rank)
       .map((x) => x.r);
   });
-  async function openResult(r: { area: Section; title: string }) {
+  async function openResult(r: { area: SettingsArea; title: string }) {
     query = '';
     showChanged = false;
-    ui.area = pageOf(r.area);
+    ui.area = r.area;
     await tick();
     const row = [...document.querySelectorAll<HTMLElement>('.view .row')].find((el) => el.querySelector('.label h3')?.textContent?.trim() === r.title);
     if (!row) return;
@@ -143,7 +150,6 @@
     } else if (e.key === 'Enter' && found.length) openResult(found[0]);
   }
   const UI_SIZES = [0.9, 1, 1.1, 1.3, 1.5];
-  const GROUPS = ['Look', 'Read', 'Listen', 'App'];
 
   // reminder times are kept as one "08:00,20:00" string in the settings
   const times = $derived(settings.remindTimes.split(',').map((t) => t.trim()).filter(Boolean));
@@ -310,7 +316,7 @@
   });
 
   $effect(() => {
-    if (!ui.settingsOpen || ui.area !== 'downloads') return;
+    if (!ui.settingsOpen || ui.area !== 'offline') return;
     const translation = settings.translation;
     const autoFollow = settings.tafsirAutoFollow;
     void (async () => {
@@ -435,17 +441,14 @@
     <button class="chg" class:on={showChanged} aria-pressed={showChanged} onclick={() => { showChanged = !showChanged; query = ''; }}>
       <span>Changed from default</span><b>{changedRows.length}</b>
     </button>
-    {#each GROUPS as g (g)}
-      <h2 class="ngrp">{g}</h2>
-      {#each AREAS.filter((a) => a.group === g) as a (a.id)}
-        <button class:on={ui.area === a.id && !showChanged} onclick={() => { ui.area = a.id; showChanged = false; }} aria-current={ui.area === a.id && !showChanged ? 'page' : undefined}>
-          <b>{a.name}</b><small>{a.hint}</small>
-        </button>
-      {/each}
+    {#each AREAS as a (a.id)}
+      <button class:on={ui.area === a.id && !showChanged} onclick={() => { ui.area = a.id; showChanged = false; }} aria-current={ui.area === a.id && !showChanged ? 'page' : undefined}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">{@html ICONS[a.id]}</svg>{a.name}
+      </button>
     {/each}
   </nav>
 
-  <div class="view">
+  <div class="view"><div class="col">
     <header>
       <button class="back" onclick={() => ui.closeSettings()} aria-label="Back to reading" title="Back (Esc)">
         <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5" /></svg>
@@ -454,6 +457,7 @@
       <span class="saved" class:show={savedVisible} data-t={savedAt}>Saved</span>
       <button class="close" onclick={() => ui.closeSettings()} aria-label="Close settings">Done</button>
     </header>
+    {#if browse}<p class="lede">{AREAS.find((a) => a.id === ui.area)?.hint}</p>{/if}
 
     {#if query}
       <ul class="results" aria-label="Search results">
@@ -479,6 +483,7 @@
       {/if}
     {:else if ui.area === 'appearance'}
       <h3 class="grp">Colour</h3>
+      <div class="card">
       <div class="row wide">
         <div class="label"><h3>Theme</h3>{@render rst('Theme')}<p>{THEMES.length} palettes, each tuned for comfortable contrast. Auto follows your system.</p></div>
         <div class="autoRow"><button class="chipauto" class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>Match system (light or dark)</button></div>
@@ -511,16 +516,20 @@
           </label>
         </div>
       </div>
+      </div>
       <h3 class="grp">Names</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Surah names in Arabic</h3>{@render rst('Surah names in Arabic')}<p>Show the Arabic name first in the list and player.</p></div>
         {@render toggle(settings.arabicNames, (v) => (settings.arabicNames = v), 'Arabic surah names')}
       </div>
+      </div>
     {/if}
 
-    {#if browse && onPage('text')}
+    {#if browse && onPage('mushaf')}
       {@render preview()}
       <h3 class="grp">Arabic script</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Mushaf</h3>{@render rst('Mushaf')}<p>How the Arabic is written. The Madani and IndoPak pages are the exact printed Mushaf (Madani: 604 pages; IndoPak: 610, with its own spelling), fetched once per page, then kept for offline use. Text fonts show plain text in the font you pick.</p></div>
         <div class="seg">
@@ -551,19 +560,22 @@
         </div>
       </div>
       {/if}
+      </div>
       <h3 class="grp">Size</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Text size</h3>{@render rst('Text size')}<p>{settings.size}px, for Verse by Verse. Mushaf pages always fill the page.</p></div>
-        <input type="range" min="24" max="96" step="2" bind:value={settings.size} aria-label="Text size" />
+        <input type="range" min="24" max="96" step="2" bind:value={settings.size} style:--p="{(settings.size - 24) / 72 * 100}%" aria-label="Text size" />
       </div>
       <div class="row">
         <div class="label"><h3>Line spacing</h3>{@render rst('Line spacing')}<p>{settings.spacing.toFixed(1)}</p></div>
-        <input type="range" min="1.3" max="3.2" step="0.1" bind:value={settings.spacing} aria-label="Line spacing" />
+        <input type="range" min="1.3" max="3.2" step="0.1" bind:value={settings.spacing} style:--p="{(settings.spacing - 1.3) / 1.9000000000000001 * 100}%" aria-label="Line spacing" />
       </div>
-    {/if}
+      </div>
 
-    {#if browse && onPage('reading')}
+    {#if browse && onPage('translation')}
       <h3 class="grp">Start</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Open in</h3>{@render rst('Open in')}<p>What you see first. Switch any time from the top bar.</p></div>
         <div class="seg">
@@ -575,7 +587,9 @@
         <div class="label"><h3>Continue where I left off</h3>{@render rst('Continue where I left off')}<p>Reopen at the surah and verse you were reading. Off: start from the beginning of Al-Fatihah.</p></div>
         {@render toggle(settings.resume, (v) => (settings.resume = v), 'Continue where I left off')}
       </div>
+      </div>
       <h3 class="grp">Translation</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Translation</h3>{@render rst('Translation')}<p>Shown under each verse and in Reading → Translation. Saved with the surah for offline use.</p></div>
         <TranslationPicker onpick={setTranslation} />
@@ -589,10 +603,12 @@
       {#if settings.translation}
         <div class="row">
           <div class="label"><h3>Translation and tafsir text size</h3>{@render rst('Translation and tafsir text size')}<p>{settings.translationSize}px</p></div>
-          <input type="range" min="13" max="30" step="1" bind:value={settings.translationSize} aria-label="Translation and tafsir text size" />
+          <input type="range" min="13" max="30" step="1" bind:value={settings.translationSize} style:--p="{(settings.translationSize - 13) / 17 * 100}%" aria-label="Translation and tafsir text size" />
         </div>
       {/if}
+      </div>
       <h3 class="grp">Word by word</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Word meanings</h3>{@render rst('Word meanings')}<p>Word-by-word translation in Verse by Verse. Right-click any word to see its meaning and play options.</p></div>
         <div class="seg">
@@ -607,11 +623,12 @@
           {@render toggle(settings.transliteration, (v) => (settings.transliteration = v), 'Transliteration')}
         </div>
       {/if}
+      </div>
     {/if}
 
-    {#if browse && onPage('pages')}
       <p class="intro">These options are for <b>Reading</b> mode, the printed Mushaf pages. Verse by Verse ignores them.</p>
       <h3 class="grp">Page</h3>
+      <div class="card">
       <div class="row wide">
         <div class="label"><h3>Page look</h3>{@render rst('Page look')}<p>The paper the Mushaf page is drawn on.</p></div>
         <div class="looks">
@@ -638,7 +655,9 @@
         <div class="label"><h3>Continuous book</h3>{@render rst('Continuous book')}<p>Pages run on across surahs like a printed Mushaf; scrolling or turning past the end opens the next surah.</p></div>
         {@render toggle(settings.continuous, (v) => { settings.continuous = v; reader.reset(); }, 'Continuous book')}
       </div>
+      </div>
       <h3 class="grp">On the page</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Page info</h3>{@render rst('Page info')}<p>Show the surah name, juz and page number on each page.</p></div>
         {@render toggle(settings.showPageInfo, (v) => (settings.showPageInfo = v), 'Page info')}
@@ -647,10 +666,12 @@
         <div class="label"><h3>Highlight bookmarks</h3>{@render rst('Highlight bookmarks')}<p>Mark bookmarked verses with a filled verse-end ornament.</p></div>
         {@render toggle(settings.highlightBookmarks, (v) => (settings.highlightBookmarks = v), 'Highlight bookmarks')}
       </div>
+      </div>
     {/if}
 
-    {#if browse && onPage('audio')}
+    {#if browse && onPage('listening')}
       <h3 class="grp">Player</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Player bar</h3>{@render rst('Player bar')}<p>On demand: opens when you press Listen or play a verse, slides up when the mouse is at the bottom edge, and ✕ closes it. Always: docked and always shown. Auto-hide: always available, shown only when the mouse is at the bottom edge.</p></div>
         <div class="seg">
@@ -659,7 +680,9 @@
           <button class:on={settings.playerBar === 'autohide'} onclick={() => (settings.playerBar = 'autohide')}>Auto-hide</button>
         </div>
       </div>
+      </div>
       <h3 class="grp">Recitation</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Reciter</h3><p>Switching keeps your place in the surah.</p></div>
         <div class="rp-wrap"><ReciterPicker /></div>
@@ -686,9 +709,11 @@
       </div>
       <div class="row">
         <div class="label"><h3>Saved offline content</h3><p>{mb(usedBytes + tafsirUsedBytes)} MB stored on this device. Manage saved audio and tafsir in the Offline manager.</p></div>
-        <button class="secondary" onclick={() => (ui.area = 'downloads')}>Open the Offline manager…</button>
+        <button class="secondary" onclick={() => (ui.area = 'offline')}>Open the Offline manager…</button>
+      </div>
       </div>
       <h3 class="grp">Following along</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Follow the recitation</h3>{@render rst('Follow the recitation')}<p>Follow keeps the current verse in view; scrolling yourself pauses it for a moment. Lock to verse returns the view to the verse being recited whenever you let go of the scroll (scrolling views). Also on the lock button in the bar above the text.</p></div>
         <div class="seg">
@@ -697,9 +722,10 @@
           <button class:on={settings.follow === 'lock'} onclick={() => (settings.follow = 'lock')}>Lock to verse</button>
         </div>
       </div>
+      </div>
     {/if}
 
-    {#if browse && onPage('manager')}
+    {#if browse && onPage('offline')}
       <div class="offline-columns"><section class="offline-col">
       <h3 class="grp">Audio</h3>
       <div class="row mgr">
@@ -811,6 +837,7 @@
     {/if}
 
     {#if browse && onPage('reminders')}
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Verse of the day</h3>{@render rst('Verse of the day')}<p>One verse from quran.com each day, from the time you choose: a card in the app, or a notification when the window is behind other apps or in the tray.</p></div>
         {@render toggle(settings.dailyVerse, (v) => (settings.dailyVerse = v), 'Verse of the day')}
@@ -849,10 +876,12 @@
         <div class="label"><h3>Use system notifications</h3>{@render rst('Use system notifications')}<p>When the window is behind other apps or in the tray, notify through Windows or macOS as well. Do Not Disturb and Focus still apply.</p></div>
         {@render toggle(settings.systemNotify, (v) => (settings.systemNotify = v), 'System notifications')}
       </div>
+      </div>
     {/if}
 
-    {#if browse && onPage('focus')}
+    {#if browse && onPage('app')}
       <h3 class="grp">Window</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Full screen</h3><p>Use the whole display without changing the layout.</p></div>
         <button class="secondary" onclick={() => ui.toggleFullscreen()}>{ui.fullscreen ? 'Exit full screen' : 'Enter full screen'}</button>
@@ -865,8 +894,10 @@
         <div class="label"><h3>Show tips</h3>{@render rst('Show tips')}<p>Now and then a small card offers a setting that suits what you are doing, such as keeping the player in view. Switch off to never see them; switching on again brings them back.</p></div>
         {@render toggle(settings.tips, (v) => hints.enable(v), 'Show tips')}
       </div>
+      </div>
       {#if isTauri()}
         <h3 class="grp">Background</h3>
+        <div class="card">
         <div class="row">
           <div class="label"><h3>Keep running in the tray</h3>{@render rst('Keep running in the tray')}<p>Closing the window leaves Quran in the system tray, so reminders and the verse of the day still arrive. Click the tray icon to open it again, or right-click it to quit. Off: closing the window quits.</p></div>
           {@render toggle(settings.background, (v) => (settings.background = v), 'Keep running in the tray')}
@@ -875,11 +906,11 @@
           <div class="label"><h3>Start with the computer</h3><p>Starts quietly in the tray when you sign in, without opening a window.</p></div>
           {@render toggle(autostart, toggleAutostart, 'Start with the computer')}
         </div>
+        </div>
       {/if}
-    {/if}
 
-    {#if browse && onPage('shortcuts')}
       <h3 class="grp">Keyboard shortcuts</h3>
+      <div class="card">
       <div class="row wide">
         <div class="label"><h3>Keyboard</h3><p>Everything is reachable without the mouse.</p></div>
         <dl class="keys">
@@ -896,10 +927,10 @@
           <dt>Esc</dt><dd>Close a menu or leave Settings</dd>
         </dl>
       </div>
-    {/if}
 
-    {#if browse && onPage('updates')}
+      </div>
       <h3 class="grp">Updates</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Version</h3><p>{version} <span class="beta">Beta</span></p></div>
         <div class="stack">
@@ -926,13 +957,13 @@
         <div class="label"><h3>Update automatically</h3>{@render rst('Update automatically')}<p>New versions download quietly in the background. You only restart to finish.</p></div>
         {@render toggle(settings.checkUpdates, (v) => (settings.checkUpdates = v), 'Update automatically')}
       </div>
-    {/if}
 
-    {#if browse && onPage('data')}
+      </div>
       <h3 class="grp">Your data</h3>
+      <div class="card">
       <div class="row">
         <div class="label"><h3>Offline downloads</h3><p>{mb(usedBytes)} MB of audio and {mb(tafsirUsedBytes)} MB of tafsir stored on this device.</p></div>
-        <button class="secondary" onclick={() => (ui.area = 'downloads')}>Open the Offline manager…</button>
+        <button class="secondary" onclick={() => (ui.area = 'offline')}>Open the Offline manager…</button>
       </div>
       <div class="row">
         <div class="label"><h3>Bookmarks</h3><p>{bookmarks.list.length} saved. Export a copy, or merge one back in.</p></div>
@@ -948,10 +979,10 @@
         <div class="label"><h3>Reset settings</h3><p>Restore every setting to its default. Downloads are kept.</p></div>
         <button class="secondary" onclick={resetSettings}>Reset to defaults…</button>
       </div>
-    {/if}
 
-    {#if browse && onPage('about')}
-      <h3 class="grp">The app</h3>
+      </div>
+      <h3 class="grp">About</h3>
+      <div class="card">
       <div class="row about">
         <div class="label"><h3>About</h3></div>
         <div class="about-content">
@@ -993,21 +1024,22 @@
           </div>
         </div>
       </div>
+      </div>
     {/if}
-  </div>
+  </div></div>
 </section>
 
 <style>
   .settings { flex: 1; display: flex; min-width: 0; background: var(--bg); overflow: hidden; }
-  nav { width: 264px; overflow-y: auto; flex: none; padding: 28px 14px; display: flex; flex-direction: column; gap: 2px; background: var(--bg-2); }
-  .ngrp { font-size: var(--t-cap); font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); padding: 16px 12px 6px; }
-  .find { position: relative; display: block; margin: 0 4px 10px; }
+  nav { width: 220px; overflow-y: auto; flex: none; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; background: var(--chrome); border-right: 1px solid var(--hair); }
+
+  .find { position: relative; display: block; margin: 0 0 10px; }
   .find svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-dim); pointer-events: none; }
-  .find input { width: 100%; height: 36px; padding: 0 12px 0 33px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: var(--t-body); }
+  .find input { width: 100%; height: 36px; padding: 0 12px 0 33px; border-radius: var(--r-md); border: 0; background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--ink); font: inherit; font-size: var(--t-meta); }
   .find input::placeholder { color: var(--ink-dim); }
   .find input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .results { list-style: none; margin: 0; padding: 0; display: grid; }
-  nav .chg { flex-direction: row; width: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 4px 0; padding: 8px 12px; border-radius: var(--r-md); font-size: var(--t-body); color: var(--ink-dim); border: 1px dashed var(--line); text-align: left; }
+  nav .chg { flex-direction: row; width: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 6px; padding: 8px 12px; height: auto; border-radius: var(--r-md); font-size: var(--t-meta); color: var(--muted); border: 1px dashed var(--hair-2); text-align: left; }
   nav .chg b { min-width: 20px; padding: 1px 7px; border-radius: var(--r-pill); text-align: center; font-size: var(--t-meta); font-weight: 600; background: var(--accent-soft); color: var(--accent); }
   nav .chg:hover { color: var(--ink); }
   nav .chg.on { color: var(--accent); border-style: solid; border-color: transparent; background: var(--btn-on); }
@@ -1025,39 +1057,38 @@
   .results .none { padding: 18px 8px; color: var(--ink-dim); font-size: var(--t-body); }
   .row.flash { animation: flash 1.8s var(--ease); border-radius: var(--r-md); }
   @keyframes flash { 0%, 55% { background: var(--accent-soft); box-shadow: 0 0 0 10px var(--accent-soft); } 100% { background: transparent; box-shadow: 0 0 0 10px transparent; } }
-  .grp { font-size: var(--t-meta); font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); padding: 26px 0 0; }
-  .grp + .row { border-top: 0; }
-  nav h1 { font-size: var(--t-title); font-weight: 600; padding: 4px 12px 14px; }
-  nav button { text-align: left; padding: 8px 12px; border-radius: var(--r-md); display: flex; flex-direction: column; gap: 2px; transition: background 0.2s; }
-  nav button:hover { background: color-mix(in oklab, var(--ink) 7%, transparent); }
-  nav button.on { background: color-mix(in oklab, var(--accent) 16%, transparent); }
-  nav small { color: var(--ink-dim); font-size: var(--t-meta); }
-  .view { flex: 1; min-width: 0; overflow-y: auto; padding: 0 clamp(24px, 5vw, 72px) 60px; }
-  header { display: flex; align-items: center; gap: 14px; position: sticky; top: 0; background: var(--bg); padding: 28px 0 18px; z-index: 2; }
-  header h2 { font-size: var(--t-title); font-weight: 600; flex: 1; }
+  .grp { font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px 2px; }
+  .card { background: var(--ink-4); border: 1px solid var(--hair); border-radius: var(--r-lg); margin-bottom: 28px; }
+  .lede { font-size: var(--t-meta); color: var(--muted); margin: 0 0 28px; }
+
+  nav h1 { font-size: var(--t-title); font-weight: 600; letter-spacing: -0.01em; padding: 4px 12px 14px; }
+  nav button { display: flex; align-items: center; gap: 10px; height: var(--nav-set); flex: none; padding: 0 12px; border-radius: var(--r-md); font-size: var(--t-body); font-weight: 500; color: var(--muted); text-align: left; transition: background 0.2s, color 0.2s; }
+  nav button:hover { background: var(--ink-4); color: var(--ink); }
+  nav button.on { background: color-mix(in oklab, var(--accent) 13%, transparent); color: var(--ink); }
+  nav button.on svg { color: var(--accent); }
+
+  .view { flex: 1; min-width: 0; overflow-y: auto; padding: 0 24px 64px; }
+  .col { max-width: 640px; margin: 0 auto; }
+  header { display: flex; align-items: center; gap: 14px; position: sticky; top: 0; background: var(--bg); padding: 40px 0 8px; z-index: 2; }
+  header h2 { font-size: var(--t-title); font-weight: 600; letter-spacing: -0.01em; flex: 1; }
   .back { width: 34px; height: 34px; border-radius: var(--r-md); display: grid; place-items: center; color: var(--ink-dim); margin-left: -8px; }
   .back:hover { background: color-mix(in oklab, var(--ink) 9%, transparent); color: var(--ink); }
   .saved { color: var(--accent); font-size: var(--t-body); opacity: 0; transition: opacity 0.4s; }
   .saved.show { opacity: 1; }
-  .close { padding: 8px 18px; border-radius: var(--r-md); background: var(--accent); color: var(--accent-ink); font-weight: 550; }
+  .close { height: 32px; padding: 0 16px; border-radius: var(--r-md); background: var(--accent); color: var(--accent-ink); font-size: var(--t-body); font-weight: 600; }
 
-  .row { display: grid; grid-template-columns: minmax(200px, 340px) 1fr; gap: 28px; padding: 22px 0; align-items: start; }
-  .row.about { grid-template-columns: 1fr; gap: 12px; }
-  .row + .row { border-top: 1px solid var(--line); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; min-height: var(--row-set); padding: 12px 16px; }
+  .row > .label { flex: 1 1 220px; min-width: 0; }
+  .row.about { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
+  .row + .row, .dlhead + .dls { border-top: 1px solid var(--hair); }
   /* big pickers (themes, scripts, page types, shortcuts) get the full width under their label */
-  .row.wide { grid-template-columns: 1fr; gap: 16px; }
+  .row.wide { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
+  .row.wide > .label, .row.about > .label { flex: none; }
   .row.wide .label p { max-width: 62ch; }
   .view { container-type: inline-size; }
-  /* on a narrower page every row stacks: label above its control */
-  @container (max-width: 760px) {
-    .row { grid-template-columns: 1fr; gap: 12px; padding: 18px 0; }
-    .label p { max-width: 60ch; }
-    .about-links { grid-template-columns: 1fr; }
-    .about-intro { padding: 17px; }
-    .about-intro h2 { font-size: var(--t-title); }
-  }
-  .label h3 { font-size: var(--t-sub); font-weight: 550; }
-  .label p { margin-top: 4px; color: var(--ink-dim); font-size: var(--t-body); line-height: 1.5; max-width: 38ch; }
+  @container (max-width: 560px) { .about-links { grid-template-columns: 1fr; } .about-intro { padding: 17px; } }
+  .label h3 { font-size: var(--t-body); font-weight: 500; }
+  .label p { margin-top: 2px; color: var(--muted); font-size: var(--t-meta); line-height: 1.45; max-width: 46ch; }
   .times { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .tm { display: inline-flex; align-items: center; gap: 2px; }
   .time, .text { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px 10px; font: inherit; color-scheme: inherit; }
@@ -1065,62 +1096,70 @@
   .rm { width: 26px; height: 26px; border-radius: var(--r-sm); display: grid; place-items: center; color: var(--ink-dim); }
   .rm:hover { background: color-mix(in oklab, var(--ink) 10%, transparent); color: var(--ink); }
   .rp-wrap { justify-self: start; max-width: 100%; }
-  .row > :global(.toggle), .row > .times, .row > .time, .row > .text, .row > :global(.tp-btn), .row > .seg, .row > button.secondary { justify-self: start; }
 
-  .intro { margin: 0 0 4px; padding: 10px 14px; border-radius: var(--r-md); background: var(--accent-soft); font-size: var(--t-body); line-height: 1.55; color: var(--ink); }
-  .preview { background: var(--surface); border-radius: var(--r-lg); padding: 22px 28px; margin-bottom: 8px; text-align: center; }
+
+  .intro { margin: 0 0 20px; font-size: var(--t-meta); line-height: 1.5; color: var(--muted); }
+  .preview { background: var(--surface); border: 1px solid var(--hair); border-radius: var(--r-lg); padding: 22px 28px; margin-bottom: 28px; text-align: center; }
   .preview p { font-family: var(--ar-font); font-size: var(--ar-size); line-height: var(--ar-lh); color: var(--ink); }
   .preview small { color: var(--ink-dim); }
 
-  .themes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .themes { display: grid; grid-template-columns: repeat(5, 96px); justify-content: space-between; gap: 20px 0; }
   .autoRow { margin-bottom: 12px; }
-  .chipauto { padding: 7px 14px; border-radius: var(--r-md); font-size: var(--t-body); background: var(--btn); }
+  .chipauto { height: 32px; padding: 0 14px; border-radius: var(--r-md); font-size: var(--t-body); font-weight: 500; background: var(--ink-6); }
   .chipauto:hover { background: var(--btn-hover); }
   .chipauto.on { background: var(--btn-on); color: var(--accent); }
-  .theme { display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: var(--r-lg); text-align: left; transition: background 0.2s; outline: 2px solid transparent; }
-  .theme:hover { background: var(--accent-soft); }
-  .theme.on { outline-color: var(--accent); }
-  .theme .sw { height: 84px; border-radius: var(--r-md); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 18%, transparent); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 0 8px; overflow: hidden; }
-  .theme .sw .ink { font-family: 'Amiri Quran', serif; font-size: 18px; line-height: 1.5; white-space: nowrap; direction: rtl; }
-  .theme .sw i { width: 32px; height: 5px; border-radius: var(--r-sm); }
-  .theme b { font-size: var(--t-body); font-weight: 500; padding: 0 2px; }
+  .theme { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 96px; text-align: center; }
+
+  .theme.on .sw { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+  .theme.on b { color: var(--ink); font-weight: 500; }
+  .theme .sw { position: relative; width: 96px; height: 64px; border-radius: var(--r-md); border: 1px solid var(--hair-2); display: grid; place-items: center; overflow: hidden; }
+  .theme .sw .ink { font-family: 'KFGQPC Uthmanic Hafs', serif; font-size: 13px; line-height: 1.2; white-space: nowrap; direction: rtl; }
+  .theme .sw i { position: absolute; left: 8px; bottom: 8px; width: 18px; height: 3px; border-radius: 2px; }
+  .theme b { font-size: 12px; font-weight: 400; color: var(--muted); }
 
   .fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
   .font { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px; border-radius: var(--r-lg); background: var(--surface); outline: 2px solid transparent; }
   .font.on { outline-color: var(--accent); }
 
 
-  .seg { display: inline-flex; background: var(--surface); border-radius: var(--r-md); padding: 3px; gap: 2px; flex-wrap: wrap; }
-  .seg button { padding: 8px 14px; border-radius: var(--r-md); color: var(--ink-dim); transition: background-color 0.2s, color 0.2s; }
+  .seg { display: inline-flex; background: var(--ink-6); border-radius: var(--r-md); padding: 3px; gap: 2px; flex-wrap: wrap; }
+  .seg button { height: 30px; padding: 0 12px; border-radius: var(--r-sm); font-size: var(--t-meta); font-weight: 500; color: var(--muted); transition: background-color 0.2s, color 0.2s; }
   .seg button:hover { color: var(--ink); }
-  .seg .custom { display: inline-flex; align-items: center; gap: 2px; padding: 0 10px; border-radius: var(--r-md); color: var(--ink-dim); }
-  .seg .custom.on { background: var(--accent-soft); color: var(--accent); }
+  .seg .custom { display: inline-flex; align-items: center; gap: 2px; padding: 0 10px; border-radius: var(--r-sm); font-size: var(--t-meta); color: var(--muted); }
+  .seg .custom.on { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); box-shadow: var(--e1); color: var(--ink); }
   .seg .custom input { width: 74px; background: transparent; border: 0; color: inherit; font: inherit; text-align: right; outline: none; }
   .seg .custom input:focus-visible { box-shadow: 0 1px 0 var(--accent); }
-  .seg button.on { background: var(--sel); color: var(--accent); font-weight: 600; }
+  .seg button.on { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); box-shadow: var(--e1); color: var(--ink); font-weight: 600; }
 
-  input[type='range'] { width: min(100%, 360px); accent-color: var(--accent); height: 28px; }
+  input[type='range'] { -webkit-appearance: none; appearance: none; width: min(100%, 240px); height: 20px; background: transparent; }
+  input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: var(--r-pill); background: linear-gradient(var(--accent), var(--accent)) 0 / var(--p, 0%) 100% no-repeat, var(--ink-6); }
+  input[type='range']::-moz-range-track { height: 4px; border-radius: var(--r-pill); background: var(--ink-6); }
+  input[type='range']::-moz-range-progress { height: 4px; border-radius: var(--r-pill); background: var(--accent); }
+  input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border-radius: 50%; background: var(--bg); border: 1px solid var(--hair-2); box-shadow: var(--e1); }
+  input[type='range']::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 1px solid var(--hair-2); box-shadow: var(--e1); }
+  input[type='range']:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--r-sm); }
 
-  .toggle { width: 42px; height: 24px; border-radius: var(--r-pill); background: var(--line); position: relative; transition: background 0.25s; flex: none; }
-  .toggle i { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); transition: transform 0.25s var(--ease); }
+  .toggle { width: 36px; height: 20px; border-radius: var(--r-pill); background: var(--ink-6); box-shadow: inset 0 0 0 1px var(--hair); position: relative; transition: background 0.25s; flex: none; }
+  .toggle i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); box-shadow: var(--e1); transition: transform 0.25s var(--ease); }
   .toggle.on { background: var(--accent); }
-  .toggle.on i { transform: translateX(18px); background: var(--accent-ink); }
+  .toggle.on i { transform: translateX(16px); background: var(--accent-ink); }
 
-  .primary, .secondary, .danger { padding: 9px 16px; border-radius: var(--r-md); font-weight: 550; transition: background-color 0.15s, opacity 0.2s; }
+  .primary, .secondary, .danger { height: 32px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-md); font-size: var(--t-body); font-weight: 600; transition: background-color 0.15s, opacity 0.2s; }
   .primary { background: var(--accent); color: var(--accent-ink); }
-  .secondary { background: var(--btn); color: var(--ink); }
+  .primary:disabled, .danger:disabled { opacity: 0.5; }
+  .secondary { background: var(--ink-6); color: var(--ink); }
   .secondary:hover:not(:disabled) { background: var(--btn-hover); }
   .secondary:disabled { opacity: 0.5; }
-  .danger { background: color-mix(in oklab, #c0392b 16%, transparent); color: color-mix(in oklab, #c0392b 62%, var(--ink)); }
-  .danger:hover:not(:disabled) { background: color-mix(in oklab, #c0392b 24%, transparent); }
+  .danger { background: color-mix(in oklab, var(--danger) 12%, transparent); color: var(--danger); }
+  .danger:hover:not(:disabled) { background: color-mix(in oklab, var(--danger) 20%, transparent); }
   .prog { width: min(360px, 100%); height: 6px; border-radius: var(--r-sm); background: color-mix(in oklab, var(--ink) 14%, transparent); overflow: hidden; }
   .prog i { display: block; height: 100%; background: var(--accent); transition: width 0.3s var(--ease); }
   .dls { list-style: none; padding: 0; border-top: 1px solid var(--line); }
-  .offline-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: stretch; }
-  .offline-col { min-width: 0; padding: 0 16px 16px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+  .offline-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; width: min(900px, calc(100vw - 220px - 48px)); margin-left: 50%; transform: translateX(-50%); align-items: stretch; }
+  .offline-col { min-width: 0; padding: 0 16px 16px; border: 1px solid var(--hair); border-radius: var(--r-lg); background: var(--ink-4); }
   .offline-col .grp { margin-top: 18px; }
-  .offline-col .row { grid-template-columns: 1fr; gap: 12px; padding: 16px 0; }
-  .offline-col .row > * { justify-self: start; }
+  .offline-col .row { flex-direction: column; align-items: flex-start; flex-wrap: nowrap; padding: 16px 0; }
+  .offline-col .row > .label { flex: none; }
   .offline-col .dls li { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 7px; }
   .offline-col .dls .sz { display: none; }
   .offline-col .dls .nm small { line-height: 1.35; }
