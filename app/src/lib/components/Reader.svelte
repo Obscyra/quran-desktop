@@ -756,11 +756,11 @@
         </div>
         <div class="size" role="group" aria-label="Page size">
           <button class="icon" aria-label="Zoom out" title={`Zoom out · ${Math.round(settings.pageZoom * 100)}%`} disabled={settings.pageZoom <= 0.5} onclick={() => zoomPage(-0.1)}>
-            <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" x2="16.65" y1="21" y2="16.65" /><line x1="8" x2="14" y1="11" y2="11" /></svg>
           </button>
           <span class="pct" aria-live="polite" title="Page zoom: {Math.round(settings.pageZoom * 100)}%">{Math.round(settings.pageZoom * 100)}%</span>
           <button class="icon" aria-label="Zoom in" title={`Zoom in · ${Math.round(settings.pageZoom * 100)}%`} disabled={settings.pageZoom >= 3} onclick={() => zoomPage(0.1)}>
-            <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5M8.5 6v5" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" x2="16.65" y1="21" y2="16.65" /><line x1="11" x2="11" y1="8" y2="14" /><line x1="8" x2="14" y1="11" y2="11" /></svg>
           </button>
         </div>
         <div class="seg" role="radiogroup" aria-label="Page fit">
@@ -769,7 +769,7 @@
         </div>
         {#if settings.flow === 'page'}
           <button class="icon" class:on={settings.spread} aria-pressed={settings.spread} aria-label="Two-page spread (T)" title="Two-page spread (T)" onclick={() => (settings.spread = !settings.spread)}>
-            <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 5.2C8.4 4.2 5.6 3.8 2.8 4.4v10.8c2.8-.6 5.6-.2 7.2.8 1.6-1 4.4-1.4 7.2-.8V4.4c-2.8-.6-5.6-.2-7.2.8zM10 5.2V16" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg>
           </button>
         {/if}
       {:else}
@@ -787,16 +787,16 @@
       </div>
       <div class="size" role="group" aria-label="Arabic text size">
         <button class="icon" aria-label="Zoom out" title={`Zoom out · ${sizePct}%`} disabled={settings.size <= 24} onclick={() => (settings.size = Math.max(24, settings.size - 4))}>
-          <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5" /></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" x2="16.65" y1="21" y2="16.65" /><line x1="8" x2="14" y1="11" y2="11" /></svg>
         </button>
         <button class="icon" aria-label="Zoom in" title={`Zoom in · ${sizePct}%`} disabled={settings.size >= 96} onclick={() => (settings.size = Math.min(96, settings.size + 4))}>
-          <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m12.7 12.7 4 4M6 8.5h5M8.5 6v5" /></svg>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" x2="16.65" y1="21" y2="16.65" /><line x1="11" x2="11" y1="8" y2="14" /><line x1="8" x2="14" y1="11" y2="11" /></svg>
         </button>
       </div>
     {/if}
     {#if !paged}
       <button class="icon" class:on={settings.lockPlaying} aria-pressed={settings.lockPlaying} aria-label="Lock on the playing verse" title="Lock on the playing verse: scrolling away returns to it" onclick={() => (settings.lockPlaying = !settings.lockPlaying)}>
-        <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">{#if settings.lockPlaying}<rect x="4.5" y="9" width="11" height="8" rx="2" /><path d="M7 9V6.5a3 3 0 0 1 6 0V9" />{:else}<rect x="4.5" y="9" width="11" height="8" rx="2" /><path d="M7 9V6.5a3 3 0 0 1 5.6-1.5" />{/if}</svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" />{#if settings.lockPlaying}<path d="M7 11V7a5 5 0 0 1 10 0v4" />{:else}<path d="M7 11V7a5 5 0 0 1 9.9-1" />{/if}</svg>
       </button>
     {/if}
     {#if reading}<span class="grow"></span>{/if}
@@ -817,7 +817,7 @@
     <div class="stage hl-sweep" bind:this={stage} onwheel={wheel} ontouchstart={touchStart} ontouchend={touchEnd} role="presentation">
       <!-- Arabic books open from the right: the next page is on the left -->
       <button class="turn next" onclick={() => reader.go(1)} disabled={!reader.canForward} aria-label="Next page (Page Down)">
-        <svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4.5 7 10l5.5 5.5" /></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
       </button>
 
       <div class="view" bind:this={view} style:--pz={settings.pageZoom}>
@@ -835,7 +835,7 @@
       </div>
 
       <button class="turn prev" onclick={() => reader.go(-1)} disabled={!reader.canBack} aria-label="Previous page (Page Up)">
-        <svg aria-hidden="true" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4.5 13 10l-5.5 5.5" /></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
       </button>
     </div>
   {:else}
@@ -946,28 +946,29 @@
   .retry:hover { background: var(--btn-hover); }
 
   /* ───── sub bar ───── */
-  .sub { flex: none; display: flex; align-items: center; gap: 10px; padding: 8px 16px; min-height: 46px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
-  .grow { flex: 1; }
+  .sub { flex: none; align-self: center; width: fit-content; max-width: calc(100% - 24px); margin: 10px auto 0; display: flex; align-items: center; gap: 0; height: 36px; min-height: 36px; padding: 0 4px; border: 1px solid var(--hair); border-radius: var(--r-lg); background: var(--chrome); box-shadow: var(--e2); position: relative; z-index: 4; }
+  .sub > * + * { margin-left: 4px; padding-left: 4px; border-left: 1px solid var(--hair); }
+  .grow { display: none; }
   .back { position: absolute; right: 22px; bottom: 18px; width: 42px; height: 42px; border-radius: var(--r-pill); display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: var(--e1); z-index: 5; transition: transform 0.15s var(--ease), opacity 0.15s; }
   .back.lift { bottom: 118px; }
   .back:hover { transform: scale(1.06); }
   .back.up svg { transform: rotate(180deg); }
-  .where { color: var(--ink-dim); font-size: var(--t-meta); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .seg { display: inline-flex; background: var(--btn); border: 1px solid var(--btn-line); border-radius: var(--r-md); padding: 2px; flex: none; }
-  .seg button { padding: 0 13px; height: 28px; border-radius: var(--r-md); font-size: var(--t-meta); font-weight: 600; color: var(--ink-dim); white-space: nowrap; transition: background-color 0.2s, color 0.2s; }
-  .seg button:hover { color: var(--ink); }
-  .seg button[aria-checked='true'] { background: var(--sel); color: var(--accent); }
-  .tafsir-note { color: var(--ink-dim); font-size: var(--t-meta); white-space: nowrap; }
-  .icon { min-width: 32px; height: 30px; padding: 0 6px; border-radius: var(--r-md); display: inline-grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid var(--btn-line); font-size: var(--t-meta); font-weight: 600; transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
-  .icon:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
-  .icon.on { color: var(--accent); background: var(--btn-on); }
+  .where { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .seg { display: inline-flex; background: transparent; border: 0; border-radius: var(--r-sm); padding: 0; gap: 2px; flex: none; }
+  .seg button { padding: 0 11px; height: 28px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; transition: background-color 0.2s, color 0.2s; }
+  .seg button:hover { color: var(--ink); background: var(--ink-4); }
+  .seg button[aria-checked='true'] { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); color: var(--ink); box-shadow: var(--e1); }
+  .tafsir-note { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+  .icon { min-width: 32px; width: 32px; height: 28px; padding: 0; border-radius: var(--r-sm); display: inline-grid; place-items: center; color: var(--muted); background: transparent; border: 0; font-size: 12.5px; font-weight: 600; transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
+  .icon:hover:not(:disabled) { background: var(--ink-6); color: var(--ink); }
+  .icon.on { color: var(--accent); background: color-mix(in oklab, var(--accent) 16%, transparent); }
   .icon:disabled { opacity: 0.4; }
-  .size { gap: 4px; }
+  .size { gap: 0; }
   .size { display: inline-flex; align-items: center; }
-  .pick { display: inline-flex; align-items: center; gap: 8px; font-size: var(--t-meta); color: var(--ink-dim); flex: none; }
+  .pick { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); flex: none; }
 
   /* ───── page stage ───── */
-  .stage { flex: 1; min-height: 0; position: relative; }
+  .stage { flex: 1; min-height: 0; position: relative; background: transparent; }
   .view { position: absolute; inset: 0; overflow: auto; display: grid; place-items: safe center; container-type: size; padding: 0 12px; }
   .book { --sh: calc(min(calc(100cqh - 24px), calc((100cqw - 140px) / 0.66)) * var(--pz, 1)); grid-area: 1 / 1; display: flex; opacity: 0; visibility: hidden; transition: opacity 0.34s var(--ease), transform 0.34s var(--ease), visibility 0s linear 0.34s; }
   /* the next pages wait on the left, the earlier ones on the right (Arabic books turn that way) */
@@ -979,8 +980,8 @@
   /* fill: the page takes the full width of the window, and the window scrolls down it */
   .book.fill { --sh: calc(((100cqw - 96px) / 0.66) * var(--pz, 1)); }
   .book.fill.spread { --sh: calc(((100cqw - 64px) / 1.32) * var(--pz, 1)); }
-  .turn { position: absolute; top: 50%; translate: 0 -50%; width: 44px; height: 88px; border-radius: var(--r-lg); display: grid; place-items: center; color: var(--ink-dim); background: var(--btn); border: 1px solid transparent; backdrop-filter: blur(6px); transition: background-color 0.15s, color 0.15s, opacity 0.15s, border-color 0.15s; z-index: 2; }
-  .turn:hover:not(:disabled) { background: var(--btn-hover); color: var(--ink); }
+  .turn { position: absolute; top: 50%; translate: 0 -50%; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); background: var(--chrome); border: 1px solid var(--hair); box-shadow: var(--e2); transition: background-color 0.15s, color 0.15s, opacity 0.15s, border-color 0.15s; z-index: 2; }
+  .turn:hover:not(:disabled) { background: color-mix(in oklab, var(--chrome) 90%, var(--ink) 10%); color: var(--ink); }
   .turn:disabled { opacity: 0.25; }
   .turn.next { left: 14px; }
   .turn.prev { right: 14px; }
@@ -989,7 +990,7 @@
   /* smooth for keys and the Back arrow; jumps to a verse or the top say `instant` themselves */
   @media (prefers-reduced-motion: no-preference) { .scroll { scroll-behavior: smooth; } }
   /* the book grows above the reader: the scroll position is kept by hand (see growUp), not by the browser's anchoring */
-  .scroll { flex: 1; overflow: auto; overflow-anchor: none; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
+  .scroll { background: transparent; flex: 1; overflow: auto; overflow-anchor: none; padding: 0 clamp(20px, 6vw, 96px); min-width: 0; container-type: inline-size; }
   .head { text-align: center; padding: 36px 0 16px; }
   .kicker { font-size: var(--t-meta); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
   h2 { font-family: 'KFGQPC Uthmanic Hafs', serif; font-weight: 400; font-size: clamp(48px, 6vw, 80px); line-height: 1.6; margin: 4px 0 6px; color: var(--accent); }
@@ -1006,7 +1007,7 @@
 
   .scroll.fill { padding: 0 12px; }
   .scroll.fill .pg { --sh: calc(100cqw * var(--pz, 1) / 0.66); }
-  .pct { min-width: 44px; text-align: center; font-size: var(--t-meta); font-variant-numeric: tabular-nums; color: var(--ink-dim); }
+  .pct { min-width: 40px; text-align: center; font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--ink-dim); }
   .verses { max-width: 900px; margin: 0 auto; }
   /* verses off screen are not laid out: a change of text size only has to lay out what is in view */
   .verse { content-visibility: auto; contain-intrinsic-size: auto 240px; padding: 18px 14px 22px; border-radius: var(--r-lg); transition: background-color 0.3s; border-bottom: 1px solid var(--line); }

@@ -295,15 +295,15 @@
   }
   .sheet.left, .sheet.right { --row: calc(100cqh * 0.92 / 15); padding: 0 clamp(10px, 3.5cqw, 28px); }
   .sheet.left header, .sheet.right header, .sheet.left footer, .sheet.right footer { left: clamp(10px, 3.5cqw, 28px); right: clamp(10px, 3.5cqw, 28px); }
-  .look-paper { background: var(--surface); border-radius: 6px; box-shadow: 0 1px 0 var(--line), 0 24px 44px -26px #000c; }
-  .look-frame {
-    background: var(--surface); border-radius: 4px; box-shadow: 0 24px 44px -26px #000c;
-    outline: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: -8px;
+  .look-paper, .look-frame {
+    background-color: var(--surface); background-image: var(--grain); border-radius: var(--r-sm);
+    box-shadow: 0 1px 1px color-mix(in oklab, var(--shade) 20%, transparent), 0 10px 30px -10px color-mix(in oklab, var(--shade) 45%, transparent), 0 40px 80px -30px color-mix(in oklab, var(--shade) 50%, transparent);
   }
+  .look-frame { outline: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: -8px; }
   .look-frame::after { content: ''; position: absolute; inset: 12px; border: 3px double color-mix(in srgb, var(--accent) 38%, transparent); border-radius: 2px; pointer-events: none; }
   .look-plain { background: transparent; }
-  .left.look-paper, .left.look-frame { border-radius: 6px 0 0 6px; background-image: linear-gradient(to right, #0000 90%, #0003); }
-  .right.look-paper, .right.look-frame { border-radius: 0 6px 6px 0; background-image: linear-gradient(to left, #0000 90%, #0003); }
+  .left.look-paper, .left.look-frame { border-radius: var(--r-sm) 0 0 var(--r-sm); background-image: var(--grain), linear-gradient(to right, transparent 92%, color-mix(in oklab, var(--shade) 10%, transparent)); }
+  .right.look-paper, .right.look-frame { border-radius: 0 var(--r-sm) var(--r-sm) 0; background-image: var(--grain), linear-gradient(to left, transparent 92%, color-mix(in oklab, var(--shade) 10%, transparent)); }
   .blank.look-paper, .blank.look-frame { opacity: 0.55; }
 
   .lines.unsized { visibility: hidden; }

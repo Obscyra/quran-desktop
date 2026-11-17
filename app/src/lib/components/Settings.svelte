@@ -979,6 +979,12 @@
               <span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3 18 17H2L10 3Z"/><path d="M10 7v4m0 3h.01"/></svg></span><span><b>Report a problem</b><small>Help improve this beta</small></span><span class="about-arrow" aria-hidden="true">↗</span>
             </a>
           </div>
+          <ul class="credits" aria-label="Credits">
+            <li>Manrope by Mikhail Sharanda — SIL Open Font License 1.1</li>
+            <li>Inter by Rasmus Andersson — SIL Open Font License 1.1</li>
+            <li>Icons: Lucide — ISC License</li>
+            <li>Surah name calligraphy and Madinah surah frame: QUL by Tarteel (qul.tarteel.ai)</li>
+          </ul>
         </div>
       </div>
       <div class="row about">
@@ -1158,6 +1164,7 @@
   .keys dt { font-weight: 600; text-align: right; color: var(--accent); }
   .keys dd { color: var(--ink-dim); margin: 0; }
   .about-content { min-width: 0; }
+  .credits { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
   .about-intro { padding: 20px 22px; border: 1px solid var(--line); border-radius: var(--r-lg); background: linear-gradient(130deg, color-mix(in oklab, var(--accent) 9%, var(--bg-2)), var(--bg-2) 72%); box-shadow: 0 8px 24px color-mix(in oklab, var(--ink) 6%, transparent); }
   .about-kicker { display: inline-flex; padding: 4px 9px; border: 1px solid color-mix(in oklab, var(--accent) 28%, var(--line)); border-radius: var(--r-pill); color: var(--accent); font-size: var(--t-cap); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
   .about-intro h2 { margin: 12px 0 7px; color: var(--ink); font-size: var(--t-title); line-height: 1.25; font-weight: 600; }

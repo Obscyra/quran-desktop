@@ -152,17 +152,17 @@
 {#snippet row(c: (typeof player.chapters)[number])}
   {@const tone = !reader.visible.length ? (c.id === player.chapter ? 'on' : '') : !reader.visible.includes(c.id) ? '' : !player.playing || !reader.visible.includes(player.chapter) || c.id === player.chapter ? 'on' : 'also'}
   <li class="surah">
-    <button class="pick" class:on={tone === 'on'} class:also={tone === 'also'} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
+    <button class="pick" aria-label="{c.id}. {c.name_simple}, {c.translated_name.name}, {c.verses_count} verses" title={c.name_arabic} class:on={tone === 'on'} class:also={tone === 'also'} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
       <span class="num">{c.id}</span>
       <span class="names">
         <b>{settings.arabicNames ? c.name_arabic : c.name_simple}</b>
         <small>{c.translated_name.name} · {c.verses_count}</small>
       </span>
       {#if player.isChapterDownloaded(c.id)}<i class="dl" title="Downloaded for offline"></i>{/if}
-      <span class="ar">{settings.arabicNames ? c.name_simple : c.name_arabic}</span>
+      {#if settings.arabicNames}<span class="ar latin">{c.name_simple}</span>{:else}<span class="ar" aria-hidden="true">surah{String(c.id).padStart(3, '0')}</span>{/if}
     </button>
     <button class="star" class:starred={stars.has(c.id)} onclick={() => stars.toggle(c.id)} aria-pressed={stars.has(c.id)} aria-label="{stars.has(c.id) ? 'Unstar' : 'Star'} {c.name_simple}" title={stars.has(c.id) ? 'Remove from starred' : 'Star: keep at the top of the list'}>
-      <svg aria-hidden="true" viewBox="0 0 20 20" width="15" height="15" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill={stars.has(c.id) ? 'currentColor' : 'none'}><path d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7z" /></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="{stars.has(c.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg>
     </button>
   </li>
 {/snippet}
@@ -181,19 +181,19 @@
           {@const c = player.chapters.find((x) => x.id === b.chapter)}
           <li>
             <button class="mark" onclick={() => go(b.chapter, b.verse)}>
-              <svg aria-hidden="true" viewBox="0 0 20 20" width="15" height="15" fill="currentColor"><path d="M5.5 2.8h9v14.4L10 13.6l-4.5 3.6z" /></svg>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
               <span class="names">
                 <b>{c ? (settings.arabicNames ? c.name_arabic : c.name_simple) : `Surah ${b.chapter}`} {b.chapter}:{b.verse}</b>
                 <small>{b.note || 'No note'}</small>
               </span>
             </button>
             <button class="rm" onclick={() => bookmarks.toggle(b.chapter, b.verse)} aria-label="Remove bookmark {b.chapter}:{b.verse}">
-              <svg aria-hidden="true" viewBox="0 0 10 10" width="9" height="9"><path d="M.5.5l9 9M9.5.5l-9 9" stroke="currentColor" stroke-width="1.2" fill="none" /></svg>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
             </button>
           </li>
         {:else}
           <li class="empty">
-            <svg aria-hidden="true" viewBox="0 0 20 20" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M5.5 2.8h9v14.4L10 13.6l-4.5 3.6z" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
             <p>No bookmarks yet</p>
             <small>Right-click a word or tap a verse number, then choose Bookmark. In Verse by Verse, use the ribbon on a verse.</small>
           </li>
@@ -201,7 +201,7 @@
       </ul>
     {:else}
     <label class="search">
-      <svg aria-hidden="true" viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="9" r="5.5" /><path d="m13.5 13.5 3.5 3.5" /></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
       <input type="search" name="surah-search" autocomplete="off" spellcheck="false" placeholder="Search, or 55:13" bind:value={query} aria-label="Search surahs, or type a verse like 55:13" onkeydown={(e) => { if (e.key === 'Enter' && ref) { go(ref.ch.id, ref.verse); query = ''; } }} />
     </label>
     {#if ref}
@@ -226,10 +226,10 @@
   <div class="cm" bind:this={menuEl} style:left="{menu.x}px" style:top="{menu.y}px" role="menu" aria-label="{target.name_simple} options" tabindex="-1" onkeydown={menuKey}>
     <header><b>{nameOf(target)}</b><small>{target.id} · {target.verses_count} verses</small></header>
     <button role="menuitem" onclick={read}>
-      <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5.2C8.4 4.2 5.6 3.8 2.8 4.4v10.8c2.8-.6 5.6-.2 7.2.8 1.6-1 4.4-1.4 7.2-.8V4.4c-2.8-.6-5.6-.2-7.2.8zM10 5.2V16" /></svg>Read
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg>Read
     </button>
     <button role="menuitem" onclick={listen}>
-      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="M7.5 4.6v14.8a.8.8 0 0 0 1.22.68l12-7.4a.8.8 0 0 0 0-1.36l-12-7.4a.8.8 0 0 0-1.22.68z" fill="currentColor" /></svg>Listen<em>{reciterName}</em>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg>Listen<em>{reciterName}</em>
     </button>
     {#if savedAudio}
       <button role="menuitem" onclick={removeAudio}>
@@ -237,56 +237,58 @@
       </button>
     {:else if fetchingAudio}
       <button role="menuitem" disabled>
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" /></svg>Downloading<em>{fetchPct === null ? '…' : `${fetchPct}%`}</em>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>Downloading<em>{fetchPct === null ? '…' : `${fetchPct}%`}</em>
       </button>
     {:else}
       <button role="menuitem" onclick={saveAudio} disabled={player.dl.running}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" /></svg>Download audio
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>Download audio
       </button>
     {/if}
     <button role="menuitem" onclick={() => { stars.toggle(target!.id); closeMenu(); }}>
-      <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill={stars.has(target.id) ? 'currentColor' : 'none'}><path d="m10 2.8 2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 8.1l5-.7z" /></svg>{stars.has(target.id) ? 'Unstar' : 'Star'}<em>{stars.has(target.id) ? 'Remove from top' : 'Keep at top'}</em>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="{stars.has(target.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg>{stars.has(target.id) ? 'Unstar' : 'Star'}<em>{stars.has(target.id) ? 'Remove from top' : 'Keep at top'}</em>
     </button>
     <button role="menuitem" onclick={copyName}>
-      <svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="9" height="9" rx="2" /><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /></svg>Copy name
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>Copy name
     </button>
   </div>
 {/if}
 
 <style>
-  aside { position: relative; flex: none; width: 324px; overflow: hidden; background: var(--bg-2); z-index: 6; transition: transform 0.38s var(--ease), opacity 0.28s var(--ease); }
+  aside { position: relative; flex: none; width: 324px; overflow: hidden; background: var(--chrome); z-index: 6; transition: transform 0.38s var(--ease), opacity 0.28s var(--ease); }
   /* Closed, it leaves the layout at once (the page reflows one time) and slides away; resizing it frame by
      frame made the page refit on every frame. */
   aside.closed { position: absolute; left: 0; top: 0; bottom: 0; transform: translateX(-100%); opacity: 0; pointer-events: none; }
-  .inner { width: 100%; height: 100%; display: flex; flex-direction: column; min-height: 0; padding: 10px 12px 12px; }
+  .inner { width: 100%; height: 100%; display: flex; flex-direction: column; min-height: 0; padding: 8px; }
   .grip { position: absolute; top: 0; right: 0; bottom: 0; width: 7px; cursor: col-resize; z-index: 2; touch-action: none; }
   .grip:hover, .grip:active { background: var(--accent-soft); }
-  .search { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 0 12px; height: 38px; border-radius: var(--r-md); background: color-mix(in oklab, var(--ink) 7%, transparent); color: var(--ink-dim); }
-  .search:focus-within { background: color-mix(in oklab, var(--ink) 10%, transparent); box-shadow: 0 0 0 2px var(--accent-soft); }
-  input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: var(--t-body); user-select: text; }
+  .search { display: flex; align-items: center; gap: 8px; margin: 0 4px 10px; padding: 0 12px; height: 36px; border-radius: var(--r-md); background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--muted); }
+  .search:focus-within { background: var(--ink-6); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 30%, transparent); }
+  input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: 12.5px; user-select: text; }
   input::placeholder { color: var(--ink-faint); }
   ul { list-style: none; padding: 0 0 8px; overflow-y: auto; scrollbar-gutter: stable; margin-right: calc(-1 * var(--sb, 0px)); flex: 1; display: flex; flex-direction: column; gap: 2px; }
   li .pick { flex: 1; min-width: 0; }
-  li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 11px 12px; border-radius: var(--r-md); text-align: left; transition: background-color 0.12s; }
-  li button:hover { background: color-mix(in oklab, var(--ink) 7%, transparent); }
-  li button.on { background: color-mix(in oklab, var(--accent) 16%, transparent); }
-  li button.also { background: color-mix(in oklab, var(--accent) 8%, transparent); }
-  .num { width: 28px; flex: none; text-align: center; font-size: var(--t-body); color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+  li button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 6px; height: 48px; border-radius: var(--r-md); text-align: left; transition: background-color 0.12s; }
+  li button:hover { background: color-mix(in oklab, var(--ink) 5%, transparent); }
+  li button.on { background: color-mix(in oklab, var(--accent) 13%, transparent); }
+  li button.also { background: color-mix(in oklab, var(--accent) 7%, transparent); }
+  .num { width: 28px; height: 28px; flex: none; display: grid; place-items: center; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .on .num { color: var(--accent); font-weight: 600; }
-  .names { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  b { font-weight: 600; font-size: var(--t-body); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  small { color: var(--ink-dim); font-size: var(--t-meta); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ar { font-family: var(--ar-ui, 'Amiri Quran'), serif; font-size: 22px; line-height: 1.2; color: var(--ink-dim); }
+  .names { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  b { font-weight: 600; font-size: 13.5px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  small { color: var(--muted); font-size: 12.5px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ar { font-family: 'SurahNames'; font-size: 22px; line-height: 1; color: var(--muted); flex: none; }
+  .ar.latin { font-family: var(--ui); font-size: 13.5px; font-weight: 500; }
   .on .ar { color: var(--accent); }
   .dl { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
-  .tabs { display: flex; margin: 0 0 12px; background: var(--btn); border: 1px solid var(--btn-line); border-radius: var(--r-md); padding: 3px; }
-  .tabs button { flex: 1; height: 32px; border-radius: var(--r-md); font-size: var(--t-body); font-weight: 600; color: var(--ink-dim); display: flex; align-items: center; justify-content: center; gap: 7px; transition: background-color 0.2s, color 0.2s; }
+  .tabs { display: flex; margin: 4px 4px 10px; background: var(--ink-6); border: 0; border-radius: var(--r-md); padding: 3px; }
+  .tabs button { flex: 1; height: 28px; padding: 0; border-radius: var(--r-sm); font-size: 13.5px; font-weight: 500; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 7px; transition: background-color 0.2s, color 0.2s; }
   .tabs button:hover { color: var(--ink); }
-  .tabs button[aria-selected='true'] { background: var(--sel); color: var(--accent); }
+  .tabs button[aria-selected='true'] { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); color: var(--ink); box-shadow: var(--e1); }
   .count { font-size: var(--t-meta); background: var(--accent-soft); color: var(--accent); border-radius: var(--r-pill); padding: 0 7px; font-variant-numeric: tabular-nums; }
   .go { margin: 0 0 12px; height: 36px; border-radius: var(--r-md); background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: var(--t-body); }
   .marks li { display: flex; align-items: center; gap: 2px; }
   .marks .mark { flex: 1; min-width: 0; align-items: flex-start; }
+  .marks .mark { height: auto; min-height: 48px; padding-top: 8px; padding-bottom: 8px; }
   .mark svg { color: var(--accent); flex: none; margin-top: 3px; }
   .mark small { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
   .rm { width: 32px; height: 32px; border-radius: var(--r-md); color: var(--ink-faint); display: grid; place-items: center; flex: none; }
@@ -301,7 +303,7 @@
   li.surah:hover .star, .star:focus-visible, .star.starred { opacity: 1; }
   .star.starred { color: var(--accent); }
   .star:hover { color: var(--accent); }
-  li.head { padding: 8px 12px 4px; font-size: var(--t-meta); font-weight: 600; color: var(--ink-dim); letter-spacing: 0.02em; }
+  li.head { padding: 14px 12px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
   li button.ctx { background: color-mix(in oklab, var(--ink) 9%, transparent); }
 
   .cm { position: fixed; z-index: 90; width: 248px; padding: 6px; display: flex; flex-direction: column; gap: 1px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--e2); animation: cm 0.14s var(--ease); }

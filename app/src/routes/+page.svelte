@@ -256,12 +256,14 @@
 
 <style>
   /* `zoom` scales the interface; the height is divided back so the app still fills the window exactly */
-  .app { position: relative; display: flex; flex-direction: column; height: calc(var(--vh, 100vh) / var(--zoom, 1)); zoom: var(--zoom, 1); }
-  .body { flex: 1; min-height: 0; display: flex; position: relative; }
-  .main { flex: 1; min-width: 0; display: flex; position: relative; }
+  .app { position: relative; display: flex; flex-direction: column; height: calc(var(--vh, 100vh) / var(--zoom, 1)); zoom: var(--zoom, 1); background: var(--chrome); }
+  /* L-frame: the title bar and sidebar are one chrome surface; the canvas sits in it behind a single hairline */
+  .body { flex: 1; min-height: 0; display: flex; position: relative; background: var(--chrome); }
+  .main { flex: 1; min-width: 0; display: flex; position: relative; background: var(--canvas); border-top: 1px solid var(--hair-2); border-left: 1px solid var(--hair-2); border-top-left-radius: var(--r-lg); overflow: hidden; }
+  :global(aside.closed) + .main { border-left: 0; border-top-left-radius: 0; }
   .pane { flex: 1; min-width: 0; display: flex; }
   .pane.gone { display: none; }
-  .over { position: absolute; inset: 0; display: flex; background: var(--bg); z-index: 5; }
+  .over { position: absolute; inset: 0; display: flex; background: var(--canvas); z-index: 5; }
   .toast { position: fixed; bottom: 14px; left: 14px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: var(--r-md); background: var(--panel); border: 1px solid var(--line); box-shadow: var(--e2); animation: in 0.45s var(--ease); z-index: 40; font-size: var(--t-body); }
   .toast button { padding: 6px 12px; border-radius: var(--r-sm); background: var(--accent); color: var(--accent-ink); font-weight: 550; }
   @keyframes in { from { transform: translateY(12px); opacity: 0; } }
