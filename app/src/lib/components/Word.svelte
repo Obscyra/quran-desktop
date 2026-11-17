@@ -1,3 +1,8 @@
+<script module lang="ts">
+  /** tajweed markup already turned into HTML, shared by every word */
+  const cache = new Map<string, string>();
+</script>
+
 <script lang="ts">
   import { pickWord, sayWord } from '$lib/actions';
   import { pageFonts } from '$lib/fonts.svelte';
@@ -36,7 +41,6 @@
     if (el && untrack(() => reader.activeKey) === key) (changed ? relight : light)(el);
   });
 
-  const cache = new Map<string, string>();
   function tajweedHtml(src: string) {
     let out = cache.get(src);
     if (out === undefined) {

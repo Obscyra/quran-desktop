@@ -144,7 +144,7 @@
   $effect(() => {
     player.chapter;
     if (closed) return;
-    queueMicrotask(() => list?.querySelector('.on')?.scrollIntoView({ block: 'nearest' }));
+    requestAnimationFrame(() => list?.querySelector('.on')?.scrollIntoView({ block: 'nearest' }));
   });
 </script>
 
