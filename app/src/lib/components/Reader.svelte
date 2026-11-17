@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte';
   import { cubicOut } from 'svelte/easing';
+  import { SvelteSet } from 'svelte/reactivity';
   import { copyVerse, toggleBookmark } from '$lib/actions';
   import { bookmarks } from '$lib/bookmarks.svelte';
   import { pageFonts } from '$lib/fonts.svelte';
@@ -138,9 +139,9 @@
   });
   // Scroll mode: a surah can be 50 printed pages (thousands of words). Only the pages near the window are built;
   // the others are empty boxes of the same size, so the scrollbar and positions stay exact and scrolling stays light.
-  let near = $state.raw(new Set<number>());
+  const near = new SvelteSet<number>();
   // the pages on screen right now; the others on hand are only measured when the browser is idle
-  let inView = $state.raw(new Set<number>());
+  const inView = new SvelteSet<number>();
   let jumpPage = $state(-1);
   const playPage = $derived(mushafMode && reader.activeKey ? (reader.wordPage.get(reader.activeKey) ?? -1) : -1);
   const built = (i: number) => near.has(i) || i === jumpPage || (playPage >= 0 && Math.abs(i - playPage) <= 1);
@@ -163,7 +164,7 @@
       return;
     }
     const i = ahead.shift();
-    if (i !== undefined && !near.has(i)) near = new Set(near).add(i);
+    if (i !== undefined) near.add(i);
     if (ahead.length) aheadRaf = whenIdle(flushAhead);
   };
   function watchPage(node: HTMLElement) {
@@ -175,20 +176,17 @@
       pageWatch = [
         // in view: now
         new IntersectionObserver((es) => {
-          const seen = new Set(inView);
-          for (const e of es) e.isIntersecting ? seen.add(idx(e)) : seen.delete(idx(e));
-          inView = seen;
-          const add = [...seen].filter((i) => !near.has(i));
-          if (add.length) near = new Set([...near, ...add]);
+          for (const e of es) e.isIntersecting ? inView.add(idx(e)) : inView.delete(idx(e));
+          for (const i of inView) near.add(i);
         }, { root }),
-        // within about two screens: ahead of time, one page per frame
+        // within about three screens: ahead of time, one page per frame
         new IntersectionObserver((es) => {
           for (const e of es) {
             const i = idx(e);
             if (e.isIntersecting && !near.has(i) && !ahead.includes(i)) ahead.push(i);
           }
           if (ahead.length && !aheadRaf) aheadRaf = whenIdle(flushAhead);
-        }, { root, rootMargin: '20000px 0px' }),
+        }, { root, rootMargin: `${3 * innerHeight}px 0px` }),
         // far away: let go
         new IntersectionObserver((es) => {
           const gone = es.filter((e) => !e.isIntersecting).map(idx);
@@ -196,8 +194,8 @@
             const at = ahead.indexOf(i);
             if (at >= 0) ahead.splice(at, 1);
           }
-          if (gone.some((i) => near.has(i))) near = new Set([...near].filter((i) => !gone.includes(i)));
-        }, { root, rootMargin: '50000px 0px' })
+          for (const i of gone) near.delete(i);
+        }, { root, rootMargin: `${6 * innerHeight}px 0px` })
       ];
     }
     pageWatch.forEach((o) => o.observe(node));
@@ -236,6 +234,8 @@
     // the text of a surah opened from outside may still be loading: the start is taken again when it arrives
     pendingStart = known ? 0 : ch;
     if (paged) {
+      // the book still shows the previous surah until the text is in: the start is taken again then
+      if (!known) return;
       reader.pageIdx = reader.firstPageOf(ch);
       void tick().then(() => {
         if (paged && player.chapter === ch) reader.pageIdx = reader.firstPageOf(ch);
@@ -252,19 +252,19 @@
   $effect(() => {
     const ch = player.chapter;
     untrack(() => {
-      const reset = reader.follow(ch);
+      const reset = mushafMode && reader.follow(ch);
       if (ch === reader.selfNav) {
         reader.selfNav = 0;
         return;
       }
       if (reset) {
-        near = new Set();
-        inView = new Set();
+        near.clear();
+        inView.clear();
         jumpPage = -1;
       }
       if (!mushafMode) {
         reader.pageIdx = 0;
-        near = new Set();
+        near.clear();
         scroller?.scrollTo({ top: 0, behavior: 'instant' });
         return;
       }
@@ -274,18 +274,22 @@
   // the text arrived for a surah that was opened before it was loaded
   $effect(() => {
     const ch = player.chapter;
-    if (!pendingStart || player.loading || !player.verses.length) return;
+    if (!pendingStart || player.versesOf !== ch || !player.verses.length) return;
     untrack(() => {
       const want = pendingStart;
       pendingStart = 0;
       if (want === ch) toStart(ch);
     });
   });
+  // coming into Pages/Scroll mode, the book is built around the surah (the other views do not need it)
+  $effect(() => {
+    if (mushafMode) untrack(() => reader.follow(player.chapter));
+  });
   // a surah the reader scrolls out of stays in the book
   $effect(() => {
     const v = player.verses;
-    const ch = player.chapter;
-    if (!player.loading && v.length) untrack(() => reader.keep(ch, v));
+    const ch = player.versesOf;
+    if (v.length) untrack(() => reader.keep(ch, v));
   });
   // the book is rebuilt when what it is made of changes
   let bookKey = '';
@@ -523,8 +527,11 @@
       const before = box.scrollHeight;
       const added = await reader.extend(-1);
       if (added <= 0) return;
-      near = new Set([...near].map((i) => i + added));
-      inView = new Set([...inView].map((i) => i + added));
+      const [n, v] = [[...near], [...inView]];
+      near.clear();
+      inView.clear();
+      n.forEach((i) => near.add(i + added));
+      v.forEach((i) => inView.add(i + added));
       if (jumpPage >= 0) jumpPage += added;
       await tick();
       box.scrollTop += box.scrollHeight - before;

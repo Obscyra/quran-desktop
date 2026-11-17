@@ -25,6 +25,8 @@ class Player {
   chapter = $state(fromHash() || (settings.resume ? read(LS.chapter, 1) : 1));
   reciterId = $state(read(LS.reciter, 7));
   verses = $state.raw<Verse[]>([]);
+  /** the surah `verses` belongs to (`chapter` flips at once on load(), `verses` follows when its text is in) */
+  versesOf = $state(0);
   audio = $state.raw<ChapterAudio | null>(null);
   playing = $state(false);
   loading = $state(false);
@@ -291,6 +293,7 @@ class Player {
       await this.firstFonts(verses);
       if (token !== this.token) return;
       this.verses = verses;
+      this.versesOf = chapter;
       const audio = await audioMeta;
       if (token !== this.token) return;
       this.audio = audio;
@@ -453,6 +456,7 @@ class Player {
       const v = await this.textFor(this.chapter);
       if (token !== this.token) return;
       this.verses = v;
+      this.versesOf = this.chapter;
       this.preloadFonts(v);
     } catch {
       this.error = 'Could not load that translation. It will work once you are online.';

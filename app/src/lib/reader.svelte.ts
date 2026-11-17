@@ -29,12 +29,23 @@ class Reader {
     player.activeTiming ? `${player.chapter}-${player.activeTiming.verse}-${player.activeTiming.pos}` : ''
   );
 
+  /** the pages last built, shown while the next surah's text is on its way (so the book is never emptied under the reader) */
+  private shown: MushafPage[] = [];
+
   pages = $derived.by(() => {
-    if (!settings.continuous) return groupBook([{ chapter: player.chapter, verses: player.verses }], settings.layout);
     const cur = player.chapter;
+    // player.chapter flips at once on load() while player.verses still holds the old surah: only trust it when it is this one's
+    const own = player.versesOf === cur ? player.verses : undefined;
+    const pages = this.build(cur, own);
+    return pages ?? this.shown;
+  });
+
+  /** the book around `cur`, or undefined while its text is not in */
+  private build(cur: number, own: Verse[] | undefined): MushafPage[] | undefined {
+    if (!own && !this.cache.get(cur)) return undefined;
+    if (!settings.continuous) return (this.shown = groupBook([{ chapter: cur, verses: own ?? this.cache.get(cur)! }], settings.layout));
     const { from, to } = this.range;
-    // player.chapter flips at once on load() while player.verses still holds the old surah: only trust it when settled
-    const avail = (ch: number): Verse[] | undefined => this.cache.get(ch) ?? (ch === cur && !player.loading ? player.verses : undefined);
+    const avail = (ch: number): Verse[] | undefined => this.cache.get(ch) ?? (ch === cur ? own : undefined);
     // the contiguous run of surahs around the current one whose text is available
     let lo = cur;
     let hi = cur;
@@ -42,8 +53,8 @@ class Reader {
     while (hi + 1 <= to && avail(hi + 1)) hi++;
     const parts: { chapter: number; verses: Verse[] }[] = [];
     for (let ch = lo; ch <= hi; ch++) parts.push({ chapter: ch, verses: avail(ch) ?? [] });
-    return groupBook(parts, settings.layout);
-  });
+    return (this.shown = groupBook(parts, settings.layout));
+  }
 
   /** "chapter-verse-pos" key of every word to the index of the page it is printed on */
   wordPage = $derived.by(() => {
@@ -106,20 +117,21 @@ class Reader {
     const from = settings.continuous ? Math.max(1, chapter - 1) : chapter;
     const to = settings.continuous ? Math.min(LAST_SURAH, chapter + 1) : chapter;
     this.range = { from, to };
-    this.cache = new Map();
-    if (chapter === player.chapter && !player.loading && player.verses.length) this.cache.set(chapter, player.verses);
-    for (let ch = from; ch <= to; ch++) {
-      if (ch === chapter) continue;
-      player.textFor(ch).then(
-        (verses) => {
-          if (ch >= this.range.from && ch <= this.range.to) this.cache = new Map(this.cache).set(ch, verses);
-        },
-        () => {
-          /* offline and not cached: the surah simply does not join the book */
-        }
-      );
-    }
+    const next = new Map<number, Verse[]>();
+    for (const [ch, verses] of this.cache) if (ch >= from && ch <= to) next.set(ch, verses);
+    if (chapter === player.versesOf && player.verses.length) next.set(chapter, player.verses);
+    this.cache = next;
+    // the neighbours load beside the current surah and join the book in one step (offline and not cached: they stay out)
+    const missing: number[] = [];
+    for (let ch = from; ch <= to; ch++) if (ch !== chapter && !next.has(ch)) missing.push(ch);
+    if (missing.length) void this.fetchAround(missing);
     return true;
+  }
+
+  private async fetchAround(chs: number[]) {
+    const got = await Promise.all(chs.map((ch) => player.textFor(ch).then((verses) => [ch, verses] as const, () => null)));
+    const add = got.filter((g): g is readonly [number, Verse[]] => !!g && g[0] >= this.range.from && g[0] <= this.range.to);
+    if (add.length) this.cache = new Map([...this.cache, ...add]);
   }
 
   /**
@@ -160,6 +172,7 @@ class Reader {
   /** Reload the window's neighbours (translation, script or layout changed). */
   reset() {
     this.range = { from: 0, to: 0 };
+    this.cache = new Map();
     this.follow(player.chapter);
   }
 
@@ -182,7 +195,8 @@ class Reader {
 
   /** after a move: load more of the book when the reader is within 3 pages of either end */
   nearEdge() {
-    if (!settings.continuous || !this.pages.length) return;
+    // while the next surah's text is on its way the pages are the previous surah's: nothing to extend
+    if (!settings.continuous || !this.pages.length || player.versesOf !== player.chapter) return;
     if (this.pageIdx <= 3) void this.extend(-1);
     else if (this.pages.length - 1 - this.pageIdx <= 3) void this.extend(1);
   }
