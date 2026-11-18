@@ -80,8 +80,8 @@
   .t { font-size: var(--ar-size); line-height: var(--ar-lh); user-select: text; -webkit-user-select: text; display: inline-block; }
   .t.g { text-rendering: geometricPrecision; }
   .w:hover .t { color: var(--accent); }
-  .w.sel { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-soft); }
-  .w.sel .t { color: var(--accent); }
+  .w.sel { background: var(--on-bg); box-shadow: 0 0 0 2px var(--on-bg); }
+  .w.sel .t { color: var(--on-fg); }
   /* The word being recited (the layers are made by sweep.ts): a soft glow behind it, and an accent copy
      that is uncovered from right to left as it is said. Both fade in and out, so the highlight glides
      from one word to the next, even when the words are short. */

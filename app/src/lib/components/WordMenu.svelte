@@ -108,9 +108,9 @@
   .acts { display: flex; flex-direction: column; }
   .acts button { display: flex; align-items: center; gap: 12px; height: 34px; padding: 0 10px; border-radius: var(--r-md); font-size: var(--t-body); text-align: left; color: var(--ink); transition: background-color 0.12s; }
   .acts button:hover { background: var(--ink-6); }
-  .acts button.on { color: var(--accent); }
+  .acts button.on { color: var(--on-fg); background: var(--on-bg); box-shadow: var(--on-bar); }
   .acts svg { color: var(--muted); flex: none; }
-  .acts button.on svg { color: var(--accent); }
+  .acts button.on svg { color: var(--on-fg); }
   .note { width: calc(100% - 12px); margin: 4px 6px 6px; height: 34px; padding: 0 10px; border-radius: var(--r-md); border: 1px solid var(--hair); background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--ink); font: inherit; font-size: var(--t-body); user-select: text; }
   .note:focus { outline: 2px solid var(--accent); outline-offset: 0; }
 </style>

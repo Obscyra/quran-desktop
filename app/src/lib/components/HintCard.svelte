@@ -54,10 +54,10 @@
   .x:hover { background: var(--ink-6); color: var(--ink); }
   p { font-size: var(--t-body); line-height: 1.55; color: var(--muted); }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: var(--r-md); background: var(--ink-6); font-size: var(--t-body); font-weight: 550; }
-  .toggle { width: 36px; height: 20px; border-radius: var(--r-pill); background: var(--ink-6); box-shadow: inset 0 0 0 1px var(--hair); position: relative; transition: background 0.25s; flex: none; }
-  .toggle i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); box-shadow: var(--e1); transition: transform 0.25s var(--ease); }
-  .toggle.on { background: var(--accent); }
-  .toggle.on i { transform: translateX(16px); background: var(--accent-ink); }
+  .toggle { width: 36px; height: 20px; border-radius: var(--r-pill); background: var(--off-track); box-shadow: inset 0 0 0 1px var(--hair-2); position: relative; transition: background-color 0.15s; flex: none; }
+  .toggle i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); box-shadow: var(--e1); transition: transform 0.15s var(--ease); }
+  .toggle.on { background: var(--on-track); box-shadow: var(--on-ring); }
+  .toggle.on i { transform: translateX(16px); background: var(--bg); }
   .acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .acts button { height: 32px; padding: 0 14px; border-radius: var(--r-md); font-size: var(--t-meta); font-weight: 600; background: var(--ink-6); }
   .acts button:hover { background: var(--btn-hover); }

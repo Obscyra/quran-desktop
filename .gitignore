@@ -10,3 +10,4 @@ target/
 app/static/data/
 app/static/fonts/qcf/
 .taste-skill/
+/app/scripts/win-build.sh

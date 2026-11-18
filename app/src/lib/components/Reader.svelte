@@ -19,11 +19,14 @@
   import TafsirPicker from './TafsirPicker.svelte';
   import { tafsirs } from '$lib/tafsir.svelte';
   import * as offline from '$lib/offline';
+  import Skeleton from './Skeleton.svelte';
   import Word from './Word.svelte';
 
   const reading = $derived(settings.mode === 'reading');
   const mushafMode = $derived(reading && settings.readingStyle === 'arabic');
   const paged = $derived(mushafMode && settings.flow === 'page');
+  // the chosen surah's text is not in yet (the book may already hold it when it was scrolled through before)
+  const notReady = $derived(!player.error && player.versesOf !== player.chapter && !(mushafMode && reader.wordPage.has(`${player.chapter}-1-1`)));
   const scrolling = $derived(!paged);
   const activeVerse = $derived(player.activeTiming?.verse ?? 0);
   const below = $derived(settings.wordMeaning === 'below' && !reading);
@@ -35,6 +38,9 @@
   let lastUserScroll = 0;
   let tafsirText = $state<Record<string, string>>({});
   let tafsirLoaded = $state<Record<string, boolean>>({});
+  // Mushaf-script text is shown only once the fonts of its pages are in: until then a skeleton holds its place
+  const glyphPending = (v: { words: { glyph?: string; gp: number }[] }) =>
+    settings.script === 'mushaf' && v.words.some((w) => w.glyph && !pageFonts.has(w.gp) && !pageFonts.missing(w.gp));
   let tafsirLoading = $state<Record<string, boolean>>({});
   let tafsirErrors = $state<Record<string, string>>({});
   const tafsirChapterKey = (chapter: number, edition: string) => `${edition}:${chapter}`;
@@ -68,7 +74,9 @@
         for (const key of Object.keys(next)) if (remove.has(key.split(':').slice(0, 2).join(':'))) delete next[key];
       }
       tafsirText = next;
-      tafsirLoaded = { ...tafsirLoaded, [chapterKey]: true };
+      // an evicted surah must be loadable again: drop its loaded flag with its text
+      const stillThere = new Set(pairs.filter((p) => Object.keys(next).some((k) => k.startsWith(`${p}:`))));
+      tafsirLoaded = { ...Object.fromEntries(Object.entries(tafsirLoaded).filter(([k]) => stillThere.has(k))), [chapterKey]: true };
     } catch (e) {
       tafsirErrors = { ...tafsirErrors, [chapterKey]: e instanceof Error ? e.message : 'Could not load tafsir. Check your connection and try again.' };
       if (!cached) ui.failNetwork('tafsir', () => { void loadTafsir(chapter, edition); });
@@ -244,8 +252,95 @@
       return;
     }
     if (known) void tick().then(() => {
-      if (player.chapter === ch) showVerse(ch, 1);
+      if (player.chapter === ch) landAt(ch);
     });
+  }
+
+  /**
+   * Scroll mode: put the start of a surah (its name banner) at the top of the window and keep it there while the book
+   * settles (the neighbouring surahs join it, adding height above). It is one jump, hidden behind a short fade, and nothing
+   * else (follow, visible-surah tracking) may move the reader or the player until it is done.
+   */
+  let pin = 0;
+  let pinRaf = 0;
+  let pinGuard = 0;
+  let landedAt = 0;
+  function hideForLanding() {
+    if (!scroller) return;
+    clearTimeout(pinGuard);
+    scroller.style.transition = 'none';
+    scroller.style.opacity = '0';
+    pinGuard = window.setTimeout(() => endPin(), 4000);
+  }
+  function showAgain() {
+    if (scroller && scroller.style.opacity) {
+      scroller.style.transition = 'opacity 0.2s ease';
+      scroller.style.opacity = '';
+    }
+  }
+  function endPin() {
+    cancelAnimationFrame(pinRaf);
+    clearTimeout(pinGuard);
+    if (pin) jumpPage = -1;
+    pin = 0;
+    landedAt = Date.now();
+    showAgain();
+    for (const ev of ['wheel', 'touchstart', 'pointerdown', 'keydown']) window.removeEventListener(ev, endPinByUser, true);
+  }
+  // the reader takes over: their own scrolling ends the landing
+  const endPinByUser = () => endPin();
+  function landAt(ch: number) {
+    if (!scroller) return;
+    cancelAnimationFrame(pinRaf);
+    pin = ch;
+    hideForLanding();
+    for (const ev of ['wheel', 'touchstart', 'pointerdown', 'keydown']) window.addEventListener(ev, endPinByUser, { capture: true, passive: true });
+    showVerse(ch, 1);
+    const t0 = performance.now();
+    let quiet = t0;
+    const step = () => {
+      const box = scroller;
+      if (pin !== ch || !box || player.chapter !== ch) return endPin();
+      const now = performance.now();
+      const w = document.getElementById(`w-${ch}-1-1`);
+      if (!w) {
+        // its page is not built yet (or not even in the DOM): go to the page's box, which builds it
+        const idx = indexOfVerse(ch, 1);
+        if (idx >= 0) {
+          reveal(idx);
+          jumpPage = idx;
+          const pg = box.querySelector<HTMLElement>(`.pg[data-i="${idx}"]`);
+          if (pg) {
+            const dy = (pg.getBoundingClientRect().top - box.getBoundingClientRect().top) / (box.getBoundingClientRect().height / box.clientHeight || 1);
+            if (Math.abs(dy) > 1) {
+              busyUntil = Date.now() + 150;
+              box.scrollTo({ top: box.scrollTop + dy, behavior: 'instant' });
+              quiet = now;
+            }
+          }
+        }
+      } else {
+        // the name banner of this surah: the nearest one above its first line
+        const row = parseInt((w.closest('.line') as HTMLElement | null)?.style.gridRow ?? '');
+        let el: HTMLElement = w;
+        for (const b of w.closest('.lines')?.querySelectorAll<HTMLElement>('.banner') ?? []) {
+          if (parseInt(b.style.gridRow) <= row) el = b;
+        }
+        const r = el.getBoundingClientRect();
+        const bx = box.getBoundingClientRect();
+        const dy = (r.top - bx.top + 2) / (bx.height / box.clientHeight || 1);
+        if (Math.abs(dy) > 1) {
+          busyUntil = Date.now() + 150;
+          box.scrollTo({ top: box.scrollTop + dy, behavior: 'instant' });
+          quiet = now;
+        }
+      }
+      const book = reader.range.from ? [...Array(reader.range.to - reader.range.from + 1)].every((_, i) => reader.cache.has(reader.range.from + i) || reader.range.from + i === ch) : true;
+      if ((w && book && now - quiet >= 800) || now - t0 > 3500) return endPin();
+      if (w && book && now - quiet >= 250) showAgain();
+      pinRaf = requestAnimationFrame(step);
+    };
+    pinRaf = requestAnimationFrame(step);
   }
 
   // the reader follows the surah: the book is rebuilt around it when it leaves the loaded window. A move the reader made
@@ -258,6 +353,7 @@
         reader.selfNav = 0;
         return;
       }
+      if (!paged && mushafMode) hideForLanding();
       if (reset) {
         near.clear();
         inView.clear();
@@ -447,7 +543,7 @@
 
   let busyUntil = 0;
   function centerPlaying(force: boolean) {
-    if (!scroller || !activeVerse) return;
+    if (!scroller || !activeVerse || pin) return;
     untrack(() => reveal(indexOfVerse(player.chapter, activeVerse)));
     const b = playingBounds();
     if (!b) return;
@@ -515,7 +611,7 @@
   let growingUp = false;
   let growingDown = false;
   function edges() {
-    if (!mushafMode || paged || !settings.continuous || !inView.size) return;
+    if (!mushafMode || paged || !settings.continuous || !inView.size || pin) return;
     const seen = [...inView];
     if (Math.min(...seen) <= 1 && !growingUp) void growUp();
     if (Math.max(...seen) >= lastIdx - 1 && !growingDown) void growDown();
@@ -535,7 +631,7 @@
       v.forEach((i) => inView.add(i + added));
       if (jumpPage >= 0) jumpPage += added;
       await tick();
-      box.scrollTop += box.scrollHeight - before;
+      box.scrollTo({ top: box.scrollTop + box.scrollHeight - before, behavior: 'instant' });
     } finally {
       growingUp = false;
     }
@@ -579,7 +675,8 @@
   }
   // once the scrolling stops, the surah on screen is the one the player is on (unless it is playing)
   function settle() {
-    if (player.loading) return;
+    // not while a surah is being landed on, and only after the reader has moved the book themselves
+    if (player.loading || pin || lastUserScroll <= landedAt) return;
     const h = here();
     if (!h) return;
     reader.visible = h.chapters;
@@ -640,6 +737,9 @@
 
   // The page being read and its neighbours stay on the page (the neighbours hidden), so a turn only moves and
   // fades pages that are already laid out. Building two new pages at the moment of the turn is what made it stutter.
+  // per spread: whether each facing sheet has its font and is fitted; the spread appears only when both are
+  let settledL = $state<Record<number, boolean>>({});
+  let settledR = $state<Record<number, boolean>>({});
   const step = $derived(settings.spread ? 2 : 1);
   const curKey = $derived(settings.spread ? reader.spread.rightNo : reader.pageIdx);
   const validKey = (k: number) => (settings.spread ? reader.hasSpread(k) : k >= 0 && k < reader.pages.length);
@@ -810,8 +910,37 @@
       <p>{player.error}</p>
       <button class="retry" onclick={() => player.load(player.chapter, false)}>Try again</button>
     </div>
-  {:else if player.loading && !player.verses.length}
-    <p class="msg">Loading…</p>
+  {:else if notReady}
+    <!-- the chosen surah's text is not in yet: its skeleton shows from the first frame, never the previous surah -->
+    {#if paged}
+      <div class="stage" role="presentation">
+        <div class="view" style:--pz={settings.pageZoom}>
+          <div class="book cur" class:fill={settings.pageFit === 'fill'} class:spread={settings.spread}>
+            <PageSheet page={null} placeholder side={settings.spread ? 'right' : 'single'} />
+            {#if settings.spread}<PageSheet page={null} placeholder side="left" />{/if}
+          </div>
+        </div>
+      </div>
+    {:else if mushafMode}
+      <main class="scroll" class:fill={settings.pageFit === 'fill'} style:--pz={settings.pageZoom} aria-busy="true">
+        <div class="pages"><div class="pg"><PageSheet page={null} placeholder /></div></div>
+      </main>
+    {:else}
+      <main class="scroll" aria-busy="true">
+        <div class="head">
+          <div class="sk-head"><Skeleton w="90px" h="12px" /><Skeleton w="min(280px, 70%)" h="56px" /><Skeleton w="180px" h="14px" /></div>
+        </div>
+        <div class="verses">
+          <p class="sk-sr" role="status">Loading the surah</p>
+          {#each [5, 4, 6, 3, 5] as n}
+            <div class="verse sk-verse">
+              <div class="sk-ar"><Skeleton lines={Math.ceil(n / 3)} h="calc(var(--ar-size, 28px) * 0.7)" widths={['100%', '92%', '64%']} align="end" gap="calc(var(--ar-size, 28px) * 0.5)" /></div>
+              {#if settings.translation}<Skeleton lines={2} h="12px" widths={['96%', '70%']} />{/if}
+            </div>
+          {/each}
+        </div>
+      </main>
+    {/if}
   {:else if paged && reader.page}
     <!-- ───────── Mushaf pages ───────── -->
     <div class="stage hl-sweep" bind:this={stage} onwheel={wheel} ontouchstart={touchStart} ontouchend={touchEnd} role="presentation">
@@ -825,8 +954,8 @@
         {@const sp = settings.spread ? reader.spreadAt(k) : null}
         <div class="book" class:fill={settings.pageFit === 'fill'} class:spread={settings.spread} class:cur={k === curKey} class:after={k > curKey} class:before={k < curKey} class:ready={waitingReady} inert={k !== curKey} aria-hidden={k !== curKey}>
           {#if sp}
-            <PageSheet page={sp.left} no={sp.leftNo} side="left" live={k === curKey} last={sp.left?.page === reader.pages[lastIdx]?.page} />
-            <PageSheet page={sp.right} no={sp.rightNo} side="right" live={k === curKey} last={sp.right?.page === reader.pages[lastIdx]?.page} />
+            <PageSheet page={sp.left} no={sp.leftNo} side="left" wait={!(settledL[k] ?? false) || !(settledR[k] ?? false)} bind:settled={settledL[k]} live={k === curKey} last={sp.left?.page === reader.pages[lastIdx]?.page} />
+            <PageSheet page={sp.right} no={sp.rightNo} side="right" wait={!(settledL[k] ?? false) || !(settledR[k] ?? false)} bind:settled={settledR[k]} live={k === curKey} last={sp.right?.page === reader.pages[lastIdx]?.page} />
           {:else}
             <PageSheet page={reader.pages[k]} live={k === curKey} last={k === lastIdx} />
           {/if}
@@ -899,9 +1028,13 @@
                 </button>
               </div>
               <div class="ar" class:below dir="rtl">
-                {#each v.words as w (w.pos)}
-                  <Word ch={player.chapter} {v} {w} {below} />{' '}
-                {/each}<End ch={player.chapter} {v} />
+                {#if glyphPending(v)}
+                  <Skeleton label="Loading the verse text" lines={Math.max(1, Math.min(4, Math.ceil(v.words.length / 6)))} h="calc(var(--ar-size, 28px) * 0.7)" widths={['100%', '90%', '60%']} align="start" gap="calc(var(--ar-size, 28px) * 0.5)" />
+                {:else}
+                  {#each v.words as w (w.pos)}
+                    <Word ch={player.chapter} {v} {w} {below} />{' '}
+                  {/each}<End ch={player.chapter} {v} />
+                {/if}
               </div>
               {#if settings.translation && v.translation && settings.wordMeaning !== 'off'}
                 <p class="tr" dir="auto">{v.translation}</p>
@@ -918,7 +1051,7 @@
                     <b>{editionName}</b><p>{commentary}</p>
                   </div>
                 {:else if tafsirLoading[chapterKey]}
-                  <p class="tafsir-status" role="status">Loading tafsir…</p>
+                  <div class="tafsir-text" role="status" aria-busy="true"><Skeleton label="Loading tafsir" lines={3} h="12px" widths={['34%', '100%', '88%']} gap="9px" /></div>
                 {:else if tafsirErrors[chapterKey]}
                   <div class="tafsir-status" role="alert"><span>{tafsirErrors[chapterKey]}</span><button class="secondary sm" onclick={() => loadTafsir(player.chapter, settings.tafsirEdition)}>Retry</button></div>
                 {:else}
@@ -941,6 +1074,10 @@
 
 <style>
   .reader { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; font-family: var(--ui); }
+  .sk-head { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .sk-verse { display: flex; flex-direction: column; gap: 16px; content-visibility: visible; }
+  .sk-ar { align-self: stretch; }
+  .sk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .msg { margin: auto; color: var(--ink-dim); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
   .retry { height: 34px; padding: 0 18px; border-radius: var(--r-pill); background: var(--btn); color: var(--ink); font-weight: 550; font-size: var(--t-body); transition: background-color 0.15s; }
   .retry:hover { background: var(--btn-hover); }
@@ -956,12 +1093,13 @@
   .where { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .seg { display: inline-flex; background: transparent; border: 0; border-radius: var(--r-sm); padding: 0; gap: 2px; flex: none; }
   .seg button { padding: 0 11px; height: 28px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; transition: background-color 0.2s, color 0.2s; }
-  .seg button:hover { color: var(--ink); background: var(--ink-4); }
-  .seg button[aria-checked='true'] { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); color: var(--ink); box-shadow: var(--e1); }
+  .seg button:hover:not([aria-checked='true']) { color: var(--ink); background: var(--ink-6); }
+  .seg button[aria-checked='true'] { background: var(--on-bg); color: var(--on-fg); font-weight: 600; box-shadow: var(--on-ring); }
   .tafsir-note { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
   .icon { min-width: 32px; width: 32px; height: 28px; padding: 0; border-radius: var(--r-sm); display: inline-grid; place-items: center; color: var(--muted); background: transparent; border: 0; font-size: 12.5px; font-weight: 600; transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
   .icon:hover:not(:disabled) { background: var(--ink-6); color: var(--ink); }
-  .icon.on { color: var(--accent); background: color-mix(in oklab, var(--accent) 16%, transparent); }
+  .icon.on { color: var(--on-fg); background: var(--on-bg); box-shadow: var(--on-ring); }
+  .icon.on:hover:not(:disabled) { background: var(--on-bg-hover); color: var(--on-fg); }
   .icon:disabled { opacity: 0.4; }
   .size { gap: 0; display: inline-flex; align-items: center; }
   .pick { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); flex: none; }
@@ -1018,8 +1156,8 @@
   .tools .icon svg { width: 22px; height: 22px; }
   .tools .verse-tafsir { position: relative; width: 40px; min-width: 40px; padding: 0; display: grid; place-items: center; flex: 0 0 40px; }
   .tools .verse-tafsir i { display: none; }
-  .tools .verse-tafsir.on { color: var(--accent); background: var(--btn-on); }
-  .tools .verse-tafsir.on i { display: block; position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); bottom: 3px; right: 3px; }
+  .tools .verse-tafsir.on { color: var(--on-fg); }
+  .tools .verse-tafsir.on i { display: block; position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--on-fg); bottom: 3px; right: 3px; }
   .ref { font-size: 16px; color: var(--ink-dim); font-variant-numeric: tabular-nums; margin-right: 8px; min-width: 42px; }
   .ar { text-align: right; line-height: var(--ar-lh); }
   .ar.below { display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: flex-start; align-items: flex-start; }
@@ -1038,6 +1176,6 @@
   .tflow p.now { background: color-mix(in oklab, var(--accent) 8%, transparent); }
   .vn { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; margin-right: 8px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; vertical-align: 1px; }
   .vn:hover { background: color-mix(in oklab, var(--accent) 28%, transparent); }
-  .vn.saved { background: var(--accent); color: var(--accent-ink); }
+  .vn.saved { background: var(--on-track); color: var(--bg); }
   .hint { color: var(--ink-dim); text-align: center; padding: 30px 0; }
 </style>

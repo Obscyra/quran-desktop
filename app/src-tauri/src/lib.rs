@@ -123,12 +123,6 @@ fn build_tray(app: &tauri::App) -> tauri::Result<()> {
     Ok(())
 }
 
-/// Opens the web inspector (Ctrl/Cmd+Shift+I): the page hides the system right-click menu, so Inspect is not offered there.
-#[tauri::command]
-fn open_inspector(window: tauri::WebviewWindow) {
-    window.open_devtools();
-}
-
 /// Read the country out of a POSIX locale such as `en_BD.UTF-8`, `en-BD` or `sr_RS@latin`.
 #[cfg(unix)]
 fn region_from_locale(raw: &str) -> Option<String> {
@@ -278,7 +272,7 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--hidden"]),
         ))
-        .invoke_handler(tauri::generate_handler![media::media_state, open_inspector, device_region])
+        .invoke_handler(tauri::generate_handler![media::media_state, device_region])
         .setup(|app| {
             build_tray(app)?;
             media::init(app);

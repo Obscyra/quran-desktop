@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Skeleton from './Skeleton.svelte';
   import { tick } from 'svelte';
   import { settings } from '$lib/settings.svelte';
   import { tafsirs } from '$lib/tafsir.svelte';
@@ -76,13 +77,16 @@
           </button>
         {/each}
       {:else}
-        {#if tafsirs.error}<p class="empty" role="alert">Could not load tafsir editions. Check your connection and try again.</p>{:else if tafsirs.ready}<p class="empty">No tafsir editions match “{query}”.</p>{:else}<p class="empty" role="status">Loading editions…</p>{/if}
+        {#if tafsirs.error}<p class="empty" role="alert">Could not load tafsir editions. Check your connection and try again.</p>{:else if tafsirs.ready}<p class="empty">No tafsir editions match “{query}”.</p>{:else}<div class="sk-list" role="status" aria-busy="true"><span class="sk-sr">Loading editions</span>{#each [0, 1, 2, 3, 4] as i (i)}<div class="sk-row"><Skeleton w={i % 2 ? '60%' : '75%'} h="13px" /><Skeleton w="38%" h="10px" /></div>{/each}</div>{/if}
       {/each}
     </div>
   </div>
 {/if}
 
 <style>
+  .sk-list { display: flex; flex-direction: column; gap: 4px; padding: 4px 6px; }
+  .sk-row { display: flex; flex-direction: column; gap: 7px; padding: 9px 10px; }
+  .sk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .tp-btn { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; max-width: 100%; min-width: 240px; height: 38px; padding: 0 12px; border-radius: var(--r-md); background: var(--btn); border: 1px solid var(--btn-line); color: var(--ink); font-size: var(--t-body); font-weight: 500; transition: background-color 0.15s; }
   .tp-btn:hover { background: var(--btn-hover); }
   .tp-btn:disabled { opacity: 0.55; cursor: default; }
@@ -98,7 +102,7 @@
   .lang { position: sticky; top: 0; z-index: 1; padding: 10px 10px 4px; background: var(--chrome); font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
   .opt { width: 100%; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-radius: var(--r-md); min-height: 48px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
   .opt:hover { background: var(--ink-6); }
-  .opt.on { background: var(--accent-soft); color: var(--accent); }
+  .opt.on { background: var(--on-bg); color: var(--on-fg); box-shadow: var(--on-bar); }
   .who { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
   .who b { font-size: var(--t-body); font-weight: 600; }
   .who small { font-size: var(--t-meta); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -133,26 +133,19 @@
   const starred = $derived(shown.filter((c) => stars.has(c.id)));
 
   let list = $state<HTMLElement>();
-  // The scrollbar takes width from the list, so its rows ended short of the search box above. Measure it once
-  // (the gutter is always reserved) and let the list reach into the sidebar's padding by that much.
-  $effect(() => {
-    if (!list) return;
-    const w = list.offsetWidth - list.clientWidth;
-    list.closest('aside')?.style.setProperty('--sb', `${w}px`);
-  });
   // bring the playing surah into view when the list opens or the surah changes
   $effect(() => {
     player.chapter;
     if (closed) return;
-    requestAnimationFrame(() => list?.querySelector('.on')?.scrollIntoView({ block: 'nearest' }));
+    requestAnimationFrame(() => list?.querySelector(`[data-ch="${player.chapter}"]`)?.scrollIntoView({ block: 'nearest' }));
   });
 </script>
 
-<!-- on: the surahs whose pages are on screen (the playing one when the recitation is among them); also: visible but not the one marked -->
+<!-- on: the current surah; with settings.highlightPageSurahs every surah on screen (only the chosen one while it loads: the page still shows the old surah) (the playing one when the recitation is among them); also: visible but not the one marked -->
 {#snippet row(c: (typeof player.chapters)[number])}
-  {@const tone = !reader.visible.length ? (c.id === player.chapter ? 'on' : '') : !reader.visible.includes(c.id) ? '' : !player.playing || !reader.visible.includes(player.chapter) || c.id === player.chapter ? 'on' : 'also'}
+  {@const tone = !settings.highlightPageSurahs || !reader.visible.length || player.loading ? (c.id === player.chapter ? 'on' : '') : !reader.visible.includes(c.id) ? '' : !player.playing || !reader.visible.includes(player.chapter) || c.id === player.chapter ? 'on' : 'also'}
   <li class="surah">
-    <button class="pick" aria-label="{c.id}. {c.name_simple}, {c.translated_name.name}, {c.verses_count} verses" title={c.name_arabic} class:on={tone === 'on'} class:also={tone === 'also'} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
+    <button class="pick" data-ch={c.id} aria-label="{c.id}. {c.name_simple}, {c.translated_name.name}, {c.verses_count} verses" title={c.name_arabic} class:on={tone === 'on'} class:also={tone === 'also'} class:ctx={menu?.id === c.id} onclick={() => { ui.closeSettings(); player.load(c.id, player.playing); }} oncontextmenu={(e) => openMenu(e, c.id)}>
       <span class="num">{c.id}</span>
       <span class="names">
         <b>{settings.arabicNames ? c.name_arabic : c.name_simple}</b>
@@ -259,31 +252,37 @@
      frame made the page refit on every frame. */
   aside.closed { position: absolute; left: 0; top: 0; bottom: 0; transform: translateX(-100%); opacity: 0; pointer-events: none; }
   .inner { width: 100%; height: 100%; display: flex; flex-direction: column; min-height: 0; padding: 8px; }
-  .grip { position: absolute; top: 0; right: 0; bottom: 0; width: 7px; cursor: col-resize; z-index: 2; touch-action: none; }
+  .grip { position: absolute; top: 0; right: 0; bottom: 0; width: 6px; cursor: col-resize; z-index: 2; touch-action: none; }
   .grip:hover, .grip:active { background: var(--accent-soft); }
   .search { display: flex; align-items: center; gap: 8px; margin: 0 4px 10px; padding: 0 12px; height: 36px; border-radius: var(--r-md); background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--muted); }
   .search:focus-within { background: var(--ink-6); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 30%, transparent); }
   input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--ink); font: inherit; font-size: 12.5px; user-select: text; }
   input::placeholder { color: var(--ink-faint); }
-  ul { list-style: none; padding: 0 0 8px; overflow-y: auto; scrollbar-gutter: stable; margin-right: calc(-1 * var(--sb, 0px)); flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  ul { list-style: none; padding: 0 0 8px; overflow-y: auto; scrollbar-gutter: stable; scrollbar-width: auto; scrollbar-color: auto; margin-right: -2px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  /* The resize grip owns the outer 6px of the sidebar; the list's scrollbar sits just inside it (list reaches 2px into the padding). */
+  ul::-webkit-scrollbar { width: calc(12px / var(--zoom, 1)); }
+  ul::-webkit-scrollbar-track { background: transparent; }
+  ul::-webkit-scrollbar-thumb { background: var(--hair-2); border-radius: var(--r-pill); border: 3px solid transparent; background-clip: content-box; }
+  ul::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); background-clip: content-box; }
   li .pick { flex: 1; min-width: 0; }
   li button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 6px; height: 48px; border-radius: var(--r-md); text-align: left; transition: background-color 0.12s; }
   li button:hover { background: color-mix(in oklab, var(--ink) 5%, transparent); }
-  li button.on { background: color-mix(in oklab, var(--accent) 13%, transparent); }
-  li button.also { background: color-mix(in oklab, var(--accent) 7%, transparent); }
+  li button.on { background: var(--on-bg); box-shadow: var(--on-bar); }
+  li button.on:hover { background: var(--on-bg-hover); }
+  li button.also { background: color-mix(in oklab, var(--ink) 7%, transparent); box-shadow: inset 3px 0 0 color-mix(in oklab, var(--ink) 28%, transparent); }
   .num { width: 28px; height: 28px; flex: none; display: grid; place-items: center; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .on .num { color: var(--accent); font-weight: 600; }
+  .on .num { color: var(--on-fg); font-weight: 700; }
   .names { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   b { font-weight: 600; font-size: 13.5px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   small { color: var(--muted); font-size: 12.5px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ar { font-family: 'SurahNames'; font-size: 22px; line-height: 1; color: var(--muted); flex: none; }
+  .ar { font-family: 'SurahNames'; font-size: 27px; line-height: 1; color: var(--muted); flex: none; }
   .ar.latin { font-family: var(--ui); font-size: 13.5px; font-weight: 500; }
-  .on .ar { color: var(--accent); }
+  .on .ar { color: var(--on-fg); }
   .dl { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
   .tabs { display: flex; margin: 4px 4px 10px; background: var(--ink-6); border: 0; border-radius: var(--r-md); padding: 3px; }
   .tabs button { flex: 1; height: 28px; padding: 0; border-radius: var(--r-sm); font-size: 13.5px; font-weight: 500; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 7px; transition: background-color 0.2s, color 0.2s; }
-  .tabs button:hover { color: var(--ink); }
-  .tabs button[aria-selected='true'] { background: color-mix(in oklab, var(--bg) 70%, var(--ink) 12%); color: var(--ink); box-shadow: var(--e1); }
+  .tabs button:hover:not([aria-selected='true']) { color: var(--ink); background: var(--ink-6); }
+  .tabs button[aria-selected='true'] { background: var(--on-bg); color: var(--on-fg); font-weight: 600; box-shadow: var(--on-ring); }
   .count { font-size: var(--t-meta); background: var(--accent-soft); color: var(--accent); border-radius: var(--r-pill); padding: 0 7px; font-variant-numeric: tabular-nums; }
   .go { margin: 0 0 12px; height: 36px; border-radius: var(--r-md); background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: var(--t-body); }
   .marks li { display: flex; align-items: center; gap: 2px; }
@@ -301,8 +300,8 @@
   li.surah { display: flex; align-items: center; gap: 2px; }
   li.surah .star { width: 32px; height: 32px; flex: none; padding: 0; justify-content: center; border-radius: var(--r-md); color: var(--ink-faint); opacity: 0; transition: opacity 0.12s, color 0.12s, background-color 0.12s; }
   li.surah:hover .star, .star:focus-visible, .star.starred { opacity: 1; }
-  .star.starred { color: var(--accent); }
-  .star:hover { color: var(--accent); }
+  .star.starred { color: var(--on-fg); background: var(--on-bg); }
+  .star:hover { color: var(--ink); }
   li.head { padding: 14px 12px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
   li button.ctx { background: color-mix(in oklab, var(--ink) 9%, transparent); }
 

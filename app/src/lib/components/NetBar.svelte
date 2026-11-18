@@ -25,10 +25,12 @@
 {#if shown && !ui.settingsOpen}
   <div class="net" transition:fade={{ duration: 220 }} role="status" aria-live="polite">
     <i class="line" aria-hidden="true"></i>
-    <span class="pill">
-      <i class="ring" aria-hidden="true"></i>
-      {slow ? `Still loading ${what}. The connection looks slow…` : `Loading ${what}…`}
-    </span>
+    {#if slow}
+      <span class="pill">
+        <i class="ring" aria-hidden="true"></i>
+        Still loading {what}. The connection looks slow…
+      </span>
+    {/if}
   </div>
 {/if}
 

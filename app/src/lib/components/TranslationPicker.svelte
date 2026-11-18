@@ -116,7 +116,7 @@
   .lang { position: sticky; top: 0; z-index: 1; padding: 10px 10px 4px; background: var(--chrome); font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
   .opt { width: 100%; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-radius: var(--r-md); min-height: 48px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
   .opt:hover { background: var(--ink-6); }
-  .opt.on { background: var(--accent-soft); color: var(--accent); }
+  .opt.on { background: var(--on-bg); color: var(--on-fg); box-shadow: var(--on-bar); }
   .who { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
   .who b { font-size: var(--t-body); font-weight: 600; }
   .who small { font-size: var(--t-meta); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

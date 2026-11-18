@@ -25,6 +25,7 @@
   import { settings } from '$lib/settings.svelte';
   import { frameFor } from '$lib/themes';
   import End from './End.svelte';
+  import Skeleton from './Skeleton.svelte';
   import Word from './Word.svelte';
 
   let {
@@ -33,8 +34,11 @@
     last = false,
     side = 'single',
     live = true,
-    stagger = false
-  }: { page: MushafPage | null; no?: number; last?: boolean; side?: 'single' | 'left' | 'right'; live?: boolean; stagger?: boolean } = $props();
+    stagger = false,
+    placeholder = false,
+    wait = false,
+    settled = $bindable()
+  }: { page: MushafPage | null; no?: number; last?: boolean; side?: 'single' | 'left' | 'right'; live?: boolean; stagger?: boolean; placeholder?: boolean; wait?: boolean; settled?: boolean } = $props();
 
   // A page built while scrolling is drawn a few lines per frame, so no single frame has the whole page to do.
   const STEP = 4;
@@ -53,6 +57,16 @@
   let lines = $state<HTMLElement>();
   // A page that has just been built is hidden until its text size is set, so it never shows once at the default size
   let sized = $state(untrack(() => stagger));
+  // Mushaf glyph pages are never drawn in a stand-in font: until this page's own font is in (and the page is fitted
+  // with it) a skeleton of the same rows holds the place
+  const gate = $derived(settings.script === 'mushaf' && !!page && !pageFonts.has(page.page) && !pageFonts.missing(page.page));
+  let fonted = $state(false);
+  const hold = $derived(gate || (settings.script === 'mushaf' && !fonted));
+  // `wait`: the facing page of a spread is not ready yet, so this one keeps its skeleton too and both appear together
+  const veil = $derived(hold || wait);
+  $effect.pre(() => {
+    settled = !page || !hold;
+  });
   // The same component can be handed another page (a new surah opening at the same place), still carrying the last
   // page's text size: hide it from that moment until it is fitted, before the browser paints
   let sizedFor = untrack(() => page?.page);
@@ -61,6 +75,7 @@
     untrack(() => {
       if (n === sizedFor) return;
       sizedFor = n;
+      fonted = false;
       if (!stagger) sized = false;
     });
   });
@@ -86,8 +101,9 @@
    */
   function fit() {
     const box = lines;
-    if (!box || !full) return;
+    if (!box || !full || gate) return;
     sized = true;
+    fonted = true;
     const rows = [...box.querySelectorAll<HTMLElement>('.line')];
     if (!rows.length) return;
     // the line elements can be left over from the previous page, still carrying its "short" marks (a wider gap): measure without them
@@ -243,7 +259,7 @@
   });
 </script>
 
-<section class="sheet look-{settings.pageLook} {side}" class:blank={!page} aria-label={page ? `Page ${page.page}` : 'Blank page'}>
+<section class="sheet look-{settings.pageLook} {side}" class:blank={!page && !placeholder} aria-label={page ? `Page ${page.page}` : 'Blank page'}>
   {#if page && geo}
     {#if settings.showPageInfo}
       <header>
@@ -251,7 +267,20 @@
         <span>Juz {page.juz}</span>
       </header>
     {/if}
-    <div class="lines" class:unsized={!sized} bind:this={lines} style:grid-template-rows="repeat({geo.rows}, var(--row))">
+    {#if veil}
+      <div class="lines skel" style:grid-template-rows="repeat({geo.rows}, var(--row))" role="status" aria-busy="true">
+        <span class="sk-sr">Loading page {page.page}</span>
+        {#each page.starts as s (s.chapter)}
+          <div class="sk-banner" style:grid-row={bannerRow(s) - geo.top + 1}><Skeleton w="55%" h="68%" /></div>
+          {#if chapterOf(s.chapter)?.bismillah_pre}<div class="sk-banner" style:grid-row={s.line - 1 - geo.top + 1}><Skeleton w="42%" h="46%" /></div>{/if}
+        {/each}
+        {#each page.lines as ln (ln.line)}
+          {@const short = page.page <= 2 || ln.cells.length < 4 || (last && ln.line === geo.end)}
+          <div class="sk-banner" style:grid-row={ln.line - geo.top + 1}><Skeleton w={short ? '48%' : '100%'} h="46%" /></div>
+        {/each}
+      </div>
+    {/if}
+    <div class="lines" class:unsized={!sized || veil} class:under={veil} bind:this={lines} style:grid-template-rows="repeat({geo.rows}, var(--row))">
       {#each page.starts as s (s.chapter)}
         {@const info = chapterOf(s.chapter)}
         {#if info}
@@ -276,6 +305,15 @@
       {/each}
     </div>
     {#if settings.showPageInfo}<footer>{page.page}</footer>{/if}
+  {:else if placeholder}
+    <!-- the surah's text is not in yet: a page of lines holds the place -->
+    <div class="lines skel" style:grid-template-rows="repeat(15, var(--row))" role="status" aria-busy="true">
+      <span class="sk-sr">Loading the surah</span>
+      <div class="sk-banner" style:grid-row="2"><Skeleton w="55%" h="68%" /></div>
+      {#each { length: 12 } as _, i}
+        <div class="sk-banner" style:grid-row={i + 4}><Skeleton w={i === 11 ? '48%' : '100%'} h="46%" /></div>
+      {/each}
+    </div>
   {:else if no > 0}
     <footer class="solo">{no}</footer>
   {/if}
@@ -308,6 +346,9 @@
   .blank.look-paper, .blank.look-frame { opacity: 0.55; }
 
   .lines.unsized { visibility: hidden; }
+  .lines.under, .lines.skel { grid-area: 1 / 1; }
+  .sk-banner { display: flex; align-items: center; justify-content: center; }
+  .sk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .lines { --ar-size: var(--fs, 20px); --ar-lh: 1.2; display: grid; width: 100%; }
   .line { display: flex; justify-content: space-between; align-items: center; white-space: nowrap; column-gap: 0.12em; min-width: 0; }
   .line { border-radius: 0.3em; transition: background-color 0.45s ease; }

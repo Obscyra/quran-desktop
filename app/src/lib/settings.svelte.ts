@@ -32,6 +32,7 @@ const defaults = {
   pageLook: 'paper' as PageLook,
   showPageInfo: true,
   highlightBookmarks: true,
+  highlightPageSurahs: false,
   script: 'mushaf' as Script,
   /** demand: opens when listening, floats and peeks up at the bottom edge; always: docked and always shown; autohide: always available, floats */
   playerBar: 'demand' as PlayerBar,
@@ -95,6 +96,7 @@ class Settings {
   pageLook = $state(defaults.pageLook);
   showPageInfo = $state(defaults.showPageInfo);
   highlightBookmarks = $state(defaults.highlightBookmarks);
+  highlightPageSurahs = $state(defaults.highlightPageSurahs);
   script = $state(defaults.script);
   playerBar = $state(defaults.playerBar);
   wordAudio = $state(defaults.wordAudio);

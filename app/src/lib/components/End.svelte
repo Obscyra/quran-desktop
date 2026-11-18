@@ -31,7 +31,8 @@
 
 <style>
   .end { display: inline-block; padding: 0 0.12em; border-radius: 8px; color: var(--accent); cursor: pointer; vertical-align: middle; transition: background-color 0.2s; }
-  .end:hover, .end.picked { background: var(--accent-soft); }
+  .end:hover { background: var(--accent-soft); }
+  .end.picked { background: var(--on-bg); }
   .g { font-size: var(--ar-size); line-height: var(--ar-lh); text-rendering: geometricPrecision; }
   .ring { display: inline-grid; place-items: center; min-width: 1.35em; height: 1.35em; padding: 0 0.15em; border-radius: 50%; border: 0.07em solid currentColor; font-family: 'KFGQPC Uthmanic Hafs', serif; font-size: calc(var(--ar-size) * 0.62); line-height: 1; }
   .end.saved { color: var(--ink); }

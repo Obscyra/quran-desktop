@@ -106,10 +106,10 @@
   .tool { width: 32px; height: 32px; border-radius: var(--r-sm); display: grid; place-items: center; color: var(--muted); background: transparent; border: 0; transition: background-color 0.15s, color 0.15s; }
   .tool:hover:not(:disabled) { background: var(--ink-6); color: var(--ink); }
   .tool:active:not(:disabled) { background: var(--ink-6); transform: scale(0.97); }
-  .tool.active { color: var(--accent); background: transparent; }
+  .tool.active { color: var(--on-fg); background: var(--on-bg); box-shadow: var(--on-ring); }
   .tool.play i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
   .tool.play { color: var(--ink); }
-  .tool.play.active { color: var(--ink); }
+  .tool.play.active { color: var(--ink); background: transparent; box-shadow: none; }
   .tool.labeled { width: auto; height: 28px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px 0 8px; border-radius: var(--r-pill); background: color-mix(in oklab, var(--accent) 14%, transparent); font-size: 13.5px; font-weight: 500; }
   .tool.labeled:hover:not(:disabled) { background: color-mix(in oklab, var(--accent) 20%, transparent); }
   @container (max-width: 900px) { .tool.labeled { width: 32px; padding: 0; justify-content: center; } .tool.labeled span { display: none; } }
@@ -118,8 +118,8 @@
   /* the one segmented control: a recessed track and a raised selected segment */
   .seg { display: inline-flex; background: color-mix(in oklab, var(--ink) 7%, transparent); border-radius: var(--r-md); padding: 3px; gap: 2px; }
   .seg button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; height: 26px; border-radius: var(--r-sm); font-size: 13.5px; font-weight: 500; color: var(--muted); transition: color 0.2s, background-color 0.2s; }
-  .seg button:hover { color: var(--ink); }
-  .seg button[aria-checked='true'] { background: var(--bg); color: var(--ink); font-weight: 600; box-shadow: 0 0 0 1px var(--hair-2), var(--e1); }
+  .seg button:hover:not([aria-checked='true']) { color: var(--ink); background: var(--ink-6); }
+  .seg button[aria-checked='true'] { background: var(--on-bg); color: var(--on-fg); font-weight: 600; box-shadow: var(--on-ring); }
 
   /* the tools sit left of the window controls with a clear gap, and a little air from the edge when there are none */
   .right > .tool:last-of-type { margin-right: 8px; }

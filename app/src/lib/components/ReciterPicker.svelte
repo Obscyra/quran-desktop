@@ -122,7 +122,7 @@
   .rp-list { display: grid; gap: 2px; }
   .rp-list li button { width: 100%; display: flex; align-items: center; gap: 14px; padding: 0 14px 0 10px; border-radius: var(--r-md); min-height: 48px; text-align: left; color: var(--ink); transition: background-color 0.12s; }
   .rp-list li button:hover { background: var(--ink-6); }
-  .rp-list li.on button { background: var(--accent-soft); color: var(--accent); }
+  .rp-list li.on button { background: var(--on-bg); color: var(--on-fg); box-shadow: var(--on-bar); }
   .who { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; text-align: left; }
   .who b { font-size: var(--t-sub); font-weight: 600; }
   .who small { font-size: var(--t-meta); color: var(--muted); }

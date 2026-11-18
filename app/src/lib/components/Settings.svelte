@@ -49,8 +49,7 @@
     { area: 'appearance', title: 'Interface size', text: 'zoom scale bigger smaller menus buttons' },
     { area: 'appearance', title: 'Surah names in Arabic', text: 'arabic names list player' },
     { area: 'mushaf', title: 'Page layout', text: 'madani indopak 15 lines print 604 610 pages text fonts' },
-    { area: 'mushaf', title: 'Mushaf', text: 'font madani indopak pages 15 lines print 604 610 text fonts tajweed uthmani naskh amiri scheherazade arabic writing script' },
-    { area: 'mushaf', title: 'Font', text: 'text fonts script card sample' },
+    { area: 'mushaf', title: 'Mushaf', text: 'font madani indopak pages 15 lines print 604 610 text fonts tajweed mushaf uthmani naskh amiri scheherazade arabic writing script' },
     { area: 'mushaf', title: 'Text size', text: 'font arabic bigger larger' },
     { area: 'mushaf', title: 'Line spacing', text: 'height lines gap' },
     { area: 'translation', title: 'Continue where I left off', text: 'resume reopen last place surah verse start remember position' },
@@ -66,6 +65,7 @@
     { area: 'mushaf', title: 'Continuous book', text: 'continuous across surahs next surah run on book join' },
     { area: 'mushaf', title: 'Page info', text: 'surah name juz page number header footer' },
     { area: 'mushaf', title: 'Highlight bookmarks', text: 'ornament marker verse end' },
+    { area: 'mushaf', title: 'Highlight all surahs on the page', text: 'surah list sidebar current page highlight' },
     { area: 'listening', title: 'Player bar', text: 'listening player always on demand dock auto-hide hover bottom edge' },
     { area: 'listening', title: 'Reciter', text: 'qari sheikh voice recitation' },
     { area: 'listening', title: 'Playback speed', text: 'faster slower rate' },
@@ -99,7 +99,7 @@
     'Theme': ['theme'], 'Interface size': ['uiScale'], 'Surah names in Arabic': ['arabicNames'],
     'Mushaf': ['script', 'pageType'], 'Page layout': ['pageType'], 'Text size': ['size'], 'Line spacing': ['spacing'],
     'Open in': ['mode'], 'Continue where I left off': ['resume'], 'Translation': ['translation'], 'Translation and tafsir text size': ['translationSize'], 'Word meanings': ['wordMeaning'], 'Transliteration': ['transliteration'],
-    'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Continuous book': ['continuous'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'],
+    'Page look': ['pageLook'], 'Page flow': ['flow'], 'Two-page spread': ['spread'], 'Continuous book': ['continuous'], 'Page info': ['showPageInfo'], 'Highlight bookmarks': ['highlightBookmarks'], 'Highlight all surahs on the page': ['highlightPageSurahs'],
     'Player bar': ['playerBar'], 'Playback speed': ['speed'], 'Play the next surah': ['autoAdvance'], 'Repeat surah': ['repeatSurah'],
     'Say a word when clicked': ['wordAudio'], 'Follow the recitation': ['follow'], 'Keep favourites offline': ['autoCache'],
     'Verse of the day': ['dailyVerse'], 'Show it from': ['dailyVerseTime'], 'Reading reminders': ['remindersOn'], 'Times': ['remindTimes'], 'Message': ['remindMessage'], 'Use system notifications': ['systemNotify'],
@@ -381,17 +381,14 @@
     const edition = tafsirs.chooseDefault(language)?.slug ?? '';
     if (edition) settings.tafsirEdition = edition;
   }
-  // one Mushaf choice: the two printed Mushafs, or a plain text font (which keeps the page type it had)
-  let lastFont = $state<Script>(settings.script !== 'mushaf' && settings.script !== 'indopak' ? settings.script : 'uthmani');
-  const mushafChoice = $derived<'madani' | 'indopak' | 'text'>(settings.script === 'mushaf' ? 'madani' : settings.script === 'indopak' && settings.pageType === 'indopak' ? 'indopak' : 'text');
-  function setMushaf(c: 'madani' | 'indopak' | 'text') {
-    if (c === 'madani') { settings.script = 'mushaf'; settings.pageType = 'madani'; }
-    else if (c === 'indopak') { settings.script = 'indopak'; settings.pageType = 'indopak'; }
-    else settings.script = lastFont; // keeps the current pageType on purpose
-  }
-  function setFont(id: Script) {
-    lastFont = id;
+  // the Madani Mushaf only exists with Madani lines; IndoPak lines need an IndoPak-capable script
+  function setScript(id: Script) {
     settings.script = id;
+    if (id === 'mushaf') settings.pageType = 'madani';
+  }
+  function setLayout(t: 'madani' | 'indopak') {
+    settings.pageType = t;
+    if (t === 'indopak' && settings.script === 'mushaf') settings.script = 'indopak';
   }
 
   function exportBookmarks() {
@@ -530,21 +527,12 @@
       {@render preview()}
       <h3 class="grp">Arabic script</h3>
       <div class="card">
-      <div class="row">
-        <div class="label"><h3>Mushaf</h3>{@render rst('Mushaf')}<p>How the Arabic is written. The Madani and IndoPak pages are the exact printed Mushaf (Madani: 604 pages; IndoPak: 610, with its own spelling), fetched once per page, then kept for offline use. Text fonts show plain text in the font you pick.</p></div>
-        <div class="seg">
-          <button class:on={mushafChoice === 'madani'} onclick={() => setMushaf('madani')}>Madani pages</button>
-          <button class:on={mushafChoice === 'indopak'} onclick={() => setMushaf('indopak')}>IndoPak pages</button>
-          <button class:on={mushafChoice === 'text'} onclick={() => setMushaf('text')}>Text fonts</button>
-        </div>
-      </div>
-      {#if mushafChoice === 'text'}
       <div class="row wide">
-        <div class="label"><h3>Font</h3><p>Every card shows the same verse.</p></div>
+        <div class="label"><h3>Mushaf</h3>{@render rst('Mushaf')}<p>How the Arabic is written. Madani Mushaf is the exact printed page (604 pages, fetched once per page, then kept for offline use); the others show plain text in that font. Every card shows the same verse.</p></div>
         <div class="scripts">
-          {#each SCRIPTS.filter((sc) => sc.id !== 'mushaf' && (sc.id !== 'indopak' || settings.pageType === 'madani')) as sc (sc.id)}
-            <button class="script" class:on={settings.script === sc.id} onclick={() => setFont(sc.id)} aria-pressed={settings.script === sc.id}>
-              <span class="sample" class:tajweed={sc.id === 'tajweed'} dir="rtl" style:font-family={sc.family}>
+          {#each SCRIPTS as sc (sc.id)}
+            <button class="script" class:on={settings.script === sc.id} onclick={() => setScript(sc.id)} aria-pressed={settings.script === sc.id}>
+              <span class="sample" class:tajweed={sc.id === 'tajweed'} dir="rtl" style:font-family={sc.id === 'mushaf' ? 'QCF1' : sc.family}>
                 {#if sc.id === 'tajweed'}{@html sample('tajweed')}{:else}{sample(sc.id)}{/if}
               </span>
               <b>{sc.name}</b><small>{sc.hint}</small>
@@ -553,13 +541,12 @@
         </div>
       </div>
       <div class="row">
-        <div class="label"><h3>Page layout</h3>{@render rst('Page layout')}<p>Which printed Mushaf the pages follow: same text, different line breaks and page numbers.</p></div>
+        <div class="label"><h3>Page layout</h3>{@render rst('Page layout')}<p>Which printed Mushaf the pages follow: same text, different line breaks and page numbers. IndoPak lines (610 pages) need a text font, so choosing them leaves the Madani Mushaf.</p></div>
         <div class="seg">
-          <button class:on={settings.pageType === 'madani'} onclick={() => (settings.pageType = 'madani')}>Madani (604)</button>
-          <button class:on={settings.pageType === 'indopak'} onclick={() => (settings.pageType = 'indopak')}>IndoPak (610)</button>
+          <button class:on={settings.layout === 'madani'} onclick={() => setLayout('madani')}>Madani (604)</button>
+          <button class:on={settings.layout === 'indopak'} onclick={() => setLayout('indopak')}>IndoPak (610)</button>
         </div>
       </div>
-      {/if}
       </div>
       <h3 class="grp">Size</h3>
       <div class="card">
@@ -612,6 +599,10 @@
       <div class="row">
         <div class="label"><h3>Highlight bookmarks</h3>{@render rst('Highlight bookmarks')}<p>Mark bookmarked verses with a filled verse-end ornament.</p></div>
         {@render toggle(settings.highlightBookmarks, (v) => (settings.highlightBookmarks = v), 'Highlight bookmarks')}
+      </div>
+      <div class="row">
+        <div class="label"><h3>Highlight all surahs on the page</h3>{@render rst('Highlight all surahs on the page')}<p>In the surah list, highlight every surah shown on the current page instead of only the one you're reading.</p></div>
+        {@render toggle(settings.highlightPageSurahs, (v) => (settings.highlightPageSurahs = v), 'Highlight all surahs on the page')}
       </div>
       </div>
     {/if}
@@ -981,49 +972,58 @@
       </div>
 
       </div>
-      <h3 class="grp">About</h3>
+<h3 class="grp">About</h3>
       <div class="card">
       <div class="row about">
-        <div class="label"><h3>About</h3></div>
-        <div class="about-content">
-          <div class="about-intro">
-            <span class="about-kicker">Quran Desktop</span>
-            <h2>A quieter space for reading and listening.</h2>
-            <p>Free and open source, with no ads or locked features. This beta is built on the ideas of <a href="https://github.com/quran/quran_android" target="_blank" rel="noreferrer">Quran for Android</a>. Quran text, timings and audio are provided by the Quran.com public API.</p>
-          </div>
-          <div class="about-links" aria-label="App links">
-            <a class="about-link" href="https://qurandesktop.pages.dev" target="_blank" rel="noreferrer">
-              <span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3a11 11 0 0 1 0 14M10 3a11 11 0 0 0 0 14"/></svg></span><span><b>App website</b><small>qurandesktop.pages.dev</small></span><span class="about-arrow" aria-hidden="true">↗</span>
-            </a>
-            <a class="about-link" href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">
-              <span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.28-1.23-1.62-1.23-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.62 1.21 3.26.92.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.12-1.44 3.05-1.15 3.05-1.15.61 1.54.23 2.68.12 2.96.71.78 1.14 1.78 1.14 3 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9z"/></svg></span><span><b>Source code</b><small>Browse the project on GitHub</small></span><span class="about-arrow" aria-hidden="true">↗</span>
-            </a>
-            <a class="about-link" href="https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml" target="_blank" rel="noreferrer">
-              <span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3v14M3 10h14"/></svg></span><span><b>Suggest a feature</b><small>Share an idea for the app</small></span><span class="about-arrow" aria-hidden="true">↗</span>
-            </a>
-            <a class="about-link" href="https://github.com/Obscyra/quran-desktop/issues/new?template=bug.yml" target="_blank" rel="noreferrer">
-              <span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3 18 17H2L10 3Z"/><path d="M10 7v4m0 3h.01"/></svg></span><span><b>Report a problem</b><small>Help improve this beta</small></span><span class="about-arrow" aria-hidden="true">↗</span>
-            </a>
-          </div>
-          <ul class="credits" aria-label="Credits">
+        <div class="label"><h3>A quieter space for reading and listening.</h3><p>Free and open source, with no ads or locked features. This beta is built on the ideas of <a href="https://github.com/quran/quran_android" target="_blank" rel="noreferrer">Quran for Android</a>. Quran text, timings and audio are provided by the Quran.com public API.</p></div>
+        <ul class="credits" aria-label="Credits">
             <li>Manrope by Mikhail Sharanda — SIL Open Font License 1.1</li>
             <li>Inter by Rasmus Andersson — SIL Open Font License 1.1</li>
             <li>Icons: Lucide — ISC License</li>
             <li>Surah name calligraphy and Madinah surah frame: QUL by Tarteel (qul.tarteel.ai)</li>
           </ul>
-        </div>
       </div>
+      <a class="row link" href="https://qurandesktop.pages.dev" target="_blank" rel="noreferrer">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3a11 11 0 0 1 0 14M10 3a11 11 0 0 0 0 14"/></svg></span>
+        <div class="label"><h3>App website</h3><p>qurandesktop.pages.dev</p></div>
+        <span class="chev" aria-hidden="true">↗</span>
+      </a>
+      <a class="row link" href="https://github.com/Obscyra/quran-desktop" target="_blank" rel="noreferrer">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.28-1.23-1.62-1.23-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.62 1.21 3.26.92.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.12-1.44 3.05-1.15 3.05-1.15.61 1.54.23 2.68.12 2.96.71.78 1.14 1.78 1.14 3 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9z"/></svg></span>
+        <div class="label"><h3>Source code</h3><p>Browse the project on GitHub</p></div>
+        <span class="chev" aria-hidden="true">↗</span>
+      </a>
+      <a class="row link" href="https://github.com/Obscyra/quran-desktop/issues/new?template=feature.yml" target="_blank" rel="noreferrer">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3v14M3 10h14"/></svg></span>
+        <div class="label"><h3>Suggest a feature</h3><p>Share an idea for the app</p></div>
+        <span class="chev" aria-hidden="true">↗</span>
+      </a>
+      <a class="row link" href="https://github.com/Obscyra/quran-desktop/issues/new?template=bug.yml" target="_blank" rel="noreferrer">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3 18 17H2L10 3Z"/><path d="M10 7v4m0 3h.01"/></svg></span>
+        <div class="label"><h3>Report a problem</h3><p>Help improve this beta</p></div>
+        <span class="chev" aria-hidden="true">↗</span>
+      </a>
+      </div>
+      <h3 class="grp">Developer</h3>
+      <div class="card">
       <div class="row about">
-        <div class="label"><h3>Developer</h3><p>Made and maintained by one person.</p></div>
-        <div class="dev-card">
-          <div class="dev-heading"><span class="dev-avatar" aria-hidden="true">FS</span><span><b>Fahim Shahriar</b><small>Developer · Maintainer</small></span></div>
-          <div class="about-links dev-links" aria-label="Developer links">
-          <a class="about-link" href="mailto:fahimonlinux@gmail.com"><span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="4" width="15" height="12" rx="2"/><path d="m3.5 5 6.5 5 6.5-5"/></svg></span><span><b>Email</b><small>fahimonlinux@gmail.com</small></span><span class="about-arrow" aria-hidden="true">↗</span></a>
-            <a class="about-link" href="https://github.com/Obscyra" target="_blank" rel="noreferrer"><span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.28-1.23-1.62-1.23-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.62 1.21 3.26.92.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.12-1.44 3.05-1.15 3.05-1.15.61 1.54.23 2.68.12 2.96.71.78 1.14 1.78 1.14 3 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9z"/></svg></span><span><b>GitHub</b><small>github.com/Obscyra</small></span><span class="about-arrow" aria-hidden="true">↗</span></a>
-            <a class="about-link" href="https://fahimshahriar.pages.dev" target="_blank" rel="noreferrer"><span class="about-link-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3a11 11 0 0 1 0 14M10 3a11 11 0 0 0 0 14"/></svg></span><span><b>Website</b><small>fahimshahriar.pages.dev</small></span><span class="about-arrow" aria-hidden="true">↗</span></a>
-          </div>
-        </div>
+        <div class="label"><h3>Fahim Shahriar</h3><p>Developer · Maintainer. Made and maintained by one person.</p></div>
       </div>
+      <a class="row link" href="mailto:fahimonlinux@gmail.com">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="4" width="15" height="12" rx="2"/><path d="m3.5 5 6.5 5 6.5-5"/></svg></span>
+        <div class="label"><h3>Email</h3><p>fahimonlinux@gmail.com</p></div>
+        <span class="chev" aria-hidden="true">↗</span>
+      </a>
+      <a class="row link" href="https://github.com/Obscyra" target="_blank" rel="noreferrer">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.28-1.23-1.62-1.23-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.62 1.21 3.26.92.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.12-1.44 3.05-1.15 3.05-1.15.61 1.54.23 2.68.12 2.96.71.78 1.14 1.78 1.14 3 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9z"/></svg></span>
+        <div class="label"><h3>GitHub</h3><p>github.com/Obscyra</p></div>
+        <span class="chev" aria-hidden="true">↗</span>
+      </a>
+      <a class="row link" href="https://fahimshahriar.pages.dev" target="_blank" rel="noreferrer">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3a11 11 0 0 1 0 14M10 3a11 11 0 0 0 0 14"/></svg></span>
+        <div class="label"><h3>Website</h3><p>fahimshahriar.pages.dev</p></div>
+        <span class="chev" aria-hidden="true">↗</span>
+      </a>
       </div>
     {/if}
   </div></div>
@@ -1042,7 +1042,7 @@
   nav .chg { flex-direction: row; width: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 6px; padding: 8px 12px; height: auto; border-radius: var(--r-md); font-size: var(--t-meta); color: var(--muted); border: 1px dashed var(--hair-2); text-align: left; }
   nav .chg b { min-width: 20px; padding: 1px 7px; border-radius: var(--r-pill); text-align: center; font-size: var(--t-meta); font-weight: 600; background: var(--accent-soft); color: var(--accent); }
   nav .chg:hover { color: var(--ink); }
-  nav .chg.on { color: var(--accent); border-style: solid; border-color: transparent; background: var(--btn-on); }
+  nav .chg.on { color: var(--on-fg); border-style: solid; border-color: transparent; background: var(--on-bg); box-shadow: var(--on-ring); }
   .results.changed li { display: flex; align-items: center; gap: 8px; }
   .results.changed .go { flex: 1; }
   .results.changed .again, .reset { flex: none; width: auto; display: inline-block; padding: 3px 10px; border-radius: var(--r-md); font-size: var(--t-meta); color: var(--accent); background: var(--btn-on); }
@@ -1064,11 +1064,11 @@
   nav h1 { font-size: var(--t-title); font-weight: 600; letter-spacing: -0.01em; padding: 4px 12px 14px; }
   nav button { display: flex; align-items: center; gap: 10px; height: var(--nav-set); flex: none; padding: 0 12px; border-radius: var(--r-md); font-size: var(--t-body); font-weight: 500; color: var(--muted); text-align: left; transition: background 0.2s, color 0.2s; }
   nav button:hover { background: var(--ink-4); color: var(--ink); }
-  nav button.on { background: color-mix(in oklab, var(--accent) 13%, transparent); color: var(--ink); }
-  nav button.on svg { color: var(--accent); }
+  nav button.on { background: var(--on-bg); color: var(--on-fg); font-weight: 600; box-shadow: var(--on-bar); }
+  nav button.on svg { color: var(--on-fg); }
 
   .view { flex: 1; min-width: 0; overflow-y: auto; padding: 0 24px 64px; }
-  .col { max-width: calc(1200px / var(--zoom, 1)); margin: 0 auto; }
+  .col { max-width: calc(1360px / var(--zoom, 1)); margin: 0 auto; }
   header { display: flex; align-items: center; gap: 14px; position: sticky; top: 0; background: var(--bg); padding: 40px 0 8px; z-index: 2; }
   header h2 { font-size: var(--t-title); font-weight: 600; letter-spacing: -0.01em; flex: 1; }
   .back { width: 34px; height: 34px; border-radius: var(--r-md); display: grid; place-items: center; color: var(--ink-dim); margin-left: -8px; }
@@ -1086,7 +1086,6 @@
   .row.wide > .label, .row.about > .label { flex: none; }
   .row.wide .label p { max-width: 70ch; }
   .view { container-type: inline-size; }
-  @container (max-width: 560px) { .about-links { grid-template-columns: 1fr; } .about-intro { padding: 17px; } }
   .label h3 { font-size: var(--t-body); font-weight: 500; }
   .label p { margin-top: 2px; color: var(--muted); font-size: var(--t-meta); line-height: 1.45; max-width: 70ch; }
   .times { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -1103,33 +1102,33 @@
   .preview p { font-family: var(--ar-font); font-size: var(--ar-size); line-height: var(--ar-lh); color: var(--ink); }
   .preview small { color: var(--ink-dim); }
 
-  .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  .themes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
   .autoRow { margin-bottom: 12px; }
   .chipauto { height: 32px; padding: 0 14px; border-radius: var(--r-md); font-size: var(--t-body); font-weight: 500; background: var(--ink-6); }
   .chipauto:hover { background: var(--btn-hover); }
-  .chipauto.on { background: var(--btn-on); color: var(--accent); }
-  .theme { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; text-align: center; }
+  .chipauto.on { background: var(--on-bg); color: var(--on-fg); box-shadow: var(--on-ring); }
+  .theme { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; text-align: center; }
 
-  .theme.on .sw { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
-  .theme.on b { color: var(--ink); font-weight: 500; }
-  .theme .sw { position: relative; width: 100%; aspect-ratio: 168 / 104; border-radius: var(--r-md); border: 1px solid var(--hair-2); display: grid; place-items: center; overflow: hidden; }
-  .theme .sw .ink { font-family: 'KFGQPC Uthmanic Hafs', serif; font-size: 22px; line-height: 1.2; white-space: nowrap; direction: rtl; }
-  .theme .sw i { position: absolute; left: 12px; bottom: 12px; width: 28px; height: 4px; border-radius: 2px; }
-  .theme b { font-size: 12.5px; font-weight: 400; color: var(--muted); }
+  .theme.on .sw { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px color-mix(in oklab, var(--ink) 70%, transparent); }
+  .theme.on b { color: var(--on-fg); font-weight: 650; }
+  .theme .sw { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--r-md); border: 1px solid var(--hair-2); display: grid; place-items: center; overflow: hidden; container-type: inline-size; }
+  .theme .sw .ink { font-family: 'KFGQPC Uthmanic Hafs', serif; font-size: 15cqw; line-height: 1.25; max-width: 88cqw; text-align: center; text-wrap: balance; padding-bottom: 6cqw; direction: rtl; }
+  .theme .sw i { position: absolute; left: 7cqw; bottom: 7cqw; width: 18cqw; height: 4px; border-radius: 2px; }
+  .theme b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; font-weight: 400; color: var(--muted); }
 
   .fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
   .font { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px; border-radius: var(--r-lg); background: var(--surface); outline: 2px solid transparent; }
-  .font.on { outline-color: var(--accent); }
+  .font.on { outline-color: color-mix(in oklab, var(--ink) 45%, transparent); background: var(--on-bg); }
 
 
   .seg { display: inline-flex; background: color-mix(in oklab, var(--ink) 7%, transparent); border-radius: var(--r-md); padding: 3px; gap: 2px; flex-wrap: wrap; }
   .seg button { height: 30px; padding: 0 12px; border-radius: var(--r-sm); font-size: var(--t-meta); font-weight: 500; color: var(--muted); transition: background-color 0.2s, color 0.2s; }
-  .seg button:hover { color: var(--ink); }
+  .seg button:hover:not(.on) { color: var(--ink); background: var(--ink-6); }
   .seg .custom { display: inline-flex; align-items: center; gap: 2px; padding: 0 10px; border-radius: var(--r-sm); font-size: var(--t-meta); color: var(--muted); }
-  .seg .custom.on { background: var(--bg); box-shadow: 0 0 0 1px var(--hair-2), var(--e1); color: var(--ink); font-weight: 600; }
+  .seg .custom.on { background: var(--on-bg); box-shadow: var(--on-ring); color: var(--on-fg); font-weight: 600; }
   .seg .custom input { width: 74px; background: transparent; border: 0; color: inherit; font: inherit; text-align: right; outline: none; }
   .seg .custom input:focus-visible { box-shadow: 0 1px 0 var(--accent); }
-  .seg button.on { background: var(--bg); color: var(--ink); font-weight: 600; box-shadow: 0 0 0 1px var(--hair-2), var(--e1); }
+  .seg button.on { background: var(--on-bg); color: var(--on-fg); font-weight: 600; box-shadow: var(--on-ring); }
 
   input[type='range'] { -webkit-appearance: none; appearance: none; width: min(100%, 240px); height: 20px; background: transparent; }
   input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: var(--r-pill); background: linear-gradient(var(--accent), var(--accent)) 0 / var(--p, 0%) 100% no-repeat, var(--ink-6); }
@@ -1139,10 +1138,10 @@
   input[type='range']::-moz-range-thumb { box-sizing: border-box; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 1px solid var(--hair-2); box-shadow: var(--e1); }
   input[type='range']:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--r-sm); }
 
-  .toggle { width: 36px; height: 20px; border-radius: var(--r-pill); background: var(--ink-6); box-shadow: inset 0 0 0 1px var(--hair); position: relative; transition: background 0.25s; flex: none; }
-  .toggle i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); box-shadow: var(--e1); transition: transform 0.25s var(--ease); }
-  .toggle.on { background: var(--accent); }
-  .toggle.on i { transform: translateX(16px); background: var(--accent-ink); }
+  .toggle { width: 36px; height: 20px; border-radius: var(--r-pill); background: var(--off-track); box-shadow: inset 0 0 0 1px var(--hair-2); position: relative; transition: background-color 0.15s; flex: none; }
+  .toggle i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); box-shadow: var(--e1); transition: transform 0.15s var(--ease); }
+  .toggle.on { background: var(--on-track); box-shadow: var(--on-ring); }
+  .toggle.on i { transform: translateX(16px); background: var(--bg); }
 
   .primary, .secondary, .danger { height: 32px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-md); font-size: var(--t-body); font-weight: 600; transition: background-color 0.15s, opacity 0.2s; }
   .primary { background: var(--accent); color: var(--accent-ink); }
@@ -1193,46 +1192,32 @@
   .keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; font-size: var(--t-body); }
   .keys dt { font-weight: 600; text-align: right; color: var(--accent); }
   .keys dd { color: var(--ink-dim); margin: 0; }
-  .about-content { min-width: 0; }
+  .row.link { color: var(--ink); text-decoration: none; justify-content: flex-start; flex-wrap: nowrap; gap: 12px; transition: background 140ms ease; }
+  .row.link:hover { background: var(--btn-hover); }
+  .row.link:hover .chev { color: var(--accent); }
+  .row.link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .row.link .ico { width: 18px; height: 18px; flex: none; display: grid; place-items: center; color: var(--ink-dim); }
+  .row.link .ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .row.link .ico svg[fill="currentColor"] { fill: currentColor; stroke: none; }
+  .row.link .label { flex: 1 1 auto; }
+  .row.link .label p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row.link .chev { flex: none; color: var(--ink-faint); font-size: var(--t-body); }
+  .row.about .label a { color: var(--accent); }
   .credits { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
-  .about-intro { padding: 20px 22px; border: 1px solid var(--line); border-radius: var(--r-lg); background: linear-gradient(130deg, color-mix(in oklab, var(--accent) 9%, var(--bg-2)), var(--bg-2) 72%); box-shadow: 0 8px 24px color-mix(in oklab, var(--ink) 6%, transparent); }
-  .about-kicker { display: inline-flex; padding: 4px 9px; border: 1px solid color-mix(in oklab, var(--accent) 28%, var(--line)); border-radius: var(--r-pill); color: var(--accent); font-size: var(--t-cap); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-  .about-intro h2 { margin: 12px 0 7px; color: var(--ink); font-size: var(--t-title); line-height: 1.25; font-weight: 600; }
-  .about-intro p { color: var(--ink-dim); line-height: 1.65; max-width: 68ch; margin: 0; }
-  .about a { color: var(--accent); text-decoration: none; }
-  .about-intro a { text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--accent) 45%, transparent); text-underline-offset: 2px; }
-  .about-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
-  .about-link { min-width: 0; display: flex; align-items: center; gap: 9px; padding: 8px 9px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-2); color: var(--ink) !important; box-shadow: 0 2px 8px color-mix(in oklab, var(--ink) 4%, transparent); transition: border-color 140ms ease, background 140ms ease, transform 140ms ease, box-shadow 140ms ease; }
-  .about-link:hover { border-color: color-mix(in oklab, var(--accent) 48%, var(--line)); background: color-mix(in oklab, var(--accent) 6%, var(--bg-2)); transform: translateY(-1px); box-shadow: 0 7px 18px color-mix(in oklab, var(--ink) 8%, transparent); }
-  .about-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .about-link-icon { width: 27px; height: 27px; display: grid; place-items: center; flex: none; border: 1px solid color-mix(in oklab, var(--accent) 22%, var(--line)); border-radius: var(--r-md); background: color-mix(in oklab, var(--accent) 10%, var(--bg)); color: var(--accent); }
-  .about-link-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-  .about-link-icon svg[fill="currentColor"] { fill: currentColor; stroke: none; }
-  .about-link > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
-  .about-link b { color: var(--ink); font-size: var(--t-meta); font-weight: 620; }
-  .about-link small { overflow: hidden; color: var(--ink-dim); font-size: var(--t-meta); text-overflow: ellipsis; white-space: nowrap; }
-  .about-arrow { margin-left: auto; align-self: flex-start; color: var(--ink-faint); font-size: var(--t-body); }
-  .dev-card { padding: 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-2); box-shadow: 0 6px 20px color-mix(in oklab, var(--ink) 5%, transparent); }
-  .dev-heading { display: flex; align-items: center; gap: 12px; }
-  .dev-avatar { width: 42px; height: 42px; display: grid; place-items: center; border-radius: var(--r-lg); background: color-mix(in oklab, var(--accent) 13%, var(--bg)); color: var(--accent); font-size: var(--t-body); font-weight: 750; letter-spacing: .04em; }
-  .dev-heading > span:last-child { display: grid; gap: 4px; }
-  .dev-heading b { color: var(--ink); font-size: var(--t-sub); }
-  .dev-heading small { color: var(--ink-dim); font-size: var(--t-meta); }
-  .dev-links { grid-template-columns: 1fr; }
   .beta { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent); font-size: var(--t-cap); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
   .inline { display: flex; gap: 10px; }
   .file { cursor: default; display: inline-block; }
   .preview .sample { font-size: var(--ar-size); line-height: var(--ar-lh); }
   .scripts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
   .script { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 16px 12px 14px; border-radius: var(--r-lg); background: var(--surface); outline: 2px solid transparent; text-align: center; transition: outline-color 0.2s; }
-  .script:hover { outline-color: var(--accent-soft); }
-  .script.on { outline-color: var(--accent); }
+  .script:hover { outline-color: var(--hair-2); }
+  .script.on { outline-color: color-mix(in oklab, var(--ink) 45%, transparent); background: var(--on-bg); }
   .script .sample { font-size: 22px; line-height: 1.8; color: var(--ink); max-width: 100%; min-height: 3.6em; display: flex; align-items: center; justify-content: center; text-align: center; text-wrap: balance; }
   .script b { font-size: var(--t-body); font-weight: 600; margin-top: 4px; }
   .script small { color: var(--ink-dim); font-size: var(--t-meta); line-height: 1.4; }
   .looks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
   .look { display: flex; flex-direction: column; gap: 3px; padding: 12px; border-radius: var(--r-lg); background: color-mix(in oklab, var(--ink) 5%, transparent); outline: 2px solid transparent; text-align: left; }
-  .look.on { outline-color: var(--accent); }
+  .look.on { outline-color: color-mix(in oklab, var(--ink) 45%, transparent); background: var(--on-bg); }
   .look small { color: var(--ink-dim); font-size: var(--t-meta); }
   .mini { height: 74px; border-radius: var(--r-sm); display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 0 16px; margin-bottom: 8px; position: relative; }
   .mini i { height: 3px; border-radius: var(--r-sm); background: var(--ink-dim); opacity: 0.7; }

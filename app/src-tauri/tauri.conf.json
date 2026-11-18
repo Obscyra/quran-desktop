@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Quran",
-  "version": "0.0.10-beta",
+  "version": "0.0.11-beta",
   "identifier": "app.quran.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -25,7 +25,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://static.qurancdn.com; font-src 'self' tauri: http://tauri.localhost data: blob:; media-src 'self' blob: https:; connect-src 'self' ipc: http://ipc.localhost https:; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://static.qurancdn.com; font-src 'self' tauri: http://tauri.localhost data: blob:; media-src 'self' blob: https://download.quranicaudio.com https://audio.qurancdn.com; connect-src 'self' ipc: http://ipc.localhost https://api.quran.com https://download.quranicaudio.com https://audio.qurancdn.com https://verses.quran.foundation https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'"
     }
   },
   "bundle": {
@@ -55,6 +55,7 @@
         "installMode": "currentUser",
         "installerIcon": "icons/icon.ico",
         "installerHooks": "./windows/hooks.nsi",
+        "template": "./windows/installer.nsi",
         "displayLanguageSelector": false
       }
     }

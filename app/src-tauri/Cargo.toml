@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.0.10-beta"
+version = "0.0.11-beta"
 description = "Free, open-source desktop Quran app"
 authors = ["Obscyra"]
 license = "GPL-3.0-only"
@@ -19,7 +19,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon", "devtools"] }
+tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
